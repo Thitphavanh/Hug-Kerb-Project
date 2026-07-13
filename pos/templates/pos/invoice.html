@@ -56,7 +56,7 @@
         <tbody>
             {% for item in order.items.all %}
             <tr>
-                <td>{{ item.description|default:item.service_type }}</td>
+                <td>{{ item.description|default:item.service_type.name|service_description }}</td>
                 <td class="text-right">{{ item.quantity }}</td>
                 <td class="text-right">{{ item.unit_price|money }}</td>
                 <td class="text-right">{{ item.subtotal|money }}</td>
@@ -68,6 +68,9 @@
     <table class="totals" style="width: 260px; margin-left: auto;">
         <tr><td class="label">ລວມຍ່ອຍ</td><td class="text-right">{{ order.subtotal|money }}</td></tr>
         <tr><td class="label">ສ່ວນຫຼຸດ</td><td class="text-right">-{{ order.discount|money }}</td></tr>
+        {% if order.vat_rate > 0 %}
+        <tr><td class="label">VAT ({{ order.vat_rate }}%)</td><td class="text-right">{{ order.vat_amount|money }}</td></tr>
+        {% endif %}
         <tr><td class="label"><strong>ຍອດລວມ</strong></td><td class="text-right"><strong>{{ order.total|money }}</strong></td></tr>
     </table>
 

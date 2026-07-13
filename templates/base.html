@@ -43,6 +43,9 @@
                     "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
                     "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
                     "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
+                    primary: "rgb(var(--color-ai-cyan) / <alpha-value>)",
+                    "primary-container": "rgb(var(--color-ai-cyan) / 0.12)",
+                    "on-primary-container": "rgb(var(--color-ai-cyan) / <alpha-value>)",
                     "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
                     "ai-cyan": "rgb(var(--color-ai-cyan) / <alpha-value>)",
                     "ai-purple": "rgb(var(--color-ai-purple) / <alpha-value>)",
@@ -177,7 +180,7 @@
         <h1 class="font-display-lg text-ai-cyan font-bold tracking-tight" style="font-size:24px;line-height:1.1;">Hug ເກີບ AI</h1>
         <p class="font-body-sm text-on-surface-variant mt-1">{% trans "SME Command Center" %}</p>
     </div>
-    <nav class="flex-1 px-4 space-y-1">
+    <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
         <a href="{% url 'dashboard:index' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'dashboard' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
             <span class="material-symbols-outlined {% if active_nav == 'dashboard' %}fill{% endif %}">dashboard</span>
             <span class="font-label-caps tracking-widest">{% trans "Dashboard" %}</span>
@@ -203,6 +206,10 @@
             <span class="font-label-caps tracking-widest">{% trans "Kanban Tracking" %}</span>
         </a>
         {% if is_manager %}
+        <a href="{% url 'accounting:dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'accounting' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
+            <span class="material-symbols-outlined {% if active_nav == 'accounting' %}fill{% endif %}">account_balance_wallet</span>
+            <span class="font-label-caps tracking-widest">{% trans "Accounting" %}</span>
+        </a>
         <a href="{% url 'reports:income_expense' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'reports' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
             <span class="material-symbols-outlined">assessment</span>
             <span class="font-label-caps tracking-widest">{% trans "Reports" %}</span>

@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 {% load i18n humanize %}
 {% load custom_filters %}
-<html lang="lo" class="dark">
+{% get_current_language as CURRENT_LANGUAGE %}
+<html lang="{{ CURRENT_LANGUAGE }}" class="dark">
 <head>
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>KicksVault AI - ສ້າງໃບສະເໜີລາຄາ</title>
+    <title>{% trans "KicksVault AI — Create quotation" %}</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -188,15 +189,23 @@
                     <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_document</span>
                 </div>
                 <div>
-                    <h1 class="font-headline-sm text-headline-sm text-on-surface font-bold">ສ້າງໃບສະເໜີລາຄາ AI</h1>
-                    <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">KicksVault AI - ການປະເມນລາຄາອັດສະລິຍະ</p>
+                    <h1 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Create AI quotation" %}</h1>
+                    <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">{% trans "KicksVault AI — Intelligent pricing" %}</p>
                 </div>
             </div>
             <!-- Global Action -->
-            <a href="{% url 'pos:create' %}" class="flex items-center gap-xs px-md py-sm rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md">
-                <span class="material-symbols-outlined text-[18px]">close</span>
-                ຍົກເລີກ
-            </a>
+            <div class="flex items-center gap-sm">
+                <form action="{% url 'set_language' %}" method="post" class="flex items-center rounded-full border border-outline-variant bg-surface-container-lowest p-1" aria-label="{% trans 'Language' %}">
+                    {% csrf_token %}
+                    <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                    <button type="submit" name="language" value="lo" class="rounded-full px-3 py-1.5 text-xs font-bold transition-colors {% if CURRENT_LANGUAGE == 'lo' %}bg-primary text-on-primary{% else %}text-on-surface-variant hover:bg-surface-variant{% endif %}">ລາວ</button>
+                    <button type="submit" name="language" value="en" class="rounded-full px-3 py-1.5 text-xs font-bold transition-colors {% if CURRENT_LANGUAGE == 'en' %}bg-primary text-on-primary{% else %}text-on-surface-variant hover:bg-surface-variant{% endif %}">EN</button>
+                </form>
+                <a href="{% url 'pos:create' %}" class="flex items-center gap-xs px-md py-sm rounded-full text-on-surface-variant hover:bg-surface-variant hover:text-on-surface transition-colors font-label-md text-label-md">
+                    <span class="material-symbols-outlined text-[18px]">close</span>
+                    {% trans "Cancel" %}
+                </a>
+            </div>
         </div>
         <!-- Wizard Stepper -->
         <div class="w-full bg-surface-container-lowest border-t border-outline-variant/50 py-sm">
@@ -210,21 +219,21 @@
                     <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-sm">
                         <span class="material-symbols-outlined text-[16px] text-white">check</span>
                     </div>
-                    <span class="font-label-sm text-label-sm text-primary">ເລືອກບໍລິການ</span>
+                    <span class="font-label-sm text-label-sm text-primary">{% trans "Select services" %}</span>
                 </div>
                 <!-- Step 2: Completed -->
                 <div class="relative z-10 flex flex-col items-center gap-xs">
                     <div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-sm">
                         <span class="material-symbols-outlined text-[16px] text-white">check</span>
                     </div>
-                    <span class="font-label-sm text-label-sm text-primary">ທົບທວນລາຄາ</span>
+                    <span class="font-label-sm text-label-sm text-primary">{% trans "Review pricing" %}</span>
                 </div>
                 <!-- Step 3: Active -->
                 <div class="relative z-10 flex flex-col items-center gap-xs">
                     <div class="w-8 h-8 rounded-full bg-surface-container-lowest border-2 border-primary text-primary flex items-center justify-center shadow-sm ring-4 ring-primary/10">
                         <span class="font-label-md text-label-md font-bold">3</span>
                     </div>
-                    <span class="font-label-sm text-label-sm text-on-surface font-semibold">ອະນຸມັດ ແລະ ເຊັນ</span>
+                    <span class="font-label-sm text-label-sm text-on-surface font-semibold">{% trans "Approve and sign" %}</span>
                 </div>
             </div>
         </div>
@@ -233,8 +242,8 @@
     <!-- Main Content Canvas -->
     <main class="flex-1 w-full max-w-4xl mx-auto px-gutter py-xl flex flex-col gap-lg">
         <div class="text-center mb-md">
-            <h2 class="font-headline-md text-headline-md text-on-surface font-bold mb-xs">ຂັ້ນຕອນສຸດທ້າຍ: ຢືນຢັນຂໍ້ຕົກລົງ</h2>
-            <p class="font-body-lg text-body-lg text-on-surface-variant">ກະລຸນາກວດສອບລາຍລະອຽດຂ້າງລຸ່ມນີ້ ແລະ ລົງລາຍເຊັນເພື່ອດຳເນີນການຕໍ່.</p>
+            <h2 class="font-headline-md text-headline-md text-on-surface font-bold mb-xs">{% trans "Final step: confirm agreement" %}</h2>
+            <p class="font-body-lg text-body-lg text-on-surface-variant">{% trans "Please review the details below and sign to continue." %}</p>
         </div>
         
         <!-- Document Data Context -->
@@ -251,11 +260,11 @@
                 <div class="px-lg py-md border-b border-surface-variant bg-surface-bright flex justify-between items-center">
                     <div class="flex items-center gap-sm">
                         <span class="material-symbols-outlined text-primary">receipt_long</span>
-                        <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">ສະຫຼຸບລາຍການສັ່ງຊື້</h3>
+                        <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Order summary" %}</h3>
                     </div>
                     <a href="{% url 'pos:quotation' order.pk %}" class="text-primary hover:text-primary-container font-label-sm text-label-sm uppercase tracking-wide flex items-center gap-xs transition-colors font-bold">
                         <span class="material-symbols-outlined text-[16px]">edit</span>
-                        ແກ້ໄຂ
+                        {% trans "Edit" %}
                     </a>
                 </div>
                 <div class="p-lg">
@@ -268,10 +277,10 @@
                                     {% if item.asset %}
                                         {{ item.asset.brand }} {{ item.asset.model_name }}
                                     {% else %}
-                                        {{ item.description|default:item.service_type.name }}
+                                        {{ item.description|default:item.service_type.name|service_description }}
                                     {% endif %}
                                 </p>
-                                <p class="font-body-md text-body-md text-on-surface-variant mt-0.5">{{ item.description|default:item.service_type.name }}</p>
+                                <p class="font-body-md text-body-md text-on-surface-variant mt-0.5">{{ item.description|default:item.service_type.name|service_description }}</p>
                             </div>
                             <p class="font-headline-sm text-headline-sm text-on-surface font-bold">₭ {{ item.subtotal|money }}</p>
                         </div>
@@ -282,7 +291,7 @@
                         <div class="flex justify-between items-start py-sm border-t border-surface-variant border-dashed">
                             <div class="flex items-center gap-sm text-secondary">
                                 <span class="material-symbols-outlined text-secondary text-[18px]">local_offer</span>
-                                <p class="font-label-md text-label-md text-secondary font-bold">ສ່ວນຫຼຸດໂປຣໂມຊັ່ນ</p>
+                                <p class="font-label-md text-label-md text-secondary font-bold">{% trans "Promotional discount" %}</p>
                             </div>
                             <p class="font-headline-sm text-headline-sm text-secondary font-bold">-₭ {{ order.discount|money }}</p>
                         </div>
@@ -292,8 +301,8 @@
                     <!-- Total Area -->
                     <div class="mt-md pt-md border-t-2 border-outline-variant flex justify-between items-end">
                         <div>
-                            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs font-bold">ຍົດລວມຕ້ອງຊຳລະຂັ້ນຕົ້ນ</p>
-                            <p class="font-body-sm text-body-sm text-outline">ລວມພາສີມູນຄ່າເພີ່ມ (VAT 10%) ₭ {{ vat_amount|money }} ແລ້ວ</p>
+                            <p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-xs font-bold">{% trans "Preliminary total due" %}</p>
+                            <p class="font-body-sm text-body-sm text-outline">{% trans "Includes VAT (10%) of" %} ₭ {{ vat_amount|money }}.</p>
                         </div>
                         <div class="text-right">
                             <p class="font-display-lg text-display-lg text-primary tracking-tight leading-none font-bold">₭ {{ total_amount|money }}</p>
@@ -309,26 +318,26 @@
                 <div class="p-lg">
                     <div class="flex items-center gap-sm mb-md">
                         <span class="material-symbols-outlined text-primary text-[28px]">draw</span>
-                        <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">ລົງລາຍເຊັນອະນຸມັດ</h3>
+                        <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Sign for approval" %}</h3>
                     </div>
                     <p class="font-body-md text-body-md text-on-surface-variant mb-lg leading-relaxed">
-                        ໂດຍການລົງລາຍເຊັນຂ້າງລຸ່ມນີ້, ທ່ານຍອມຮັບເງື່ອນໄຂການໃຫ້ບໍລິການ ແລະ ລາຄາທີ່ລະບຸໄວ້ຂ້າງເທິງ. ໃບແຈ້ງໜີ້ຕົວຈິງຈະຖືກສົ່ງໄປຍັງອີເມວຂອງທ່ານ.
+                        {% trans "By signing below, you accept the service terms and the prices shown above. The final invoice will be sent to your email." %}
                     </p>
                     
                     <!-- Digital Signature Area -->
-                    <div class="bg-surface border-2 border-dashed border-outline-variant rounded-lg p-sm relative group mb-md transition-colors hover:border-primary hover:bg-surface-container-low cursor-crosshair" id="signature-container">
+                    <div class="h-48 bg-surface border-2 border-dashed border-outline-variant rounded-lg p-sm relative group mb-md transition-colors hover:border-primary hover:bg-surface-container-low cursor-crosshair" id="signature-container">
                         <!-- Signature Canvas -->
-                        <canvas class="absolute inset-0 w-full h-full z-10" id="signature-canvas"></canvas>
+                        <canvas class="absolute inset-0 z-10" id="signature-canvas"></canvas>
                         
-                        <div class="h-48 w-full flex flex-col items-center justify-center text-outline-variant group-hover:text-primary transition-colors z-0" id="canvas-placeholder">
+                        <div class="h-full w-full flex flex-col items-center justify-center text-outline-variant group-hover:text-primary transition-colors z-0" id="canvas-placeholder">
                             <span class="material-symbols-outlined text-[48px] opacity-20 mb-xs">gesture</span>
-                            <span class="font-label-md text-label-md opacity-50 font-bold">ເຊັນຊື່ຂອງທ່ານທີ່ນີ້</span>
+                            <span class="font-label-md text-label-md opacity-50 font-bold">{% trans "Sign your name here" %}</span>
                         </div>
                         
                         <!-- Actions inside pad -->
                         <button type="button" class="absolute top-sm right-sm bg-surface-container-lowest border border-outline-variant text-on-surface-variant hover:text-status-error hover:border-status-error rounded-md px-sm py-xs font-label-sm text-label-sm transition-colors flex items-center gap-xs shadow-sm z-20" onclick="clearCanvas()">
                             <span class="material-symbols-outlined text-[14px]">delete</span>
-                            ລຶບລ້າງ
+                            {% trans "Clear" %}
                         </button>
                         <!-- Baseline for signature -->
                         <div class="absolute bottom-6 left-lg right-lg h-px bg-outline-variant/30 pointer-events-none z-0"></div>
@@ -337,12 +346,12 @@
                     <!-- Signatory Details -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-md">
                         <div class="flex flex-col gap-xs">
-                            <label class="font-label-sm text-label-sm text-on-surface font-bold" for="signer-name">ຊື່ຜູ້ມີອຳນາດລົງນາມ *</label>
-                            <input class="px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all font-body-md text-body-md" id="signer-name" name="signer_name" placeholder="ພິມຊື່ເຕັມຂອງທ່ານ" type="text" required/>
+                            <label class="font-label-sm text-label-sm text-on-surface font-bold" for="signer-name">{% trans "Authorized signatory name" %} *</label>
+                            <input class="px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all font-body-md text-body-md" id="signer-name" name="signer_name" placeholder="{% trans 'Enter your full name' %}" type="text" required/>
                         </div>
                         <div class="flex flex-col gap-xs">
-                            <label class="font-label-sm text-label-sm text-on-surface font-bold" for="signer-title">ຕຳແໜ່ງ</label>
-                            <input class="px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all font-body-md text-body-md" id="signer-title" name="signer_title" placeholder="ເຊັ່ນ: ຜູ້ຈັດການທົ່ວໄປ" type="text"/>
+                            <label class="font-label-sm text-label-sm text-on-surface font-bold" for="signer-title">{% trans "Position" %}</label>
+                            <input class="px-md py-sm rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all font-body-md text-body-md" id="signer-title" name="signer_title" placeholder="{% trans 'e.g. General manager' %}" type="text"/>
                         </div>
                     </div>
                 </div>
@@ -352,7 +361,7 @@
                         <input class="w-4 h-4 rounded border-outline-variant text-primary focus:ring-primary/25 bg-surface-container-lowest cursor-pointer" id="terms-agree" type="checkbox" onchange="toggleSubmitButton()"/>
                     </div>
                     <label class="font-body-sm text-body-sm text-on-surface-variant cursor-pointer select-none" for="terms-agree">
-                        ຂ້າພະເຈົ້າໄດ້ອ່ານ ແລະ ເຂົ້າໃຈ <a class="text-primary hover:underline font-bold" href="#">ຂໍ້ກຳນົດ ແລະ ເງື່ອນໄຂ</a> ຂອງ KicksVault AI ເປັນທີ່ຮຽບຮ້ອຍແລ້ວ.
+                        {% trans "I have read and understand" %} <a class="text-primary hover:underline font-bold" href="#">{% trans "the terms and conditions" %}</a> {% trans "of KicksVault AI." %}
                     </label>
                 </div>
             </div>
@@ -361,10 +370,10 @@
             <div class="flex items-center justify-between mt-sm pt-md">
                 <a href="{% url 'pos:quotation' order.pk %}" class="px-lg py-md rounded-lg border border-outline-variant bg-surface-container-lowest text-on-surface hover:bg-surface-variant transition-colors font-label-md text-label-md flex items-center gap-xs font-bold">
                     <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-                    ກັບຄືນ
+                    {% trans "Back" %}
                 </a>
                 <button type="submit" id="submit-btn" class="px-xl py-md rounded-lg bg-primary/40 text-on-primary/60 cursor-not-allowed shadow-md transition-all font-label-md text-label-md flex items-center gap-sm font-bold" disabled>
-                    ຢືນຢັນ ແລະ ສົ່ງເອກະສານ
+                    {% trans "Confirm and send document" %}
                     <span class="material-symbols-outlined text-[18px]">send</span>
                 </button>
             </div>
@@ -386,13 +395,23 @@
 
         function resizeCanvas() {
             const container = document.getElementById('signature-container');
-            canvas.width = container.offsetWidth - 16;
-            canvas.height = container.offsetHeight - 16;
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+
+            // Set drawing buffer dimensions with a minimum fallback size
+            canvas.width = w > 50 ? w : 600;
+            canvas.height = h > 50 ? h : 200;
+
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
             ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#22d3ee' : '#0058be';
         }
         window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', resizeCanvas);
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(resizeCanvas, 50);
+            setTimeout(resizeCanvas, 300);
+        });
         resizeCanvas();
 
         function getCoordinates(e) {
@@ -438,9 +457,9 @@
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseleave', stopDrawing);
 
-        canvas.addEventListener('touchstart', startDrawing);
-        canvas.addEventListener('touchmove', draw);
-        canvas.addEventListener('touchend', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing, { passive: false });
 
         function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);

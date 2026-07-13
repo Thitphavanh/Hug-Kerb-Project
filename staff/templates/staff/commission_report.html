@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 {% load humanize i18n %}
 
-{% block title %}ຄອມມິດຊັນພະນັກງານ — Hug ເກີບ AI{% endblock %}
+{% block title %}{% trans "Staff commissions" %} — Hug ເກີບ AI{% endblock %}
 
 {% block content %}
 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
     <div>
-        <h2 class="font-headline-lg text-headline-lg text-on-surface">ພະນັກງານ &amp; ຄອມມິດຊັນ 👥</h2>
-        <p class="text-on-surface-variant text-body-sm mt-1">ຄິດໄລ່ຈາກວຽກທີ່ສົ່ງມອບແລ້ວ (Completed) ຂອງຊ່າງແຕ່ລະຄົນ</p>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">{% trans "Staff and commissions" %} 👥</h2>
+        <p class="text-on-surface-variant text-body-sm mt-1">{% trans "Calculated from each technician's completed jobs." %}</p>
     </div>
     <form method="get" class="flex items-center gap-2">
         <input type="month" name="month" value="{{ month_value }}"
                class="bg-surface-container border border-white/10 rounded-lg px-3 py-2 text-sm text-on-surface">
-        <button class="btn-gradient text-on-primary rounded-lg px-4 py-2 text-sm font-bold">ເບິ່ງ</button>
+        <button class="btn-gradient text-on-primary rounded-lg px-4 py-2 text-sm font-bold">{% trans "View" %}</button>
     </form>
 </div>
 
@@ -20,11 +20,11 @@
     <table class="w-full text-sm">
         <thead>
             <tr class="text-left text-on-surface-variant font-label-caps text-label-caps border-b border-white/10">
-                <th class="px-4 py-3">ຊ່າງ</th>
-                <th class="px-4 py-3 text-right">ວຽກສຳເລັດ</th>
-                <th class="px-4 py-3 text-right">ຍອດຄ່າບໍລິການ</th>
-                <th class="px-4 py-3 text-right">ອັດຕາ (%)</th>
-                <th class="px-4 py-3 text-right">ຄອມມິດຊັນ</th>
+                <th class="px-4 py-3">{% trans "Technician" %}</th>
+                <th class="px-4 py-3 text-right">{% trans "Completed jobs" %}</th>
+                <th class="px-4 py-3 text-right">{% trans "Service total" %}</th>
+                <th class="px-4 py-3 text-right">{% trans "Rate (%)" %}</th>
+                <th class="px-4 py-3 text-right">{% trans "Commission" %}</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-white/5">
@@ -32,7 +32,7 @@
             <tr class="data-row">
                 <td class="px-4 py-3 font-medium text-on-surface">
                     {{ row.user.get_full_name|default:row.user.username }}
-                    {% if row.profile %}<span class="text-on-surface-variant text-xs ml-1">({{ row.profile.get_role_display }})</span>{% endif %}
+                    {% if row.profile %}<span class="text-on-surface-variant text-xs ml-1">({{ row.role_label }})</span>{% endif %}
                 </td>
                 <td class="px-4 py-3 text-right font-data-mono">{{ row.job_count }}</td>
                 <td class="px-4 py-3 text-right font-data-mono">{{ row.base_total|intcomma }}</td>
@@ -48,13 +48,13 @@
             </tr>
             {% endfor %}
             {% empty %}
-            <tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">ຍັງບໍ່ມີວຽກສົ່ງມອບໃນເດືອນນີ້ ຫຼື ຍັງບໍ່ໄດ້ມອບວຽກໃຫ້ຊ່າງ</td></tr>
+            <tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">{% trans "No completed jobs this month, or no jobs have been assigned to a technician." %}</td></tr>
             {% endfor %}
         </tbody>
         {% if rows %}
         <tfoot>
             <tr class="border-t border-white/10 font-bold">
-                <td class="px-4 py-3" colspan="4">ລວມຄອມມິດຊັນທັງໝົດ</td>
+                <td class="px-4 py-3" colspan="4">{% trans "Total commission" %}</td>
                 <td class="px-4 py-3 text-right font-data-mono text-ai-cyan">{{ grand_commission|intcomma }}</td>
             </tr>
         </tfoot>
@@ -63,17 +63,231 @@
 </div>
 
 <div class="glass-card rounded-xl p-5">
-    <h3 class="font-headline-md text-headline-md text-on-surface mb-3">ລາຍຊື່ພະນັກງານ</h3>
+    <div class="flex justify-between items-center mb-3">
+        <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Staff directory" %}</h3>
+        <button onclick="openAddModal()" class="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-on-primary hover:scale-[1.02] active:scale-95 transition-transform shadow-sm cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">add</span>
+            {% if request.LANGUAGE_CODE == 'en' %}Add Staff{% else %}ເພີ່ມພະນັກງານ{% endif %}
+        </button>
+    </div>
     <div class="grid md:grid-cols-3 gap-3">
         {% for p in staff_members %}
-        <div class="bg-surface-container-lowest/60 border border-white/10 rounded-lg px-4 py-3">
-            <p class="font-medium text-on-surface">{{ p.user.get_full_name|default:p.user.username }}</p>
-            <p class="text-xs text-on-surface-variant">{{ p.get_role_display }} · ຄອມມິດຊັນ {{ p.commission_rate }}%
-                {% if not p.is_active %}· <span class="text-status-error">ພັກວຽກ</span>{% endif %}</p>
+        <div class="bg-surface-container-lowest/60 border border-white/10 rounded-lg px-4 py-3 flex justify-between items-center group">
+            <div>
+                <p class="font-medium text-on-surface">
+                    {{ p.user.get_full_name|default:p.user.username }}
+                    <span class="text-[10px] text-on-surface-variant font-normal">({{ p.user.username }})</span>
+                </p>
+                <p class="text-xs text-on-surface-variant">
+                    {{ p.localized_role }} · {% trans "Commission" %} {{ p.commission_rate }}%
+                    {% if not p.is_active %}· <span class="text-status-error">{% trans "Inactive" %}</span>{% endif %}
+                </p>
+                {% if p.phone %}
+                <p class="text-[10px] text-on-surface-variant mt-0.5 flex items-center gap-0.5">
+                    <span class="material-symbols-outlined text-[12px]">phone</span> {{ p.phone }}
+                </p>
+                {% endif %}
+            </div>
+            <div class="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="openEditModal('{{ p.pk }}', '{{ p.user.first_name|escapejs }}', '{{ p.user.last_name|escapejs }}', '{{ p.role }}', '{{ p.phone|escapejs }}', '{{ p.commission_rate }}', {% if p.is_active %}true{% else %}false{% endif %})" class="p-1 hover:text-primary transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">edit</span>
+                </button>
+                {% if p.user != request.user %}
+                <button onclick="openDeleteModal('{{ p.pk }}', '{{ p.user.get_full_name|default:p.user.username|escapejs }}')" class="p-1 hover:text-status-error transition-colors cursor-pointer">
+                    <span class="material-symbols-outlined text-[18px]">delete</span>
+                </button>
+                {% endif %}
+            </div>
         </div>
         {% empty %}
-        <p class="text-on-surface-variant text-sm">ຍັງບໍ່ມີພະນັກງານ — ເພີ່ມໄດ້ທີ່ <a href="/admin/staff/staffprofile/add/" class="text-ai-cyan underline">Admin → ພະນັກງານ</a></p>
+        <p class="text-on-surface-variant text-sm col-span-3 text-center py-6">{% trans "No staff members yet — add them above" %}</p>
         {% endfor %}
     </div>
 </div>
+
+<!-- Add Staff Modal -->
+<div id="add-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-surface-container rounded-xl border border-outline-variant/30 shadow-2xl w-full max-w-md overflow-hidden relative">
+        <div class="px-6 py-4 border-b border-outline-variant/20 bg-surface-bright flex justify-between items-center">
+            <h3 class="font-bold text-lg text-on-surface">{% if request.LANGUAGE_CODE == 'en' %}Add New Staff{% else %}ເພີ່ມພະນັກງານໃໝ່{% endif %}</h3>
+            <button onclick="closeAddModal()" class="text-on-surface-variant hover:text-on-surface cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="post" action="{% url 'staff:add' %}" class="p-6 flex flex-col gap-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">ຊື່ (First Name)</label>
+                    <input type="text" name="first_name" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">ນາມສະກຸນ (Last Name)</label>
+                    <input type="text" name="last_name" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">ຊື່ເຂົ້າໃຊ້ລະບົບ (Username) *</label>
+                <input type="text" name="username" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">ລະຫັດຜ່ານ (Password) *</label>
+                <input type="password" name="password" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">ເບີໂທ (Phone)</label>
+                <input type="text" name="phone" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">ໜ້າທີ່ (Role)</label>
+                    <select name="role" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                        <option value="technician">ຊ່າງຊັກເກີບ (Technician)</option>
+                        <option value="front_desk">ໜ້າຮ້ານ (Front desk)</option>
+                        <option value="manager">ຜູ້ຈັດການ (Manager)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">ຄອມມິດຊັນ (%)</label>
+                    <input type="number" step="0.01" name="commission_rate" value="0" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+            <div class="flex items-center gap-2 mt-2">
+                <input type="checkbox" name="is_active" id="add-is-active" checked class="rounded border-outline-variant bg-surface-container-lowest text-primary focus:ring-primary/20">
+                <label for="add-is-active" class="text-sm text-on-surface select-none cursor-pointer">ເປີດໃຊ້ງານບັນຊີ (Active)</label>
+            </div>
+            <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-outline-variant/20">
+                <button type="button" onclick="closeAddModal()" class="px-4 py-2 rounded-lg border border-outline-variant/50 text-sm font-semibold hover:bg-surface-variant text-on-surface transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-on-primary font-bold text-sm hover:opacity-90 transition-opacity cursor-pointer">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Staff Modal -->
+<div id="edit-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-surface-container rounded-xl border border-outline-variant/30 shadow-2xl w-full max-w-md overflow-hidden relative">
+        <div class="px-6 py-4 border-b border-outline-variant/20 bg-surface-bright flex justify-between items-center">
+            <h3 class="font-bold text-lg text-on-surface">{% if request.LANGUAGE_CODE == 'en' %}Edit Staff Details{% else %}ແກ້ໄຂຂໍ້ມູນພະນັກງານ{% endif %}</h3>
+            <button onclick="closeEditModal()" class="text-on-surface-variant hover:text-on-surface cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="post" id="edit-form" class="p-6 flex flex-col gap-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">ຊື່ (First Name)</label>
+                    <input type="text" name="first_name" id="edit-first-name" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">ນາມສະກຸນ (Last Name)</label>
+                    <input type="text" name="last_name" id="edit-last-name" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">ປ່ຽນລະຫັດຜ່ານ (ໃສ່ເມື່ອຕ້ອງການປ່ຽນໃໝ່)</label>
+                <input type="password" name="password" placeholder="Leave blank to keep current password" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-on-surface-variant mb-1">ເບີໂທ (Phone)</label>
+                <input type="text" name="phone" id="edit-phone" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">ໜ້າທີ່ (Role)</label>
+                    <select name="role" id="edit-role" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                        <option value="technician">ຊ່າງຊັກເກີບ (Technician)</option>
+                        <option value="front_desk">ໜ້າຮ້ານ (Front desk)</option>
+                        <option value="manager">ຜູ້ຈັດການ (Manager)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-on-surface-variant mb-1">ຄອມມິດຊັນ (%)</label>
+                    <input type="number" step="0.01" name="commission_rate" id="edit-commission-rate" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                </div>
+            </div>
+            <div class="flex items-center gap-2 mt-2">
+                <input type="checkbox" name="is_active" id="edit-is-active" class="rounded border-outline-variant bg-surface-container-lowest text-primary focus:ring-primary/20">
+                <label for="edit-is-active" class="text-sm text-on-surface select-none cursor-pointer">ເປີດໃຊ້ງານບັນຊີ (Active)</label>
+            </div>
+            <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-outline-variant/20">
+                <button type="button" onclick="closeEditModal()" class="px-4 py-2 rounded-lg border border-outline-variant/50 text-sm font-semibold hover:bg-surface-variant text-on-surface transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-primary text-on-primary font-bold text-sm hover:opacity-90 transition-opacity cursor-pointer">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Staff Confirmation Modal -->
+<div id="delete-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-surface-container rounded-xl border border-outline-variant/30 shadow-2xl w-full max-w-sm overflow-hidden relative">
+        <div class="px-6 py-4 border-b border-outline-variant/20 bg-surface-bright flex justify-between items-center">
+            <h3 class="font-bold text-lg text-status-error flex items-center gap-1">
+                <span class="material-symbols-outlined text-[20px]">warning</span>
+                ຢືນຢັນການລົບພະນັກງານ
+            </h3>
+            <button onclick="closeDeleteModal()" class="text-on-surface-variant hover:text-on-surface cursor-pointer">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="post" id="delete-form" class="p-6 flex flex-col gap-4">
+            {% csrf_token %}
+            <p class="text-sm text-on-surface-variant">
+                ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລົບພະນັກງານ <strong id="delete-staff-name" class="text-on-surface"></strong> ອອກຈາກລະບົບ?
+            </p>
+            <div class="flex justify-end gap-2 mt-4 pt-4 border-t border-outline-variant/20">
+                <button type="button" onclick="closeDeleteModal()" class="px-4 py-2 rounded-lg border border-outline-variant/50 text-sm font-semibold hover:bg-surface-variant text-on-surface transition-colors cursor-pointer">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-status-error text-on-error font-bold text-sm hover:opacity-90 transition-opacity cursor-pointer">Delete</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAddModal() {
+        const modal = document.getElementById('add-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+    function closeAddModal() {
+        const modal = document.getElementById('add-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    function openEditModal(pk, firstName, lastName, role, phone, commissionRate, isActive) {
+        const form = document.getElementById('edit-form');
+        form.action = "{% url 'staff:edit' 0 %}".replace('0', pk);
+        
+        document.getElementById('edit-first-name').value = firstName;
+        document.getElementById('edit-last-name').value = lastName;
+        document.getElementById('edit-role').value = role;
+        document.getElementById('edit-phone').value = phone;
+        document.getElementById('edit-commission-rate').value = commissionRate;
+        document.getElementById('edit-is-active').checked = isActive;
+        
+        const modal = document.getElementById('edit-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+    function closeEditModal() {
+        const modal = document.getElementById('edit-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    function openDeleteModal(pk, name) {
+        const form = document.getElementById('delete-form');
+        form.action = "{% url 'staff:delete' 0 %}".replace('0', pk);
+        document.getElementById('delete-staff-name').textContent = name;
+        
+        const modal = document.getElementById('delete-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+    function closeDeleteModal() {
+        const modal = document.getElementById('delete-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+</script>
 {% endblock %}

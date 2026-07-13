@@ -60,3 +60,21 @@ class TagAndTicketViewTest(TestCase):
         url = reverse("asset_intake:social_image", args=[self.asset.pk])
         resp = self.client.get(url)
         self.assertEqual(resp.status_code, 302)
+
+    def test_intake_list_switches_between_english_and_lao(self):
+        self.client.force_login(self.user)
+        url = reverse("asset_intake:list")
+
+        self.client.post(reverse("set_language"), {"language": "en", "next": url})
+        english = self.client.get(url)
+        self.assertContains(english, "AI inspection and valuation system")
+        self.assertContains(english, "New intake")
+        self.assertContains(english, "Ticket number")
+        self.assertContains(english, "Received")
+
+        self.client.post(reverse("set_language"), {"language": "lo", "next": url})
+        lao = self.client.get(url)
+        self.assertContains(lao, "ລະບົບກວດສອບ ແລະ ປະເມີນລາຄາ AI")
+        self.assertContains(lao, "ຮັບເຄື່ອງໃໝ່")
+        self.assertContains(lao, "ເລກໃບຮັບ")
+        self.assertContains(lao, "ຮັບເຂົ້າ")

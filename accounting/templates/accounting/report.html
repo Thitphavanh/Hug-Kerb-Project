@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load humanize i18n %}
+
+{% block title %}{% trans "Financial report" %} — Hug ເກີບ AI{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+    <div class="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-ai-cyan">{% trans "Profit & cashflow" %}</p>
+            <h1 class="mt-1 text-3xl font-bold">{% trans "Financial report" %}</h1>
+            <p class="mt-1 text-on-surface-variant">{% trans "Currencies are reported separately without automatic exchange-rate conversion." %}</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <!-- Monthly Cash Handover Dropdown -->
+            <div class="relative inline-block text-left">
+                <button type="button"
+                    onclick="toggleDropdown('dropdown-monthly')"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-ai-purple px-4 py-3 font-bold text-on-primary">
+                    <span class="material-symbols-outlined text-sm">description</span>
+                    {% trans "ບົດສະຫຼູບການເງິນປະຈຳເດືອນ" %}
+                    <span class="material-symbols-outlined text-xs">keyboard_arrow_down</span>
+                </button>
+                <div id="dropdown-monthly" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-surface-container border border-outline-variant/30 shadow-xl z-50">
+                    <div class="py-1">
+                        <a href="{% url 'accounting:monthly_summary_financial' %}?month={{ start_date|date:'m' }}&year={{ start_date|date:'Y' }}&currency=ALL" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">
+                            {% trans "ທັງໝົດ (All)" %}
+                        </a>
+                        <a href="{% url 'accounting:monthly_summary_financial' %}?month={{ start_date|date:'m' }}&year={{ start_date|date:'Y' }}&currency=LAK" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">
+                            LAK (ກີບ)
+                        </a>
+                        <a href="{% url 'accounting:monthly_summary_financial' %}?month={{ start_date|date:'m' }}&year={{ start_date|date:'Y' }}&currency=THB" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">
+                            THB (ບາດ)
+                        </a>
+                        <a href="{% url 'accounting:monthly_summary_financial' %}?month={{ start_date|date:'m' }}&year={{ start_date|date:'Y' }}&currency=USD" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">
+                            USD (ໂດລາ)
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Yearly Cash Handover Dropdown -->
+            <div class="relative inline-block text-left">
+                <button type="button"
+                    onclick="toggleDropdown('dropdown-yearly')"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-surface-container border border-outline-variant/30 px-4 py-3 font-bold text-on-surface">
+                    <span class="material-symbols-outlined text-sm">description</span>
+                    {% trans "ບົດສະຫຼູບການເງິນປະຈຳປີ" %}
+                    <span class="material-symbols-outlined text-xs">keyboard_arrow_down</span>
+                </button>
+                <div id="dropdown-yearly" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-surface-container border border-outline-variant/30 shadow-xl z-50">
+                    <div class="py-1">
+                        <a href="{% url 'accounting:yearly_summary_financial' %}?year={{ start_date|date:'Y' }}&currency=ALL" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">
+                            {% trans "ທັງໝົດ (All)" %}
+                        </a>
+                        <a href="{% url 'accounting:yearly_summary_financial' %}?year={{ start_date|date:'Y' }}&currency=LAK" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">
+                            LAK (ກີບ)
+                        </a>
+                        <a href="{% url 'accounting:yearly_summary_financial' %}?year={{ start_date|date:'Y' }}&currency=THB" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">
+                            THB (ບາດ)
+                        </a>
+                        <a href="{% url 'accounting:yearly_summary_financial' %}?year={{ start_date|date:'Y' }}&currency=USD" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">
+                            USD (ໂດລາ)
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <a href="{% url 'accounting:export_csv' %}?start={{ start_date }}&end={{ end_date }}&group={{ grouping }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-ai-cyan px-5 py-3 font-bold text-on-primary">
+                <span class="material-symbols-outlined">download</span> {% trans "Export CSV" %}
+            </a>
+        </div>
+    </div>
+    {% include "accounting/_nav.html" %}
+    <form method="get" class="glass-card grid grid-cols-1 items-end gap-3 rounded-xl p-4 sm:grid-cols-4">
+        <label><span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "Start date" %}</span><input type="date" name="start" value="{{ start_date|date:'Y-m-d' }}" class="w-full rounded-lg border-outline-variant/40 bg-surface-container-lowest"></label>
+        <label><span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "End date" %}</span><input type="date" name="end" value="{{ end_date|date:'Y-m-d' }}" class="w-full rounded-lg border-outline-variant/40 bg-surface-container-lowest"></label>
+        <label><span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "Group by" %}</span><select name="group" class="w-full rounded-lg border-outline-variant/40 bg-surface-container-lowest"><option value="daily" {% if grouping == 'daily' %}selected{% endif %}>{% trans "Daily" %}</option><option value="monthly" {% if grouping == 'monthly' %}selected{% endif %}>{% trans "Monthly" %}</option><option value="yearly" {% if grouping == 'yearly' %}selected{% endif %}>{% trans "Yearly" %}</option></select></label>
+        <button class="rounded-lg bg-ai-purple px-5 py-3 font-bold text-white">{% trans "Generate report" %}</button>
+    </form>
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        {% for currency, stats in totals.items %}<article class="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5"><div class="flex justify-between"><span class="rounded-lg bg-ai-cyan/10 px-3 py-1 text-xs font-bold text-ai-cyan">{{ currency }}</span><span class="material-symbols-outlined text-on-surface-variant">payments</span></div><p class="mt-4 text-xs text-on-surface-variant">{% trans "Net balance" %}</p><h2 class="font-data-mono text-3xl font-bold {% if stats.balance < 0 %}text-status-error{% else %}text-on-surface{% endif %}">{{ stats.balance|floatformat:0|intcomma }}</h2><div class="mt-4 grid grid-cols-2 gap-2 text-xs"><div class="rounded-lg bg-emerald-500/10 p-2 text-emerald-500">{% trans "In" %}<br><b class="font-data-mono">{{ stats.income|floatformat:0|intcomma }}</b></div><div class="rounded-lg bg-status-error/10 p-2 text-status-error">{% trans "Out" %}<br><b class="font-data-mono">{{ stats.expense|floatformat:0|intcomma }}</b></div></div></article>{% endfor %}
+    </div>
+    <article class="overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest">
+        <div class="border-b border-outline-variant/20 px-5 py-4"><h2 class="font-bold">{% trans "Cashflow breakdown" %}</h2><p class="text-xs text-on-surface-variant">{{ start_date|date:"d/m/Y" }} – {{ end_date|date:"d/m/Y" }}</p></div>
+        <div class="overflow-x-auto"><table class="w-full min-w-[700px] text-sm"><thead class="bg-surface-container-low text-left text-xs uppercase tracking-wider text-on-surface-variant"><tr><th class="px-5 py-3">{% trans "Period" %}</th><th class="px-4 py-3">{% trans "Currency" %}</th><th class="px-4 py-3">{% trans "Cashflow" %}</th><th class="px-4 py-3 text-right">{% trans "Income" %}</th><th class="px-4 py-3 text-right">{% trans "Expense" %}</th><th class="px-5 py-3 text-right">{% trans "Net" %}</th></tr></thead><tbody class="divide-y divide-outline-variant/15">{% for row in rows %}<tr class="hover:bg-surface-container-low"><td class="px-5 py-4 font-bold">{% if grouping == 'yearly' %}{{ row.period|date:"Y" }}{% elif grouping == 'monthly' %}{{ row.period|date:"m/Y" }}{% else %}{{ row.period|date:"d/m/Y" }}{% endif %}</td><td class="px-4 py-4"><span class="rounded bg-surface-container px-2 py-1 text-xs font-bold">{{ row.currency }}</span></td><td class="w-60 px-4 py-4"><div class="space-y-1"><div class="h-1.5 rounded-full bg-surface-container"><div class="h-full rounded-full bg-emerald-500" style="width:{{ row.income_percent }}%"></div></div><div class="h-1.5 rounded-full bg-surface-container"><div class="h-full rounded-full bg-status-error" style="width:{{ row.expense_percent }}%"></div></div></div></td><td class="px-4 py-4 text-right font-data-mono text-emerald-500">{{ row.income|floatformat:0|intcomma }}</td><td class="px-4 py-4 text-right font-data-mono text-status-error">{{ row.expense|floatformat:0|intcomma }}</td><td class="px-5 py-4 text-right font-data-mono font-bold {% if row.balance < 0 %}text-status-error{% endif %}">{{ row.balance|floatformat:0|intcomma }}</td></tr>{% empty %}<tr><td colspan="6" class="py-14 text-center text-on-surface-variant">{% trans "No data for this period." %}</td></tr>{% endfor %}</tbody></table></div>
+    </article>
+</section>
+
+<script>
+function toggleDropdown(id) {
+    const el = document.getElementById(id);
+    const hidden = el.classList.contains('hidden');
+    document.querySelectorAll('[id^="dropdown-"]').forEach(menu => menu.classList.add('hidden'));
+    if (hidden) {
+        el.classList.remove('hidden');
+    }
+}
+window.addEventListener('click', function(e) {
+    if (!e.target.closest('.relative')) {
+        document.querySelectorAll('[id^="dropdown-"]').forEach(menu => menu.classList.add('hidden'));
+    }
+});
+</script>
+{% endblock %}

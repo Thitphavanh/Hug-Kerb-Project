@@ -5,6 +5,9 @@
 {% block title %}{% trans "Point of Sale — Hug ເກີບ AI" %}{% endblock %}
 
 {% block content %}
+{% trans "No matching customers found." as js_no_customer_results %}
+{% trans "Existing customer" as js_existing_customer %}
+{% trans "New CRM Entry" as js_new_customer %}
 <style>
     /* Ambient Background Pattern */
     .bg-pattern {
@@ -23,6 +26,70 @@
         background: rgba(15, 23, 42, 0.7);
         border: 1px solid rgba(255, 255, 255, 0.08);
     }
+
+    /* Theme-aligned native controls: consistent in light and dark mode. */
+    .theme-select,
+    .theme-input {
+        width: 100%;
+        min-height: 46px;
+        border: 1px solid rgb(var(--color-outline-variant) / 0.65);
+        border-radius: 12px;
+        background-color: rgb(var(--color-surface-container-lowest));
+        color: rgb(var(--color-on-surface));
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+        box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    }
+    .theme-input {
+        padding: 0.7rem 0.9rem;
+    }
+    .theme-select {
+        appearance: none;
+        -webkit-appearance: none;
+        cursor: pointer;
+        padding: 0.7rem 2.75rem 0.7rem 0.9rem;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230058be' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 0.8rem center;
+        background-size: 1.15rem;
+    }
+    .theme-select:hover,
+    .theme-input:hover {
+        border-color: rgb(0 88 190 / 0.65);
+        background-color: rgb(var(--color-surface-container-low));
+    }
+    .theme-select:focus,
+    .theme-input:focus {
+        outline: none;
+        border-color: #0058be;
+        box-shadow: 0 0 0 3px rgb(0 88 190 / 0.14);
+    }
+    .theme-select option,
+    .theme-select optgroup {
+        background: rgb(var(--color-surface-container-lowest));
+        color: rgb(var(--color-on-surface));
+    }
+    .theme-select-with-swatch {
+        padding-left: 2.75rem;
+    }
+    .color-swatch {
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        z-index: 1;
+        width: 1rem;
+        height: 1rem;
+        transform: translateY(-50%);
+        border: 2px solid rgb(var(--color-surface-container-lowest));
+        border-radius: 9999px;
+        box-shadow: 0 0 0 1px rgb(var(--color-outline-variant));
+        pointer-events: none;
+    }
+    .dark .theme-select {
+        color-scheme: dark;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    }
 </style>
 
 <!-- Main Workspace -->
@@ -33,11 +100,7 @@
             <h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-1 font-bold">{% trans "Point of Sale" %}</h1>
             <p class="font-body-md text-on-surface-variant">{% trans "Process new service orders and manage intake." %}</p>
         </div>
-        <div class="flex items-center gap-3 w-full md:w-auto">
-            <div class="relative w-full md:w-64">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-                <input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all shadow-sm" placeholder="{% trans 'Search customer (Phone, Name)...' %}" type="text"/>
-            </div>
+        <div class="flex items-center gap-3 md:w-auto">
             <button type="button" onclick="openScanModal()" class="bg-surface-container-highest text-on-surface p-2 rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex-shrink-0" title="{% trans 'Scan Barcode' %}">
                 <span class="material-symbols-outlined">barcode_scanner</span>
             </button>
@@ -57,16 +120,26 @@
                         <span class="material-symbols-outlined text-primary">person</span>
                         <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Customer Details" %}</h2>
                     </div>
-                    <span class="bg-secondary-container text-on-secondary-container font-bold text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider">{% trans "New CRM Entry" %}</span>
+                    <span id="customer-entry-badge" class="bg-secondary-container text-on-secondary-container font-bold text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider">{% trans "New CRM Entry" %}</span>
                 </div>
                 <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="hidden" name="customer_id" id="customer-id" value="">
+                    <div class="relative md:col-span-2">
+                        <label class="block font-semibold text-xs text-on-surface-variant mb-1" for="customer-search">{% trans "Find an existing customer" %}</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+                            <input id="customer-search" class="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="{% trans 'Search existing customer by name or phone...' %}" type="search" autocomplete="off" aria-autocomplete="list" aria-controls="customer-search-results" aria-expanded="false"/>
+                            <div id="customer-search-results" class="absolute left-0 right-0 top-full z-50 mt-2 hidden overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl" role="listbox"></div>
+                        </div>
+                        <p class="mt-1.5 text-xs text-on-surface-variant">{% trans "Type a Lao name or part of a phone number, then select a customer." %}</p>
+                    </div>
                     <div>
                         <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Full Name" %}</label>
-                        <input class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" name="customer_name" type="text" placeholder="{% trans 'e.g. John Doe' %}" required/>
+                        <input id="customer-name" class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" name="customer_name" type="text" placeholder="{% trans 'e.g. John Doe' %}" autocomplete="name" required/>
                     </div>
                     <div>
                         <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Phone Number" %}</label>
-                        <input class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" name="customer_phone" type="tel" placeholder="e.g. 20XXXXXXXX" required/>
+                        <input id="customer-phone" class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" name="customer_phone" type="tel" placeholder="e.g. 20XXXXXXXX" autocomplete="tel" required/>
                     </div>
                 </div>
             </div>
@@ -90,10 +163,10 @@
                             <span class="material-symbols-outlined text-[20px]">close</span>
                         </button>
                         <h3 class="font-bold text-xs text-on-surface mb-4">{% trans "Item #1 Details" %}</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                             <div>
                                 <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Brand" %}</label>
-                                <select class="w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" id="brand-select-0" name="brand_0">
+                                <select class="theme-select" id="brand-select-0" name="brand_0">
                                     <option>Nike</option>
                                     <option>Adidas</option>
                                     <option>Jordan</option>
@@ -102,12 +175,78 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Model / Colorway" %}</label>
-                                <input class="w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary model-input" id="model-input-0" name="model_name_0" placeholder="e.g. Air Force 1 White" type="text" required/>
+                                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Model" %}</label>
+                                <input class="theme-input model-input" id="model-input-0" name="model_name_0" placeholder="e.g. Air Force 1" type="text" required/>
                             </div>
                             <div>
-                                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Size (US)" %}</label>
-                                <input class="w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" name="size_0" placeholder="e.g. 10.5" type="text" required/>
+                                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Color" %}</label>
+                                <div class="relative">
+                                    <span class="color-swatch" id="color-swatch-0" aria-hidden="true"></span>
+                                    <select class="theme-select theme-select-with-swatch" id="color-select-0" name="color_0">
+                                        <option value="Black">Black (ສີດຳ)</option>
+                                        <option value="White">White (ສີຂາວ)</option>
+                                        <option value="Grey">Grey (ສີເທົາ)</option>
+                                        <option value="Blue">Blue (ສີຟ້າ/ນ້ຳເງິນ)</option>
+                                        <option value="Red">Red (ສີແດງ)</option>
+                                        <option value="Green">Green (ສີຂຽວ)</option>
+                                        <option value="Yellow">Yellow (ສີເຫຼືອງ)</option>
+                                        <option value="Pink">Pink (ສີບົວ)</option>
+                                        <option value="Brown">Brown (ສີນ້ຳຕານ)</option>
+                                        <option value="Cream">Cream (ສີຄຣີມ)</option>
+                                        <option value="Multicolor">Multicolor (ຫຼາກຫຼາຍສີ)</option>
+                                        <option value="Other">Other (ອື່ນໆ)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Size (US/EU)" %}</label>
+                                <select class="theme-select" id="size-select-0" name="size_0">
+                                    <optgroup label="{% trans 'EU sizes' %}">
+                                        <option value="36">36</option>
+                                        <option value="36.5">36.5</option>
+                                        <option value="37">37</option>
+                                        <option value="37.5">37.5</option>
+                                        <option value="38">38</option>
+                                        <option value="38.5">38.5</option>
+                                        <option value="39">39</option>
+                                        <option value="39.5">39.5</option>
+                                        <option value="40">40</option>
+                                        <option value="40.5">40.5</option>
+                                        <option value="41">41</option>
+                                        <option value="41.5">41.5</option>
+                                        <option value="42">42</option>
+                                        <option value="42.5">42.5</option>
+                                        <option value="43" selected>43</option>
+                                        <option value="43.5">43.5</option>
+                                        <option value="44">44</option>
+                                        <option value="44.5">44.5</option>
+                                        <option value="45">45</option>
+                                        <option value="45.5">45.5</option>
+                                        <option value="46">46</option>
+                                        <option value="47">47</option>
+                                        <option value="48">48</option>
+                                    </optgroup>
+                                    <optgroup label="{% trans 'US sizes' %}">
+                                        <option value="US 4">US 4</option>
+                                        <option value="US 4.5">US 4.5</option>
+                                        <option value="US 5">US 5</option>
+                                        <option value="US 5.5">US 5.5</option>
+                                        <option value="US 6">US 6</option>
+                                        <option value="US 6.5">US 6.5</option>
+                                        <option value="US 7">US 7</option>
+                                        <option value="US 7.5">US 7.5</option>
+                                        <option value="US 8">US 8</option>
+                                        <option value="US 8.5">US 8.5</option>
+                                        <option value="US 9">US 9</option>
+                                        <option value="US 9.5">US 9.5</option>
+                                        <option value="US 10">US 10</option>
+                                        <option value="US 10.5">US 10.5</option>
+                                        <option value="US 11">US 11</option>
+                                        <option value="US 11.5">US 11.5</option>
+                                        <option value="US 12">US 12</option>
+                                        <option value="US 13">US 13</option>
+                                    </optgroup>
+                                </select>
                             </div>
                         </div>
                         <div class="mb-4">
@@ -115,9 +254,9 @@
                             <div class="flex flex-wrap gap-2">
                                 {% for service in services %}
                                 <label class="cursor-pointer">
-                                    <input class="peer sr-only service-radio-0" name="service_0" type="radio" value="{{ service.pk }}" data-name="{{ service.name }}" data-price="{{ service.price }}" {% if forloop.first %}checked{% endif %} onchange="updateCart()"/>
+                                    <input class="peer sr-only service-radio-0" name="service_0" type="radio" value="{{ service.pk }}" data-name="{{ service.name|service_name }}" data-price="{{ service.price }}" {% if forloop.first %}checked{% endif %} onchange="updateCart()"/>
                                     <div class="px-4 py-2 rounded-lg border border-outline-variant/50 text-sm text-on-surface peer-checked:bg-primary-container peer-checked:border-primary peer-checked:text-on-primary-container hover:bg-surface-container/60 transition-all font-semibold">
-                                        {{ service.name }} (₭ {{ service.price|money }})
+                                        {{ service.name|service_name }} (₭ {{ service.price|money }})
                                     </div>
                                 </label>
                                 {% endfor %}
@@ -224,6 +363,42 @@
     }
 
     let maxIdx = 0;
+
+    const COLOR_SWATCHES = {
+        Black: '#111827',
+        White: '#f8fafc',
+        Grey: '#94a3b8',
+        Blue: '#2563eb',
+        Red: '#ef4444',
+        Green: '#22c55e',
+        Yellow: '#facc15',
+        Pink: '#ec4899',
+        Brown: '#92400e',
+        Cream: '#f5e6c8',
+        Multicolor: 'linear-gradient(135deg, #ef4444, #facc15, #22c55e, #3b82f6, #a855f7)',
+        Other: '#64748b'
+    };
+
+    function updateColorSwatch(idx) {
+        const select = document.getElementById(`color-select-${idx}`);
+        const swatch = document.getElementById(`color-swatch-${idx}`);
+        if (!select || !swatch) return;
+        const color = COLOR_SWATCHES[select.value] || COLOR_SWATCHES.Other;
+        swatch.style.background = color;
+    }
+
+    function setMatchingSelectValue(select, value) {
+        if (!select || !value) return false;
+        const wanted = String(value).trim().toLowerCase();
+        const withoutSystem = wanted.replace(/^(us|eu)\s+/, '');
+        const option = [...select.options].find((item) => {
+            const optionValue = item.value.trim().toLowerCase();
+            return optionValue === wanted || optionValue.replace(/^(us|eu)\s+/, '') === withoutSystem;
+        });
+        if (!option) return false;
+        select.value = option.value;
+        return true;
+    }
     
     function addItem() {
         maxIdx++;
@@ -236,10 +411,10 @@
                     <span class="material-symbols-outlined text-[20px]">close</span>
                 </button>
                 <h3 class="font-bold text-xs text-on-surface mb-4">{% trans "Item" %} #${maxIdx + 1} {% trans "Details" %}</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                     <div>
                         <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Brand" %}</label>
-                        <select class="w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" id="brand-select-${maxIdx}" name="brand_${maxIdx}">
+                        <select class="theme-select" id="brand-select-${maxIdx}" name="brand_${maxIdx}">
                             <option>Nike</option>
                             <option>Adidas</option>
                             <option>Jordan</option>
@@ -248,12 +423,78 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Model / Colorway" %}</label>
-                        <input class="w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary model-input" id="model-input-${maxIdx}" name="model_name_${maxIdx}" placeholder="e.g. Air Force 1 White" type="text" required/>
+                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Model" %}</label>
+                        <input class="theme-input model-input" id="model-input-${maxIdx}" name="model_name_${maxIdx}" placeholder="e.g. Air Force 1" type="text" required/>
                     </div>
                     <div>
-                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Size (US)" %}</label>
-                        <input class="w-full px-4 py-2 bg-surface-container-lowest border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" name="size_${maxIdx}" placeholder="e.g. 10.5" type="text" required/>
+                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Color" %}</label>
+                        <div class="relative">
+                        <span class="color-swatch" id="color-swatch-${maxIdx}" aria-hidden="true"></span>
+                        <select class="theme-select theme-select-with-swatch" id="color-select-${maxIdx}" name="color_${maxIdx}">
+                            <option value="Black">Black (ສີດຳ)</option>
+                            <option value="White">White (ສີຂາວ)</option>
+                            <option value="Grey">Grey (ສີເທົາ)</option>
+                            <option value="Blue">Blue (ສີຟ້າ/ນ້ຳເງິນ)</option>
+                            <option value="Red">Red (ສີແດງ)</option>
+                            <option value="Green">Green (ສີຂຽວ)</option>
+                            <option value="Yellow">Yellow (ສີເຫຼືອງ)</option>
+                            <option value="Pink">Pink (ສີບົວ)</option>
+                            <option value="Brown">Brown (ສີນ້ຳຕານ)</option>
+                            <option value="Cream">Cream (ສີຄຣີມ)</option>
+                            <option value="Multicolor">Multicolor (ຫຼາກຫຼາຍສີ)</option>
+                            <option value="Other">Other (ອື່ນໆ)</option>
+                        </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Size (US/EU)" %}</label>
+                        <select class="theme-select" id="size-select-${maxIdx}" name="size_${maxIdx}">
+                            <optgroup label="{% trans 'EU sizes' %}">
+                                <option value="36">36</option>
+                                <option value="36.5">36.5</option>
+                                <option value="37">37</option>
+                                <option value="37.5">37.5</option>
+                                <option value="38">38</option>
+                                <option value="38.5">38.5</option>
+                                <option value="39">39</option>
+                                <option value="39.5">39.5</option>
+                                <option value="40">40</option>
+                                <option value="40.5">40.5</option>
+                                <option value="41">41</option>
+                                <option value="41.5">41.5</option>
+                                <option value="42">42</option>
+                                <option value="42.5">42.5</option>
+                                <option value="43" selected>43</option>
+                                <option value="43.5">43.5</option>
+                                <option value="44">44</option>
+                                <option value="44.5">44.5</option>
+                                <option value="45">45</option>
+                                <option value="45.5">45.5</option>
+                                <option value="46">46</option>
+                                <option value="47">47</option>
+                                <option value="48">48</option>
+                            </optgroup>
+                            <optgroup label="{% trans 'US sizes' %}">
+                                <option value="US 4">US 4</option>
+                                <option value="US 4.5">US 4.5</option>
+                                <option value="US 5">US 5</option>
+                                <option value="US 5.5">US 5.5</option>
+                                <option value="US 6">US 6</option>
+                                <option value="US 6.5">US 6.5</option>
+                                <option value="US 7">US 7</option>
+                                <option value="US 7.5">US 7.5</option>
+                                <option value="US 8">US 8</option>
+                                <option value="US 8.5">US 8.5</option>
+                                <option value="US 9">US 9</option>
+                                <option value="US 9.5">US 9.5</option>
+                                <option value="US 10">US 10</option>
+                                <option value="US 10.5">US 10.5</option>
+                                <option value="US 11">US 11</option>
+                                <option value="US 11.5">US 11.5</option>
+                                <option value="US 12">US 12</option>
+                                <option value="US 13">US 13</option>
+                            </optgroup>
+                        </select>
                     </div>
                 </div>
                 <div class="mb-4">
@@ -261,9 +502,9 @@
                     <div class="flex flex-wrap gap-2">
                         {% for service in services %}
                         <label class="cursor-pointer">
-                            <input class="peer sr-only service-radio-${maxIdx}" name="service_${maxIdx}" type="radio" value="{{ service.pk }}" data-name="{{ service.name }}" data-price="{{ service.price }}" {% if forloop.first %}checked{% endif %} onchange="updateCart()"/>
+                            <input class="peer sr-only service-radio-${maxIdx}" name="service_${maxIdx}" type="radio" value="{{ service.pk }}" data-name="{{ service.name|service_name }}" data-price="{{ service.price }}" {% if forloop.first %}checked{% endif %} onchange="updateCart()"/>
                             <div class="px-4 py-2 rounded-lg border border-outline-variant/50 text-sm text-on-surface peer-checked:bg-primary-container peer-checked:border-primary peer-checked:text-on-primary-container hover:bg-surface-container/60 transition-all font-semibold">
-                                {{ service.name }} (₭ {{ service.price|money }})
+                                {{ service.name|service_name }} (₭ {{ service.price|money }})
                             </div>
                         </label>
                         {% endfor %}
@@ -281,7 +522,13 @@
         // Add event listeners to update cart on change
         document.getElementById(`brand-select-${maxIdx}`).addEventListener('change', updateCart);
         document.getElementById(`model-input-${maxIdx}`).addEventListener('input', updateCart);
-        
+        document.getElementById(`color-select-${maxIdx}`).addEventListener('change', () => {
+            updateColorSwatch(maxIdx);
+            updateCart();
+        });
+        document.getElementById(`size-select-${maxIdx}`).addEventListener('change', updateCart);
+
+        updateColorSwatch(maxIdx);
         updateCart();
     }
     
@@ -315,11 +562,17 @@
         indices.forEach(idx => {
             const brandSelect = document.getElementById(`brand-select-${idx}`);
             const modelInput = document.getElementById(`model-input-${idx}`);
-            
+            const colorSelect = document.getElementById(`color-select-${idx}`);
+            const sizeSelect = document.getElementById(`size-select-${idx}`);
+
             const brandName = brandSelect ? brandSelect.value : 'Sneaker';
             const modelName = (modelInput && modelInput.value.trim()) ? modelInput.value.trim() : 'Item';
-            
-            const selectedRadio = document.querySelector(idx === '0' ? `.service-radio:checked` : `.service-radio-${idx}:checked`);
+            const colorVal = colorSelect ? colorSelect.value : '';
+            const sizeVal = sizeSelect ? sizeSelect.value : '';
+
+            const detailStr = `${brandName} ${modelName}` + (colorVal ? ` (${colorVal})` : '') + (sizeVal ? ` [Size: ${sizeVal}]` : '');
+
+            const selectedRadio = document.querySelector(`.service-radio-${idx}:checked`);
             if (selectedRadio) {
                 const serviceName = selectedRadio.getAttribute('data-name');
                 const servicePrice = parseFloat(selectedRadio.getAttribute('data-price')) || 0;
@@ -328,7 +581,7 @@
                 cartHtml += `
                     <div class="flex justify-between items-start border-b border-outline-variant/10 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
                         <div>
-                            <div class="font-bold text-sm text-on-surface">${brandName} ${modelName}</div>
+                            <div class="font-bold text-sm text-on-surface">${detailStr}</div>
                             <div class="text-xs text-on-surface-variant">${serviceName}</div>
                         </div>
                         <div class="font-bold text-sm text-on-surface">${formatCurrency(servicePrice)}</div>
@@ -350,9 +603,130 @@
 
     document.getElementById('brand-select-0').addEventListener('change', updateCart);
     document.getElementById('model-input-0').addEventListener('input', updateCart);
+    document.getElementById('color-select-0').addEventListener('change', () => {
+        updateColorSwatch(0);
+        updateCart();
+    });
+    document.getElementById('size-select-0').addEventListener('change', updateCart);
 
     // Initial run
+    updateColorSwatch(0);
     updateCart();
+
+    // Existing customer autocomplete (Lao/English name or partial phone number)
+    const CUSTOMER_SEARCH_URL = "{% url 'pos:customer_search' %}";
+    const customerSearchInput = document.getElementById('customer-search');
+    const customerResults = document.getElementById('customer-search-results');
+    const customerIdInput = document.getElementById('customer-id');
+    const customerNameInput = document.getElementById('customer-name');
+    const customerPhoneInput = document.getElementById('customer-phone');
+    const customerEntryBadge = document.getElementById('customer-entry-badge');
+    let customerSearchTimer = null;
+    let customerSearchRequest = 0;
+
+    function setCustomerBadge(isExisting) {
+        customerEntryBadge.textContent = isExisting
+            ? '{{ js_existing_customer|escapejs }}'
+            : '{{ js_new_customer|escapejs }}';
+    }
+
+    function hideCustomerResults() {
+        customerResults.classList.add('hidden');
+        customerSearchInput.setAttribute('aria-expanded', 'false');
+    }
+
+    function clearSelectedCustomer(clearSearch = false) {
+        customerIdInput.value = '';
+        setCustomerBadge(false);
+        if (clearSearch) customerSearchInput.value = '';
+    }
+
+    function applyCustomerSelection(customer) {
+        customerIdInput.value = customer.id || '';
+        customerNameInput.value = customer.name || '';
+        customerPhoneInput.value = customer.phone || '';
+        customerSearchInput.value = [customer.name, customer.phone].filter(Boolean).join(' · ');
+        setCustomerBadge(Boolean(customer.id));
+        hideCustomerResults();
+    }
+
+    function renderCustomerResults(customers) {
+        customerResults.replaceChildren();
+        if (!customers.length) {
+            const empty = document.createElement('div');
+            empty.className = 'px-4 py-3 text-xs text-on-surface-variant';
+            empty.textContent = '{{ js_no_customer_results|escapejs }}';
+            customerResults.appendChild(empty);
+        } else {
+            customers.forEach((customer) => {
+                const option = document.createElement('button');
+                option.type = 'button';
+                option.className = 'flex w-full items-center justify-between gap-3 border-b border-outline-variant/30 px-4 py-3 text-left last:border-0 hover:bg-surface-container-low focus:bg-surface-container-low focus:outline-none';
+                option.setAttribute('role', 'option');
+
+                const name = document.createElement('span');
+                name.className = 'truncate text-sm font-bold text-on-surface';
+                name.textContent = customer.name;
+
+                const phone = document.createElement('span');
+                phone.className = 'shrink-0 text-xs text-on-surface-variant';
+                phone.textContent = customer.phone;
+
+                option.append(name, phone);
+                option.addEventListener('click', () => applyCustomerSelection(customer));
+                customerResults.appendChild(option);
+            });
+        }
+        customerResults.classList.remove('hidden');
+        customerSearchInput.setAttribute('aria-expanded', 'true');
+    }
+
+    async function searchCustomers(query) {
+        const requestId = ++customerSearchRequest;
+        try {
+            const response = await fetch(CUSTOMER_SEARCH_URL + '?q=' + encodeURIComponent(query), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (!response.ok) throw new Error('Customer search failed');
+            const data = await response.json();
+            if (requestId === customerSearchRequest) renderCustomerResults(data.results || []);
+        } catch (error) {
+            if (requestId === customerSearchRequest) hideCustomerResults();
+        }
+    }
+
+    customerSearchInput.addEventListener('input', function () {
+        clearTimeout(customerSearchTimer);
+        clearSelectedCustomer(false);
+        const query = this.value.trim();
+        if (!query) {
+            hideCustomerResults();
+            return;
+        }
+        customerSearchTimer = setTimeout(() => searchCustomers(query), 180);
+    });
+
+    customerSearchInput.addEventListener('keydown', function (event) {
+        const options = [...customerResults.querySelectorAll('[role="option"]')];
+        if (event.key === 'ArrowDown' && options.length) {
+            event.preventDefault();
+            options[0].focus();
+        } else if (event.key === 'Escape') {
+            hideCustomerResults();
+        }
+    });
+
+    [customerNameInput, customerPhoneInput].forEach((input) => {
+        input.addEventListener('input', () => {
+            if (customerIdInput.value) clearSelectedCustomer(true);
+        });
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!customerSearchInput.contains(event.target) && !customerResults.contains(event.target)) {
+            hideCustomerResults();
+        }
+    });
 </script>
 
 <!-- Scan Modal (ເຄື່ອງສະແກນ USB + ກ້ອງມືຖື/iPad) -->
@@ -432,20 +806,28 @@
             }
             // ຕື່ມຂໍ້ມູນລູກຄ້າໃສ່ຟອມ
             if (data.customer) {
-                const nameInput = document.querySelector('input[name="customer_name"]');
-                const phoneInput = document.querySelector('input[name="customer_phone"]');
-                if (data.customer.name) nameInput.value = data.customer.name;
-                if (data.customer.phone) phoneInput.value = data.customer.phone;
+                applyCustomerSelection(data.customer);
             }
             // ຕື່ມຂໍ້ມູນເຄື່ອງໃສ່ Item #1
             if (data.asset) {
                 const brandSelect = document.getElementById('brand-select-0');
                 if (data.asset.brand) {
-                    const opt = [...brandSelect.options].find(o => o.value.toLowerCase() === data.asset.brand.toLowerCase());
-                    brandSelect.value = opt ? opt.value : 'Other';
+                    if (!setMatchingSelectValue(brandSelect, data.asset.brand)) brandSelect.value = 'Other';
                 }
                 if (data.asset.model_name) document.getElementById('model-input-0').value = data.asset.model_name;
-                if (data.asset.size) document.querySelector('input[name="size_0"]').value = data.asset.size;
+
+                // Autofill Color dropdown
+                const colorSelect = document.getElementById('color-select-0');
+                if (colorSelect && data.asset.color) {
+                    if (!setMatchingSelectValue(colorSelect, data.asset.color)) colorSelect.value = 'Other';
+                    updateColorSwatch(0);
+                }
+
+                // Autofill Size dropdown
+                const sizeSelect = document.getElementById('size-select-0');
+                if (sizeSelect && data.asset.size) {
+                    setMatchingSelectValue(sizeSelect, data.asset.size);
+                }
                 updateCart();
             }
             setScanStatus('✓ ' + data.label + ' — ' + (data.customer.name || ''), 'ok');

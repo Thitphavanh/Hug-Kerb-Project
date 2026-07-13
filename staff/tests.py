@@ -63,3 +63,24 @@ class CommissionReportTest(TestCase):
         self.client.force_login(self.manager)
         resp = self.client.get(self.url, {"month": "not-a-month"})
         self.assertEqual(resp.status_code, 200)
+
+    def test_commission_report_switches_between_english_and_lao(self):
+        self.client.force_login(self.manager)
+
+        self.client.post(
+            reverse("set_language"), {"language": "en", "next": self.url}
+        )
+        english = self.client.get(self.url)
+        self.assertContains(english, "Staff and commissions")
+        self.assertContains(english, "Completed jobs")
+        self.assertContains(english, "Staff directory")
+        self.assertContains(english, "Technician")
+
+        self.client.post(
+            reverse("set_language"), {"language": "lo", "next": self.url}
+        )
+        lao = self.client.get(self.url)
+        self.assertContains(lao, "ພະນັກງານ ແລະ ຄອມມິດຊັນ")
+        self.assertContains(lao, "ວຽກສຳເລັດ")
+        self.assertContains(lao, "ລາຍຊື່ພະນັກງານ")
+        self.assertContains(lao, "ຊ່າງ")

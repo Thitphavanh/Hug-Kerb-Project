@@ -774,6 +774,901 @@ msgstr "ຄົ້ນຫາອໍເດີ, ລູກຄ້າ, ສາງ..."
 msgid "Toggle color theme"
 msgstr "ສະຫຼັບສີໜ້າຈໍ"
 
+# Accounting transaction form
+msgid "Category"
+msgstr "ໝວດ"
+
+msgid "Date"
+msgstr "ວັນທີ"
+
+msgid "Time"
+msgstr "ເວລາ"
+
+msgid "Transaction type"
+msgstr "ປະເພດລາຍການ"
+
+msgid "Description"
+msgstr "ລາຍລະອຽດ"
+
+msgid "Amount"
+msgstr "ຈຳນວນເງິນ"
+
+msgid "Currency"
+msgstr "ສະກຸນເງິນ"
+
+msgid "Payment method"
+msgstr "ຊ່ອງທາງຊຳລະ"
+
+msgid "Reference number"
+msgstr "ເລກອ້າງອີງ"
+
+msgid "Receipt or attachment"
+msgstr "ໃບບິນ ຫຼື ໄຟລ໌ຫຼັກຖານ"
+
+msgid "Notes"
+msgstr "ໝາຍເຫດ"
+
+msgid "Income"
+msgstr "ລາຍຮັບ"
+
+msgid "Expense"
+msgstr "ລາຍຈ່າຍ"
+
+msgid "Thai baht (THB)"
+msgstr "ເງິນບາດໄທ (THB)"
+
+msgid "Lao kip (LAK)"
+msgstr "ເງິນກີບລາວ (LAK)"
+
+msgid "US dollar (USD)"
+msgstr "ເງິນໂດລາສະຫະລັດ (USD)"
+
+msgid "Cash"
+msgstr "ເງິນສົດ"
+
+msgid "Bank transfer"
+msgstr "ໂອນທະນາຄານ"
+
+msgid "QR payment"
+msgstr "ຊຳລະຜ່ານ QR"
+
+msgid "Other"
+msgstr "ອື່ນໆ"
+
+msgid "Confirmed"
+msgstr "ຢືນຢັນແລ້ວ"
+
+msgid "Draft"
+msgstr "ສະບັບຮ່າງ"
+
+msgid "Void"
+msgstr "ຍົກເລີກ"
+
+msgid "Category does not match transaction type."
+msgstr "ໝວດບໍ່ກົງກັບປະເພດລາຍການ"
+
+msgid "Manual ledger entry"
+msgstr "ບັນທຶກບັນຊີດ້ວຍຕົນເອງ"
+
+msgid "POS income is recorded automatically, so you do not need to enter it again."
+msgstr "ລາຍຮັບຈາກ POS ຈະເຂົ້າລະບົບອັດຕະໂນມັດ ບໍ່ຕ້ອງປ້ອນຊ້ຳ"
+
+msgid "Back"
+msgstr "ກັບຄືນ"
+
+msgid "Transaction details"
+msgstr "ຂໍ້ມູນລາຍການ"
+
+msgid "Save transaction"
+msgstr "ບັນທຶກລາຍການ"
+
+msgid "Transaction saved successfully."
+msgstr "ບັນທຶກລາຍການສຳເລັດແລ້ວ"
+
+msgid "Add accounting transaction"
+msgstr "ເພີ່ມລາຍການບັນຊີ"
+
+msgid "Transaction updated successfully."
+msgstr "ແກ້ໄຂລາຍການສຳເລັດແລ້ວ"
+
+msgid "Edit accounting transaction"
+msgstr "ແກ້ໄຂລາຍການບັນຊີ"
+
+# Accounting dashboard
+msgid "Accounting system"
+msgstr "ລະບົບບັນຊີ"
+
+msgid "Finance command center"
+msgstr "ສູນຄວບຄຸມການເງິນ"
+
+msgid "Income and expense accounting"
+msgstr "ບັນຊີລາຍຮັບ–ລາຍຈ່າຍ"
+
+msgid "POS and manual entries are combined in one place."
+msgstr "ຂໍ້ມູນຈາກ POS ແລະລາຍການທີ່ປ້ອນເອງຖືກລວມໃນຈຸດດຽວ"
+
+msgid "Add transaction"
+msgstr "ເພີ່ມລາຍການ"
+
+msgid "View report"
+msgstr "ເບິ່ງລາຍງານ"
+
+msgid "All"
+msgstr "ທັງໝົດ"
+
+msgid "All currencies"
+msgstr "ທຸກສະກຸນ"
+
+msgid "All categories"
+msgstr "ທຸກໝວດ"
+
+msgid "Search"
+msgstr "ຄົ້ນຫາ"
+
+msgid "Description or reference number..."
+msgstr "ລາຍການ ຫຼື ເລກອ້າງອີງ..."
+
+msgid "Daily net balance"
+msgstr "ຍອດສຸດທິປະຈຳວັນ"
+
+msgid "Daily transactions"
+msgstr "ລາຍການປະຈຳວັນ"
+
+#, python-format
+msgid "%(counter)s transaction"
+msgid_plural "%(counter)s transactions"
+msgstr[0] "%(counter)s ລາຍການ"
+
+msgid "POS entries are read-only"
+msgstr "ລາຍການ POS ແກ້ໄຂບໍ່ໄດ້"
+
+msgid "Time / transaction"
+msgstr "ເວລາ / ລາຍການ"
+
+msgid "Source"
+msgstr "ແຫຼ່ງ"
+
+msgid "Method"
+msgstr "ຊ່ອງທາງ"
+
+msgid "Actions"
+msgstr "ຈັດການ"
+
+msgid "No reference number"
+msgstr "ບໍ່ມີເລກອ້າງອີງ"
+
+msgid "Are you sure you want to delete this transaction?"
+msgstr "ຢືນຢັນລົບລາຍການນີ້?"
+
+msgid "No transactions found"
+msgstr "ບໍ່ພົບລາຍການ"
+
+msgid "Try changing the filters or adding a new transaction."
+msgstr "ລອງປ່ຽນຕົວກອງ ຫຼື ເພີ່ມລາຍການໃໝ່"
+
+msgid "This month overview"
+msgstr "ພາບລວມເດືອນນີ້"
+
+#, python-format
+msgid "Through %(date)s"
+msgstr "ເຖິງ %(date)s"
+
+msgid "In"
+msgstr "ເຂົ້າ"
+
+msgid "Out"
+msgstr "ອອກ"
+
+msgid "Budget control"
+msgstr "ຄວບຄຸມງົບ"
+
+msgid "Monthly expense categories"
+msgstr "ໝວດລາຍຈ່າຍປະຈຳເດືອນ"
+
+msgid "Set budget"
+msgstr "ຕັ້ງງົບ"
+
+msgid "No monthly budget has been set."
+msgstr "ຍັງບໍ່ໄດ້ຕັ້ງງົບປະຈຳເດືອນ"
+
+msgid "Daily ledger"
+msgstr "ບັນຊີປະຈຳວັນ"
+
+msgid "Cash handover"
+msgstr "ສົ່ງມອບເງິນ"
+
+msgid "Categories & budgets"
+msgstr "ໝວດ ແລະ ງົບປະມານ"
+
+# Accounting reports, cash handover, and settings
+msgid "Financial report"
+msgstr "ລາຍງານການເງິນ"
+
+msgid "Profit & cashflow"
+msgstr "ກຳໄລ ແລະ ກະແສເງິນ"
+
+msgid "Currencies are reported separately without automatic exchange-rate conversion."
+msgstr "ແຍກສະກຸນເງິນຊັດເຈນ ໂດຍບໍ່ປ່ຽນອັດຕາແລກປ່ຽນອັດຕະໂນມັດ"
+
+msgid "Export CSV"
+msgstr "ສົ່ງອອກ CSV"
+
+msgid "Start date"
+msgstr "ຈາກວັນທີ"
+
+msgid "End date"
+msgstr "ເຖິງວັນທີ"
+
+msgid "Group by"
+msgstr "ການຈັດກຸ່ມ"
+
+msgid "Daily"
+msgstr "ລາຍວັນ"
+
+msgid "Monthly"
+msgstr "ລາຍເດືອນ"
+
+msgid "Yearly"
+msgstr "ລາຍປີ"
+
+msgid "Generate report"
+msgstr "ສ້າງລາຍງານ"
+
+msgid "Net balance"
+msgstr "ຍອດສຸດທິ"
+
+msgid "Cashflow breakdown"
+msgstr "ລາຍລະອຽດກະແສເງິນ"
+
+msgid "Period"
+msgstr "ຊ່ວງເວລາ"
+
+msgid "Cashflow"
+msgstr "ກະແສເງິນ"
+
+msgid "Net"
+msgstr "ສຸດທິ"
+
+msgid "No data for this period."
+msgstr "ບໍ່ມີຂໍ້ມູນໃນຊ່ວງນີ້"
+
+msgid "End-of-day control"
+msgstr "ຄວບຄຸມທ້າຍມື້"
+
+msgid "Cash handover and reconciliation"
+msgstr "ສົ່ງມອບ ແລະ ກວດນັບເງິນ"
+
+msgid "Compare system cash with the amount physically counted."
+msgstr "ກວດທຽບຍອດເງິນສົດໃນລະບົບກັບຍອດທີ່ນັບໄດ້ຈິງ"
+
+msgid "Load totals"
+msgstr "ໂຫຼດຍອດ"
+
+msgid "Expected cash"
+msgstr "ເງິນສົດຕາມລະບົບ"
+
+msgid "Cash received"
+msgstr "ຮັບເງິນສົດ"
+
+msgid "Cash paid out"
+msgstr "ຈ່າຍເງິນສົດ"
+
+msgid "Legacy POS expenses are treated as cash because the previous expense model has no payment-method field."
+msgstr "ລາຍຈ່າຍເກົ່າຈາກ POS ຖືກນັບເປັນເງິນສົດ ເນື່ອງຈາກໂມເດວເກົ່າບໍ່ມີຊ່ອງທາງຊຳລະ"
+
+msgid "Edit handover"
+msgstr "ແກ້ໄຂໃບສົ່ງມອບ"
+
+msgid "Create handover"
+msgstr "ສ້າງໃບສົ່ງມອບ"
+
+msgid "Confirm handover"
+msgstr "ຢືນຢັນການສົ່ງມອບ"
+
+msgid "Handover history"
+msgstr "ປະຫວັດການສົ່ງມອບ"
+
+msgid "System total"
+msgstr "ຕາມລະບົບ"
+
+msgid "Counted"
+msgstr "ນັບໄດ້"
+
+msgid "Difference"
+msgstr "ສ່ວນຕ່າງ"
+
+msgid "Giver → Receiver"
+msgstr "ຜູ້ສົ່ງ → ຜູ້ຮັບ"
+
+msgid "No handover history yet."
+msgstr "ຍັງບໍ່ມີປະຫວັດ"
+
+msgid "Opening balance"
+msgstr "ເງິນທອນຕົ້ນມື້"
+
+msgid "Counted amount"
+msgstr "ຍອດນັບໄດ້"
+
+msgid "Receiver"
+msgstr "ຜູ້ຮັບ"
+
+msgid "Handover saved successfully."
+msgstr "ບັນທຶກການສົ່ງມອບເງິນສຳເລັດແລ້ວ"
+
+msgid "Accounting settings"
+msgstr "ຕັ້ງຄ່າບັນຊີ"
+
+msgid "Accounting configuration"
+msgstr "ການຕັ້ງຄ່າບັນຊີ"
+
+msgid "Accounting categories and budgets"
+msgstr "ໝວດບັນຊີ ແລະ ງົບປະມານ"
+
+msgid "Manage core accounting data directly without using Django Admin."
+msgstr "ຈັດການຂໍ້ມູນບັນຊີພື້ນຖານໄດ້ໂດຍກົງ ໂດຍບໍ່ຕ້ອງເຂົ້າ Django Admin"
+
+msgid "Add a new category"
+msgstr "ເພີ່ມໝວດໃໝ່"
+
+msgid "Choose a color to identify the category in tables."
+msgstr "ເລືອກສີເພື່ອຈຳແນກໝວດໃນຕາຕະລາງ"
+
+msgid "Add category"
+msgstr "ເພີ່ມໝວດ"
+
+msgid "Set monthly budget"
+msgstr "ຕັ້ງງົບລາຍເດືອນ"
+
+msgid "Saving the same category, month and currency updates the existing budget."
+msgstr "ການບັນທຶກໝວດ, ເດືອນ ແລະ ສະກຸນເງິນເດີມຊ້ຳ ຈະອັບເດດງົບເກົ່າ"
+
+msgid "Save budget"
+msgstr "ບັນທຶກງົບປະມານ"
+
+msgid "Income categories"
+msgstr "ໝວດລາຍຮັບ"
+
+msgid "Expense categories"
+msgstr "ໝວດລາຍຈ່າຍ"
+
+msgid "Active"
+msgstr "ເປີດໃຊ້"
+
+msgid "Inactive"
+msgstr "ປິດໃຊ້"
+
+msgid "Configured budgets"
+msgstr "ງົບປະມານທີ່ກຳນົດ"
+
+msgid "Month"
+msgstr "ເດືອນ"
+
+msgid "Budget"
+msgstr "ງົບ"
+
+msgid "Budget amount"
+msgstr "ງົບປະມານ"
+
+msgid "Are you sure you want to delete this budget?"
+msgstr "ຢືນຢັນລົບງົບນີ້?"
+
+msgid "No budgets have been configured."
+msgstr "ຍັງບໍ່ມີງົບປະມານ"
+
+msgid "Category added successfully."
+msgstr "ເພີ່ມໝວດບັນຊີສຳເລັດແລ້ວ"
+
+msgid "Budget saved successfully."
+msgstr "ບັນທຶກງົບປະມານສຳເລັດແລ້ວ"
+
+msgid "Category status updated successfully."
+msgstr "ອັບເດດສະຖານະໝວດສຳເລັດແລ້ວ"
+
+msgid "Budget deleted successfully."
+msgstr "ລົບງົບປະມານສຳເລັດແລ້ວ"
+
+msgid "Transaction deleted successfully."
+msgstr "ລົບລາຍການສຳເລັດແລ້ວ"
+
+# Dynamic transaction labels
+msgid "Manual"
+msgstr "ປ້ອນເອງ"
+
+msgid "Walk-in customer"
+msgstr "ລູກຄ້າທົ່ວໄປ"
+
+# POS quotation and signature workflow
+msgid "Smart quotation"
+msgstr "ການສະເໜີລາຄາອັດສະລິຍະ"
+
+msgid "Configure AI service pricing for your customer."
+msgstr "ກຳນົດລາຄາບໍລິການ AI ສຳລັບລູກຄ້າຂອງທ່ານ"
+
+msgid "Customer information"
+msgstr "ຂໍ້ມູນລູກຄ້າ"
+
+msgid "Document number"
+msgstr "ເລກທີເອກະສານ"
+
+msgid "Automated high-accuracy AI product condition assessment."
+msgstr "ປະເມີນສະພາບສິນຄ້າດ້ວຍ AI ແບບອັດຕະໂນມັດ ແລະ ແມ່ນຍຳສູງ"
+
+msgid "Essential inventory management for small and medium businesses."
+msgstr "ລະບົບຈັດການສາງພື້ນຖານສຳລັບທຸລະກິດຂະໜາດນ້ອຍ ແລະ ກາງ"
+
+msgid "Advanced reporting and data analysis powered by machine learning."
+msgstr "ລາຍງານ ແລະ ວິເຄາະຂໍ້ມູນຂັ້ນສູງດ້ວຍ Machine Learning"
+
+msgid "Customer relationship management integration for seamless service."
+msgstr "ເຊື່ອມຕໍ່ລະບົບລູກຄ້າສຳພັນເພື່ອການບໍລິການທີ່ຕໍ່ເນື່ອງ"
+
+msgid "Specialized add-on service for specific needs."
+msgstr "ບໍລິການເສີມພິເສດສຳລັບຄວາມຕ້ອງການສະເພາະ"
+
+msgid "Recommended"
+msgstr "ແນະນຳ"
+
+msgid "Add-on"
+msgstr "ບໍລິການເສີມ"
+
+msgid "Promotions and discounts"
+msgstr "ໂປຣໂມຊັນ ແລະ ສ່ວນຫຼຸດ"
+
+msgid "Enter discount code..."
+msgstr "ປ້ອນລະຫັດສ່ວນຫຼຸດ..."
+
+msgid "Apply"
+msgstr "ນຳໃຊ້"
+
+msgid "Order summary"
+msgstr "ສະຫຼຸບລາຍການ"
+
+msgid "VAT (10%)"
+msgstr "ອາກອນມູນຄ່າເພີ່ມ (10%)"
+
+msgid "Grand total"
+msgstr "ຍອດລວມທັງໝົດ"
+
+msgid "Approval signature"
+msgstr "ລາຍເຊັນອະນຸມັດ"
+
+msgid "Tap to sign"
+msgstr "ແຕະເພື່ອເຊັນຊື່"
+
+msgid "Submit quotation"
+msgstr "ສົ່ງໃບສະເໜີລາຄາ"
+
+msgid "Save as draft"
+msgstr "ບັນທຶກເປັນຮ່າງ"
+
+msgid "Select services to view the summary."
+msgstr "ເລືອກບໍລິການເພື່ອເບິ່ງສະຫຼຸບລາຍການ"
+
+msgid "Code applied successfully!"
+msgstr "ນຳໃຊ້ລະຫັດສຳເລັດແລ້ວ!"
+
+msgid "off"
+msgstr "ຫຼຸດ"
+
+msgid "Invalid discount code."
+msgstr "ລະຫັດສ່ວນຫຼຸດບໍ່ຖືກຕ້ອງ"
+
+msgid "Discount"
+msgstr "ສ່ວນຫຼຸດ"
+
+msgid "Lao kip"
+msgstr "ກີບ"
+
+msgid "Language"
+msgstr "ພາສາ"
+
+msgid "KicksVault AI — Create quotation"
+msgstr "KicksVault AI — ສ້າງໃບສະເໜີລາຄາ"
+
+msgid "Create AI quotation"
+msgstr "ສ້າງໃບສະເໜີລາຄາ AI"
+
+msgid "KicksVault AI — Intelligent pricing"
+msgstr "KicksVault AI — ການກຳນົດລາຄາອັດສະລິຍະ"
+
+msgid "Select services"
+msgstr "ເລືອກບໍລິການ"
+
+msgid "Review pricing"
+msgstr "ທົບທວນລາຄາ"
+
+msgid "Approve and sign"
+msgstr "ອະນຸມັດ ແລະ ເຊັນ"
+
+msgid "Final step: confirm agreement"
+msgstr "ຂັ້ນຕອນສຸດທ້າຍ: ຢືນຢັນຂໍ້ຕົກລົງ"
+
+msgid "Please review the details below and sign to continue."
+msgstr "ກະລຸນາກວດສອບລາຍລະອຽດຂ້າງລຸ່ມ ແລະ ລົງລາຍເຊັນເພື່ອດຳເນີນການຕໍ່"
+
+msgid "Promotional discount"
+msgstr "ສ່ວນຫຼຸດໂປຣໂມຊັນ"
+
+msgid "Preliminary total due"
+msgstr "ຍອດລວມທີ່ຕ້ອງຊຳລະຂັ້ນຕົ້ນ"
+
+msgid "Includes VAT (10%) of"
+msgstr "ລວມ VAT (10%) ຈຳນວນ"
+
+msgid "Sign for approval"
+msgstr "ລົງລາຍເຊັນອະນຸມັດ"
+
+msgid "By signing below, you accept the service terms and the prices shown above. The final invoice will be sent to your email."
+msgstr "ໂດຍການລົງລາຍເຊັນຂ້າງລຸ່ມ ທ່ານຍອມຮັບເງື່ອນໄຂບໍລິການ ແລະ ລາຄາທີ່ສະແດງຂ້າງເທິງ ໂດຍໃບແຈ້ງໜີ້ສຸດທ້າຍຈະຖືກສົ່ງໄປຫາອີເມວຂອງທ່ານ"
+
+msgid "Sign your name here"
+msgstr "ເຊັນຊື່ຂອງທ່ານທີ່ນີ້"
+
+msgid "Clear"
+msgstr "ລຶບລ້າງ"
+
+msgid "Authorized signatory name"
+msgstr "ຊື່ຜູ້ມີອຳນາດລົງນາມ"
+
+msgid "Enter your full name"
+msgstr "ປ້ອນຊື່ເຕັມຂອງທ່ານ"
+
+msgid "Position"
+msgstr "ຕຳແໜ່ງ"
+
+msgid "e.g. General manager"
+msgstr "ຕົວຢ່າງ: ຜູ້ຈັດການທົ່ວໄປ"
+
+msgid "I have read and understand"
+msgstr "ຂ້ອຍໄດ້ອ່ານ ແລະ ເຂົ້າໃຈ"
+
+msgid "the terms and conditions"
+msgstr "ຂໍ້ກຳນົດ ແລະ ເງື່ອນໄຂ"
+
+msgid "of KicksVault AI."
+msgstr "ຂອງ KicksVault AI ແລ້ວ"
+
+msgid "Confirm and send document"
+msgstr "ຢືນຢັນ ແລະ ສົ່ງເອກະສານ"
+
+# POS existing-customer autocomplete
+msgid "Search existing customer by name or phone..."
+msgstr "ຄົ້ນຫາລູກຄ້າເກົ່າດ້ວຍຊື່ ຫຼື ເບີໂທ..."
+
+msgid "No matching customers found."
+msgstr "ບໍ່ພົບລູກຄ້າທີ່ກົງກັນ"
+
+msgid "Existing customer"
+msgstr "ລູກຄ້າເກົ່າ"
+
+msgid "Find an existing customer"
+msgstr "ຄົ້ນຫາລູກຄ້າເກົ່າ"
+
+msgid "Type a Lao name or part of a phone number, then select a customer."
+msgstr "ພິມຊື່ພາສາລາວ ຫຼື ເບີໂທບາງສ່ວນ ແລ້ວເລືອກລູກຄ້າ"
+
+msgid "Model"
+msgstr "ລຸ້ນ"
+
+msgid "Size (US/EU)"
+msgstr "ຂະໜາດ (US/EU)"
+
+msgid "EU sizes"
+msgstr "ຂະໜາດ EU"
+
+msgid "US sizes"
+msgstr "ຂະໜາດ US"
+
+# POS service names stored in the database
+msgid "AI Condition Report"
+msgstr "ລາຍງານສະພາບດ້ວຍ AI"
+
+msgid "Color Touch-up"
+msgstr "ແຕ່ງສີສ້ອມແຊມ"
+
+msgid "Deep Clean Service"
+msgstr "ບໍລິການຊັກສະອາດເລິກ"
+
+msgid "Premium Spa + Deodorize"
+msgstr "ສະປາພຣີມຽມ + ກຳຈັດກິ່ນ"
+
+msgid "Sole Restoration"
+msgstr "ຟື້ນຟູພື້ນເກີບ"
+
+#, python-format
+msgid "Payment for %(order)s — %(customer)s"
+msgstr "ຮັບຊຳລະ %(order)s — %(customer)s"
+
+msgid "POS income"
+msgstr "ລາຍຮັບຈາກ POS"
+
+msgid "POS expense"
+msgstr "ລາຍຈ່າຍຈາກ POS"
+
+msgid "Supplies and cleaning products"
+msgstr "ອຸປະກອນ ແລະ ນ້ຳຢາ"
+
+msgid "Rent"
+msgstr "ຄ່າເຊົ່າ"
+
+msgid "Utilities"
+msgstr "ຄ່ານ້ຳ/ໄຟ/ອິນເຕີເນັດ"
+
+msgid "Salaries and wages"
+msgstr "ເງິນເດືອນ/ຄ່າແຮງງານ"
+
+msgid "Marketing and advertising"
+msgstr "ການຕະຫຼາດ/ໂຄສະນາ"
+
+msgid "Other expenses"
+msgstr "ລາຍຈ່າຍອື່ນໆ"
+
+# Intake queue
+msgid "AI grading queue"
+msgstr "ຄິວປະເມີນ AI"
+
+msgid "AI inspection and valuation system"
+msgstr "ລະບົບກວດສອບ ແລະ ປະເມີນລາຄາ AI"
+
+msgid "Asset intake queue for sneaker condition assessment and valuation."
+msgstr "ຄິວຮັບເກີບເຂົ້າ ສຳລັບກວດສະພາບ ແລະ ປະເມີນລາຄາ"
+
+msgid "AI engine active"
+msgstr "ລະບົບ AI ກຳລັງເຮັດວຽກ"
+
+msgid "New intake"
+msgstr "ຮັບເຄື່ອງໃໝ່"
+
+msgid "Search ticket, customer, brand or model..."
+msgstr "ຄົ້ນຫາເລກໃບຮັບ, ລູກຄ້າ, ຍີ່ຫໍ້ ຫຼື ລຸ້ນ..."
+
+msgid "All statuses"
+msgstr "ທຸກສະຖານະ"
+
+msgid "Waiting"
+msgstr "ລໍຖ້າ"
+
+msgid "Grading"
+msgstr "ກຳລັງປະເມີນ"
+
+msgid "Ready"
+msgstr "ພ້ອມແລ້ວ"
+
+msgid "Ticket number"
+msgstr "ເລກໃບຮັບ"
+
+msgid "Customer"
+msgstr "ລູກຄ້າ"
+
+msgid "Sneaker"
+msgstr "ເກີບ"
+
+msgid "Intake date"
+msgstr "ວັນທີຮັບເຂົ້າ"
+
+msgid "Received"
+msgstr "ຮັບເຂົ້າ"
+
+msgid "Open"
+msgstr "ເປີດເບິ່ງ"
+
+msgid "No intake items yet."
+msgstr "ຍັງບໍ່ມີເຄື່ອງຮັບຝາກ"
+
+# Financial overview report
+msgid "Financial overview"
+msgstr "ພາບລວມການເງິນ"
+
+msgid "Income, expenses and AI analysis"
+msgstr "ລາຍຮັບ, ລາຍຈ່າຍ ແລະ ການວິເຄາະ AI"
+
+msgid "Total revenue"
+msgstr "ລາຍຮັບລວມ"
+
+msgid "Total expenses"
+msgstr "ລາຍຈ່າຍລວມ"
+
+msgid "Net profit"
+msgstr "ກຳໄລສຸດທິ"
+
+msgid "AI insight"
+msgstr "ຂໍ້ມູນວິເຄາະ AI"
+
+msgid "Cash flow is projected to remain positive for Q3 based on current historical trends."
+msgstr "ຈາກແນວໂນ້ມຂໍ້ມູນປັດຈຸບັນ ຄາດວ່າກະແສເງິນສົດໃນໄຕມາດ 3 ຈະຍັງເປັນບວກ"
+
+msgid "Cashflow overview"
+msgstr "ພາບລວມກະແສເງິນ"
+
+msgid "Income vs expenses (monthly)"
+msgstr "ລາຍຮັບທຽບກັບລາຍຈ່າຍ (ລາຍເດືອນ)"
+
+msgid "More options"
+msgstr "ຕົວເລືອກເພີ່ມເຕີມ"
+
+msgid "Customer segments"
+msgstr "ກຸ່ມລູກຄ້າ"
+
+msgid "AI RFM analysis"
+msgstr "ການວິເຄາະ RFM ດ້ວຍ AI"
+
+msgid "RFM AI segment details"
+msgstr "ລາຍລະອຽດກຸ່ມລູກຄ້າຈາກ RFM AI"
+
+msgid "Actionable insights based on recency, frequency and monetary value."
+msgstr "ຂໍ້ມູນແນະນຳຈາກຄວາມລ່າສຸດ, ຄວາມຖີ່ ແລະ ມູນຄ່າການຊື້"
+
+msgid "View full report"
+msgstr "ເບິ່ງລາຍງານເຕັມ"
+
+msgid "Customer name"
+msgstr "ຊື່ລູກຄ້າ"
+
+msgid "Segment"
+msgstr "ກຸ່ມ"
+
+msgid "Last order"
+msgstr "ອໍເດີລ່າສຸດ"
+
+msgid "Total spend"
+msgstr "ຍອດໃຊ້ຈ່າຍລວມ"
+
+msgid "AI recommended action"
+msgstr "ຄຳແນະນຳຈາກ AI"
+
+msgid "No customer data available yet."
+msgstr "ຍັງບໍ່ມີຂໍ້ມູນລູກຄ້າ"
+
+msgid "Expenses"
+msgstr "ລາຍຈ່າຍ"
+
+msgid "VIP customers"
+msgstr "ລູກຄ້າ VIP"
+
+msgid "3+ recorded orders"
+msgstr "ມີ 3 ອໍເດີຂຶ້ນໄປ"
+
+msgid "Loyal customers"
+msgstr "ລູກຄ້າປະຈຳ"
+
+msgid "1–2 recorded orders"
+msgstr "ມີ 1–2 ອໍເດີ"
+
+msgid "At-risk customers"
+msgstr "ລູກຄ້າທີ່ສ່ຽງຈະຫາຍ"
+
+msgid "No recorded orders yet"
+msgstr "ຍັງບໍ່ມີອໍເດີ"
+
+msgid "Never"
+msgstr "ບໍ່ເຄີຍ"
+
+msgid "Yesterday"
+msgstr "ມື້ວານນີ້"
+
+#, python-format
+msgid "%(count)d day ago"
+msgid_plural "%(count)d days ago"
+msgstr[0] "%(count)d ວັນກ່ອນ"
+
+#, python-format
+msgid "%(count)d week ago"
+msgid_plural "%(count)d weeks ago"
+msgstr[0] "%(count)d ອາທິດກ່ອນ"
+
+msgid "VIP"
+msgstr "VIP"
+
+msgid "Loyal"
+msgstr "ລູກຄ້າປະຈຳ"
+
+msgid "At-risk"
+msgstr "ສ່ຽງຈະຫາຍ"
+
+msgid "Offer exclusive early access"
+msgstr "ສະເໜີສິດເຂົ້າເຖິງພິເສດກ່ອນຜູ້ອື່ນ"
+
+msgid "Send standard newsletter"
+msgstr "ສົ່ງຂ່າວສານປະຈຳ"
+
+msgid "Trigger win-back email sequence"
+msgstr "ກະຕຸ້ນອີເມວເພື່ອດຶງລູກຄ້າກັບຄືນ"
+
+# Staff commission report
+msgid "Staff commissions"
+msgstr "ຄອມມິດຊັນພະນັກງານ"
+
+msgid "Staff and commissions"
+msgstr "ພະນັກງານ ແລະ ຄອມມິດຊັນ"
+
+msgid "Calculated from each technician's completed jobs."
+msgstr "ຄິດໄລ່ຈາກວຽກທີ່ຊ່າງແຕ່ລະຄົນເຮັດສຳເລັດແລ້ວ"
+
+msgid "Technician"
+msgstr "ຊ່າງ"
+
+msgid "Completed jobs"
+msgstr "ວຽກສຳເລັດ"
+
+msgid "Service total"
+msgstr "ຍອດຄ່າບໍລິການ"
+
+msgid "Rate (%)"
+msgstr "ອັດຕາ (%)"
+
+msgid "Commission"
+msgstr "ຄອມມິດຊັນ"
+
+msgid "No completed jobs this month, or no jobs have been assigned to a technician."
+msgstr "ຍັງບໍ່ມີວຽກສຳເລັດໃນເດືອນນີ້ ຫຼື ຍັງບໍ່ໄດ້ມອບວຽກໃຫ້ຊ່າງ"
+
+msgid "Total commission"
+msgstr "ລວມຄອມມິດຊັນທັງໝົດ"
+
+msgid "Staff directory"
+msgstr "ລາຍຊື່ພະນັກງານ"
+
+msgid "Manager"
+msgstr "ຜູ້ຈັດການ"
+
+msgid "Front desk"
+msgstr "ພະນັກງານໜ້າຮ້ານ"
+
+msgid "No staff members yet — add them in"
+msgstr "ຍັງບໍ່ມີພະນັກງານ — ເພີ່ມໄດ້ທີ່"
+
+msgid "Staff"
+msgstr "ພະນັກງານ"
+
+# Kanban board
+msgid "Kanban Job Tracking"
+msgstr "ກະດານຕິດຕາມວຽກ Kanban"
+
+msgid "Kanban Tracking"
+msgstr "ຕິດຕາມວຽກ Kanban"
+
+msgid "Accounting"
+msgstr "ບັນຊີລາຍຮັບ–ລາຍຈ່າຍ"
+
+msgid "Live workflow"
+msgstr "ຂັ້ນຕອນວຽກແບບສົດ"
+
+msgid "Drag each job to update its service status."
+msgstr "ລາກແຕ່ລະວຽກໄປຫາຖັນໃໝ່ເພື່ອອັບເດດສະຖານະບໍລິການ"
+
+msgid "Print tag"
+msgstr "ພິມປ້າຍ"
+
+msgid "No notes provided."
+msgstr "ບໍ່ມີໝາຍເຫດ"
+
+msgid "View"
+msgstr "ເບິ່ງ"
+
+msgid "Failed to update status."
+msgstr "ອັບເດດສະຖານະບໍ່ສຳເລັດ"
+
+msgid "Error updating status."
+msgstr "ເກີດຂໍ້ຜິດພາດໃນການອັບເດດສະຖານະ"
+
+msgid "Intake"
+msgstr "ຮັບເຂົ້າ"
+
+msgid "Cleaning"
+msgstr "ກຳລັງຊັກ"
+
+msgid "Repairing"
+msgstr "ກຳລັງສ້ອມແປງ"
+
+msgid "Ready for pickup"
+msgstr "ພ້ອມໃຫ້ລູກຄ້າຮັບ"
+
+msgid "Completed"
+msgstr "ສົ່ງມອບແລ້ວ"
+
+msgid "Last 7 days"
+msgstr "7 ວັນຫຼ້າສຸດ"
+
 #~ msgid "Create Order — Hug ເກີບ AI"
 #~ msgstr "ສ້າງອໍເດີ — Hug ເກີບ AI"
 
@@ -806,9 +1701,6 @@ msgstr "ສະຫຼັບສີໜ້າຈໍ"
 #~ "No orders yet. Create one from asset intake/admin, or run the demo seed "
 #~ "command."
 #~ msgstr "ຍັງບໍ່ມີອໍເດີ. ສ້າງຈາກ asset intake/admin ຫຼື run demo seed command."
-
-#~ msgid "Discount"
-#~ msgstr "ສ່ວນຫຼຸດ"
 
 #~ msgid "Start New Intake"
 #~ msgstr "ເລີ່ມຮັບສິນຄ້າໃໝ່"
@@ -869,9 +1761,6 @@ msgstr "ສະຫຼັບສີໜ້າຈໍ"
 #~ msgid "Total expense"
 #~ msgstr "ລາຍຈ່າຍລວມ"
 
-#~ msgid "Net"
-#~ msgstr "ສຸດທິ"
-
 #~ msgid "Cashflow Overview"
 #~ msgstr "ພາບລວມກະແສເງິນ"
 
@@ -880,15 +1769,6 @@ msgstr "ສະຫຼັບສີໜ້າຈໍ"
 
 #~ msgid "No cashflow data for this period."
 #~ msgstr "ບໍ່ມີຂໍ້ມູນກະແສເງິນໃນໄລຍະນີ້."
-
-#~ msgid "Income"
-#~ msgstr "ລາຍຮັບ"
-
-#~ msgid "Expenses"
-#~ msgstr "ລາຍຈ່າຍ"
-
-#~ msgid "Expense"
-#~ msgstr "ລາຍຈ່າຍ"
 
 #~ msgid "Customer Segments"
 #~ msgstr "ກຸ່ມລູກຄ້າ"
@@ -904,9 +1784,6 @@ msgstr "ສະຫຼັບສີໜ້າຈໍ"
 
 #~ msgid "Add Expense"
 #~ msgstr "ເພີ່ມລາຍຈ່າຍ"
-
-#~ msgid "Date"
-#~ msgstr "ວັນທີ"
 
 #~ msgid "No data for this period yet."
 #~ msgstr "ຍັງບໍ່ມີຂໍ້ມູນໃນໄລຍະນີ້."

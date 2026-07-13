@@ -5,6 +5,13 @@
 {% block title %}{% trans "Interactive Quotation — Hug ເກີບ AI" %}{% endblock %}
 
 {% block content %}
+{% trans "Walk-in customer" as walk_in_customer %}
+{% trans "Select services to view the summary." as js_empty_summary %}
+{% trans "Code applied successfully!" as js_code_applied %}
+{% trans "off" as js_off %}
+{% trans "Invalid discount code." as js_invalid_code %}
+{% trans "Discount" as js_discount %}
+{% trans "Lao kip" as js_lao_kip %}
 <style>
     .glass-panel {
         background: rgba(255, 255, 255, 0.7);
@@ -44,23 +51,23 @@
     <div class="flex-grow flex flex-col gap-lg max-w-4xl w-full">
         <!-- Page Header -->
         <div class="mb-2">
-            <h1 class="font-display-lg text-headline-lg text-on-surface mb-1 font-bold">ການສະເໜີລາຄາອັດສະລິຍະ</h1>
-            <p class="font-body-lg text-on-surface-variant">ກຳນົດຄ່າການບໍລິການ AI ສຳລັບລູກຄ້າຂອງທ່ານ.</p>
+            <h1 class="font-display-lg text-headline-lg text-on-surface mb-1 font-bold">{% trans "Smart quotation" %}</h1>
+            <p class="font-body-lg text-on-surface-variant">{% trans "Configure AI service pricing for your customer." %}</p>
         </div>
 
         <!-- Client Info Card -->
         <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
             <h2 class="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2 font-bold">
                 <span class="material-symbols-outlined text-primary">person</span>
-                ຂໍ້ມູນລູກຄ້າ
+                {% trans "Customer information" %}
             </h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block font-semibold text-xs text-on-surface-variant mb-1 uppercase">ຊື່ລູກຄ້າ</label>
-                    <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2 text-on-surface font-body-md focus:outline-none" readonly type="text" value="{{ order.customer.name|default:"Walk-in Customer" }}"/>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1 uppercase">{% trans "Customer name" %}</label>
+                    <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2 text-on-surface font-body-md focus:outline-none" readonly type="text" value="{{ order.customer.name|default:walk_in_customer }}"/>
                 </div>
                 <div>
-                    <label class="block font-semibold text-xs text-on-surface-variant mb-1 uppercase">ເລກທີເອກະສານ</label>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1 uppercase">{% trans "Document number" %}</label>
                     <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2 text-on-surface font-body-md focus:outline-none" readonly type="text" value="{{ order.order_number }}"/>
                 </div>
             </div>
@@ -76,7 +83,7 @@
                 {% for service in all_services %}
                 <div class="cursor-pointer group hover:shadow-md transition-shadow relative border rounded-xl p-5 flex flex-col justify-between min-h-[200px] {% if service in order_services %}border-secondary bg-surface-container-low ai-border-glow{% else %}border-outline-variant bg-surface-container-lowest{% endif %}" id="card-{{ service.pk }}" onclick="toggleService('{{ service.pk }}')">
                     <!-- Checkbox Box (hidden) -->
-                    <input type="checkbox" name="services" value="{{ service.pk }}" data-price="{{ service.price }}" data-name="{{ service.name }}" class="hidden service-checkbox" id="checkbox-{{ service.pk }}" {% if service in order_services %}checked{% endif %}>
+                    <input type="checkbox" name="services" value="{{ service.pk }}" data-price="{{ service.price }}" data-name="{{ service.name|service_name }}" class="hidden service-checkbox" id="checkbox-{{ service.pk }}" {% if service in order_services %}checked{% endif %}>
                     
                     <!-- Selected Icon -->
                     <div class="absolute top-4 right-4 {% if service in order_services %}{% else %}hidden{% endif %}" id="check-icon-{{ service.pk }}">
@@ -101,18 +108,18 @@
                     </div>
 
                     <div>
-                        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 font-bold">{{ service.name }}</h3>
+                        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 font-bold">{{ service.name|service_name }}</h3>
                         <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed text-sm mb-4">
                             {% if "grading" in service.name|lower or "grade" in service.name|lower %}
-                                ການປະເມີນສະພາບສິນຄ້າດ້ວຍ AI ແບບອັດຕະໂນມັດ ຄວາມແມ່ນຍຳສູງ.
+                                {% trans "Automated high-accuracy AI product condition assessment." %}
                             {% elif "inventory" in service.name|lower %}
-                                ລະບົບຈັດການສາງສິນຄ້າພື້ນຖານ ສຳລັບທຸລະກິດຂະໜາດນ້ອຍເຖິງກາງ.
+                                {% trans "Essential inventory management for small and medium businesses." %}
                             {% elif "analytics" in service.name|lower %}
-                                ລາຍງານ ແລະ ວິເຄາະຂໍ້ມູນເຊີງເລິກດ້ວຍ Machine Learning.
+                                {% trans "Advanced reporting and data analysis powered by machine learning." %}
                             {% elif "crm" in service.name|lower %}
-                                ເມື່ອເຊື່ອມຕໍ່ລະບົບລູກຄ້າສຳພັນ ເພື່ອການບໍລິການທີ່ໄຮ້ຮອຍຕໍ່.
+                                {% trans "Customer relationship management integration for seamless service." %}
                             {% else %}
-                                ບໍລິການເສີມພິເສດເພື່ອຄວາມຕ້ອງການສະເພາະ.
+                                {% trans "Specialized add-on service for specific needs." %}
                             {% endif %}
                         </p>
                     </div>
@@ -120,11 +127,11 @@
                     <div class="flex justify-between items-center mt-auto">
                         <span class="font-label-md text-label-md {% if service in order_services %}text-secondary bg-surface-bright border-secondary-fixed{% else %}text-on-surface-variant border-outline-variant{% endif %} px-2.5 py-0.5 rounded-full border text-[11px]" id="badge-{{ service.pk }}">
                             {% if service.price >= 1500000 %}
-                                ແນະນຳ
+                                {% trans "Recommended" %}
                             {% elif service.price < 1000000 %}
-                                ພື້ນຖານ
+                                {% trans "Basic" %}
                             {% else %}
-                                ເສີມ
+                                {% trans "Add-on" %}
                             {% endif %}
                         </span>
                         <span class="font-headline-md text-headline-md text-on-surface text-base font-bold">₭ {{ service.price|money }}</span>
@@ -137,12 +144,12 @@
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm mt-4">
                 <h2 class="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2 font-bold">
                     <span class="material-symbols-outlined text-primary">local_offer</span>
-                    ໂປຣໂມຊັ່ນ ແລະ ສ່ວນຫຼຸດ
+                    {% trans "Promotions and discounts" %}
                 </h2>
                 <div class="flex gap-3 mb-4">
-                    <input class="flex-1 bg-surface border border-outline-variant rounded-lg px-4 py-2 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary uppercase placeholder:normal-case" placeholder="ປ້ອນລະຫັດສ່ວນຫຼຸດ..." type="text" id="promo-input" value="KVAIPRO20"/>
+                    <input class="flex-1 bg-surface border border-outline-variant rounded-lg px-4 py-2 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary uppercase placeholder:normal-case" placeholder="{% trans 'Enter discount code...' %}" type="text" id="promo-input" value="KVAIPRO20"/>
                     <button type="button" class="bg-surface-variant text-primary font-semibold text-sm px-6 py-2 rounded-lg hover:bg-primary/10 transition-colors border border-primary/20" onclick="applyPromo()">
-                        ນຳໃຊ້
+                        {% trans "Apply" %}
                     </button>
                 </div>
                 <!-- Success State Banner -->
@@ -160,7 +167,7 @@
     <!-- Right Column: Price Breakdown Drawer (4 cols-like) -->
     <aside class="w-full xl:w-96 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-md p-6 flex flex-col glass-panel sticky top-20">
         <h2 class="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center justify-between font-bold">
-            <span>ສະຫຼຸບລາຍການ</span>
+            <span>{% trans "Order summary" %}</span>
             <span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">more_horiz</span>
         </h2>
         
@@ -171,41 +178,51 @@
 
         <div class="border-t border-outline-variant/50 pt-3 mb-4 flex flex-col gap-3">
             <div class="flex justify-between items-center text-sm">
-                <span class="font-body-md text-on-surface-variant">ລວມຍອດ (Subtotal)</span>
+                <span class="font-body-md text-on-surface-variant">{% trans "Subtotal" %}</span>
                 <span class="font-bold text-on-surface" id="subtotal-val">₭ 0</span>
             </div>
             <!-- Dynamic discount inserted here by JS -->
+            <!-- Hidden input to submit the selected VAT rate -->
+            <input type="hidden" name="vat_rate" id="vat-rate-input" value="10"/>
             <div class="flex justify-between items-center text-sm" id="vat-row">
-                <span class="font-body-md text-on-surface-variant">ອາກອນ (VAT 10%)</span>
+                <span class="font-body-md text-on-surface-variant flex items-center gap-1">
+                    {% trans "VAT" %}:
+                    <select id="vat-rate-select" class="px-2 py-0.5 bg-surface-container border border-outline-variant/30 rounded text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-on-surface cursor-pointer font-bold" onchange="updateVatRate()">
+                        <option value="10" selected>10%</option>
+                        <option value="7">7%</option>
+                        <option value="5">5%</option>
+                        <option value="0">0%</option>
+                    </select>
+                </span>
                 <span class="font-bold text-on-surface" id="vat-val">₭ 0</span>
             </div>
         </div>
 
         <div class="bg-surface-container-high rounded-lg p-4 mb-6 border border-primary/10">
             <div class="flex justify-between items-end">
-                <span class="font-headline-sm text-headline-sm text-on-surface font-bold">ຍອດລວມທັງໝົດ</span>
+                <span class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Grand total" %}</span>
                 <span class="font-headline-lg text-headline-lg ai-gradient-text font-bold" id="total-val">₭ 0</span>
             </div>
         </div>
 
         <!-- Final Approval / Signature -->
         <div class="mt-auto border-t border-outline-variant/50 pt-4">
-            <h3 class="font-semibold text-xs text-on-surface-variant uppercase mb-2">ເຊັນອະນຸມັດ</h3>
+            <h3 class="font-semibold text-xs text-on-surface-variant uppercase mb-2">{% trans "Approval signature" %}</h3>
             
             <div class="bg-surface border-2 border-dashed border-outline-variant hover:border-primary/50 rounded-lg h-28 mb-4 flex items-center justify-center relative cursor-crosshair group overflow-hidden" id="signature-container">
                 <canvas class="absolute inset-0 w-full h-full z-10" id="signature-canvas"></canvas>
                 <div class="z-0 flex items-center gap-1.5 text-outline-variant group-hover:text-primary transition-colors pointer-events-none" id="canvas-placeholder">
                     <span class="material-symbols-outlined text-sm">draw</span>
-                    <span class="font-semibold text-xs">ແຕະເພື່ອເຊັນຊື່</span>
+                    <span class="font-semibold text-xs">{% trans "Tap to sign" %}</span>
                 </div>
             </div>
 
             <button type="submit" class="w-full bg-primary hover:opacity-95 text-on-primary font-bold py-3 rounded-lg transition-all shadow-sm flex justify-center items-center gap-2 hover:scale-[1.02] active:scale-95">
                 <span class="material-symbols-outlined text-[20px]">send</span>
-                ສົ່ງໃບສະເໜີລາຄາ
+                {% trans "Submit quotation" %}
             </button>
             <button type="button" class="w-full mt-2 bg-transparent text-primary hover:bg-white/5 font-semibold py-3 rounded-lg transition-colors flex justify-center items-center border border-primary/20" onclick="saveDraft()">
-                ບັນທຶກເປັນຮ່າງ
+                {% trans "Save as draft" %}
             </button>
         </div>
     </aside>
@@ -224,6 +241,14 @@
     const promoBanner = document.getElementById('promo-banner');
     const promoCodeInput = document.getElementById('promo-code-input');
     const form = document.getElementById('quotation-form');
+    const i18n = {
+        emptySummary: '{{ js_empty_summary|escapejs }}',
+        codeApplied: '{{ js_code_applied|escapejs }}',
+        off: '{{ js_off|escapejs }}',
+        invalidCode: '{{ js_invalid_code|escapejs }}',
+        discount: '{{ js_discount|escapejs }}',
+        laoKip: '{{ js_lao_kip|escapejs }}'
+    };
 
     let subtotal = 0;
     let discount = 0;
@@ -279,7 +304,7 @@
         });
 
         if (subtotal === 0) {
-            summaryItemsContainer.innerHTML = '<div class="text-on-surface-variant/60 text-center py-4 italic text-xs">Select modules to view summary</div>';
+            summaryItemsContainer.innerHTML = `<div class="text-on-surface-variant/60 text-center py-4 italic text-xs">${i18n.emptySummary}</div>`;
         }
 
         calculateTotal();
@@ -292,19 +317,19 @@
             discountPercent = 20;
             discount = 0;
             promoBanner.classList.remove('hidden');
-            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> <span>ນຳໃຊ້ລະຫັດ <strong class="font-bold">KVAIPRO20</strong> ສຳເລັດ! (ຫຼຸດ 20%)</span>`;
+            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> <span>${i18n.codeApplied} <strong class="font-bold">KVAIPRO20</strong> (20% ${i18n.off})</span>`;
             promoCodeInput.value = 'KVAIPRO20';
         } else if (code === 'RAINY15') {
             discountPercent = 0;
             discount = 15000;
             promoBanner.classList.remove('hidden');
-            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> <span>ນຳໃຊ້ລະຫັດ <strong class="font-bold">RAINY15</strong> ສຳເລັດ! (ຫຼຸດ ₭15,000)</span>`;
+            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> <span>${i18n.codeApplied} <strong class="font-bold">RAINY15</strong> (₭15,000 ${i18n.off})</span>`;
             promoCodeInput.value = 'RAINY15';
         } else if (code === 'MISSYOU25') {
             discountPercent = 0;
             discount = 25000;
             promoBanner.classList.remove('hidden');
-            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> <span>ນຳໃຊ້ລະຫັດ <strong class="font-bold">MISSYOU25</strong> ສຳເລັດ! (ຫຼຸດ ₭25,000)</span>`;
+            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> <span>${i18n.codeApplied} <strong class="font-bold">MISSYOU25</strong> (₭25,000 ${i18n.off})</span>`;
             promoCodeInput.value = 'MISSYOU25';
         } else if (code === '') {
             clearPromo();
@@ -312,7 +337,7 @@
             discountPercent = 0;
             discount = 0;
             promoBanner.classList.remove('hidden');
-            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm text-status-error">error</span> <span class="text-status-error font-semibold">ລະຫັດບໍ່ຖືກຕ້ອງ</span>`;
+            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm text-status-error">error</span> <span class="text-status-error font-semibold">${i18n.invalidCode}</span>`;
             promoCodeInput.value = '';
         }
         calculateTotal();
@@ -327,13 +352,22 @@
         calculateTotal();
     }
 
+    let vatPercent = 10;
+    
+    function updateVatRate() {
+        const select = document.getElementById('vat-rate-select');
+        vatPercent = parseFloat(select.value) || 0;
+        document.getElementById('vat-rate-input').value = vatPercent;
+        calculateTotal();
+    }
+
     function calculateTotal() {
         let actualDiscount = discount;
         if (discountPercent > 0) {
             actualDiscount = Math.round(subtotal * (discountPercent / 100));
         }
 
-        const vat = Math.round((subtotal - actualDiscount) * 0.10);
+        const vat = Math.round((subtotal - actualDiscount) * (vatPercent / 100));
         let total = subtotal - actualDiscount + vat;
         if (total < 0) total = 0;
 
@@ -347,7 +381,7 @@
         if (actualDiscount > 0) {
             const discountHtml = `
                 <div id="discount-row" class="flex justify-between items-center text-secondary text-sm">
-                    <span class="font-body-md text-secondary">ສ່ວນຫຼຸດ (${discountPercent > 0 ? discountPercent + '%' : 'ກີບ'})</span>
+                    <span class="font-body-md text-secondary">${i18n.discount} (${discountPercent > 0 ? discountPercent + '%' : i18n.laoKip})</span>
                     <span class="font-bold">-${formatCurrency(actualDiscount)}</span>
                 </div>
             `;

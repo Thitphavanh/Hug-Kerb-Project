@@ -64,6 +64,15 @@
         transition: background .2s ease, transform .15s ease;
     }
     .member-btn:hover { background: color-mix(in srgb, var(--accent) 16%, transparent); transform: translateY(-1px); }
+
+    .logout-btn {
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        background: transparent; color: var(--text-muted);
+        border: 1px solid var(--surface-border);
+        border-radius: 14px; padding: 12px; text-decoration: none; font-weight: 600; font-size: 14px;
+        transition: all .2s ease; margin-top: 12px;
+    }
+    .logout-btn:hover { background: color-mix(in srgb, var(--text) 5%, transparent); color: var(--text); }
 </style>
 {% endblock %}
 
@@ -127,4 +136,9 @@
         💳 ບັດສະມາຊິກຂອງຂ້ອຍ — {{ member_card.points_balance }} ຄະແນນ
     </a>
     {% endif %}
+
+    <a class="logout-btn" href="{% url 'digital_member:logout' asset.public_token %}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        ອອກຈາກລະບົບ
+    </a>
 {% endblock %}

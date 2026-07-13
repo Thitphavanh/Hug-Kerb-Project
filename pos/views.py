@@ -1,6 +1,7 @@
 import re
 
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.loader import render_to_string
@@ -8,6 +9,29 @@ from django.template.loader import render_to_string
 from inventory.models import StockMovement, Supply
 
 from .models import Order, OrderItem, Payment, ServiceType, generate_order_number
+
+
+@login_required
+def customer_search(request):
+    """Return a small autocomplete list for the POS customer picker."""
+    from crm.models import Customer
+
+    query = request.GET.get("q", "").strip()
+    if not query:
+        return JsonResponse({"results": []})
+
+    customers = (
+        Customer.objects.filter(
+            Q(name__icontains=query) | Q(phone__icontains=query)
+        )
+        .order_by("name", "phone")[:8]
+    )
+    return JsonResponse({
+        "results": [
+            {"id": customer.pk, "name": customer.name, "phone": customer.phone}
+            for customer in customers
+        ]
+    })
 
 
 @login_required
@@ -73,12 +97,14 @@ def scan_lookup(request):
         "source": source,
         "label": label,
         "customer": {
+            "id": customer.pk if customer else None,
             "name": customer.name if customer else "",
             "phone": customer.phone if customer else "",
         },
         "asset": {
             "brand": asset.brand,
             "model_name": asset.model_name,
+            "color": asset.color,
             "size": asset.size,
         } if asset else None,
     })
@@ -87,6 +113,7 @@ def scan_lookup(request):
 @login_required
 def create_order(request):
     if request.method == "POST":
+        customer_id = request.POST.get("customer_id", "").strip()
         customer_name = request.POST.get("customer_name", "").strip()
         customer_phone = request.POST.get("customer_phone", "").strip()
 
@@ -94,10 +121,16 @@ def create_order(request):
             from crm.models import Customer
             from asset_intake.models import Asset
 
-            customer, _ = Customer.objects.get_or_create(
-                phone=customer_phone,
-                defaults={"name": customer_name}
+            customer = (
+                Customer.objects.filter(pk=customer_id).first()
+                if customer_id.isdigit()
+                else None
             )
+            if customer is None:
+                customer, _ = Customer.objects.get_or_create(
+                    phone=customer_phone,
+                    defaults={"name": customer_name}
+                )
 
             # Check if we have multiple items indexed
             indices_str = request.POST.get("item_indices")
@@ -118,6 +151,7 @@ def create_order(request):
                 for idx in indices:
                     brand = request.POST.get(f"brand_{idx}", "").strip()
                     model_name = request.POST.get(f"model_name_{idx}", "").strip()
+                    color = request.POST.get(f"color_{idx}", "").strip()
                     size = request.POST.get(f"size_{idx}", "").strip()
                     service_id = request.POST.get(f"service_{idx}", "")
 
@@ -127,6 +161,7 @@ def create_order(request):
                             customer=customer,
                             brand=brand,
                             model_name=model_name,
+                            color=color,
                             size=size,
                             status=Asset.Status.RECEIVED
                         )
@@ -134,11 +169,14 @@ def create_order(request):
                         # Create OrderItem
                         try:
                             service = ServiceType.objects.get(pk=service_id)
+                            desc = f"{service.name} for {brand} {model_name}"
+                            if color:
+                                desc += f" ({color})"
                             OrderItem.objects.create(
                                 order=order,
                                 service_type=service,
                                 asset=asset,
-                                description=f"{service.name} for {brand} {model_name}",
+                                description=desc,
                                 quantity=1,
                                 unit_price=service.price
                             )
@@ -148,6 +186,7 @@ def create_order(request):
                 # Single fallback item
                 brand = request.POST.get("brand", "").strip()
                 model_name = request.POST.get("model_name", "").strip()
+                color = request.POST.get("color", "").strip()
                 size = request.POST.get("size", "").strip()
                 service_id = request.POST.get("service", "")
                 
@@ -156,16 +195,20 @@ def create_order(request):
                         customer=customer,
                         brand=brand,
                         model_name=model_name,
+                        color=color,
                         size=size,
                         status=Asset.Status.RECEIVED
                     )
                     try:
                         service = ServiceType.objects.get(pk=service_id)
+                        desc = f"{service.name} for {brand} {model_name}"
+                        if color:
+                            desc += f" ({color})"
                         OrderItem.objects.create(
                             order=order,
                             service_type=service,
                             asset=asset,
-                            description=f"{service.name} for {brand} {model_name}",
+                            description=desc,
                             quantity=1,
                             unit_price=service.price
                         )
@@ -205,6 +248,7 @@ def quotation_view(request, pk):
     if request.method == "POST":
         selected_service_ids = request.POST.getlist("services")
         promo_code = request.POST.get("promo_code", "").strip().upper()
+        vat_rate = int(request.POST.get("vat_rate", 10))
         
         # Clear existing items
         order.items.all().delete()
@@ -230,6 +274,7 @@ def quotation_view(request, pk):
             discount_amount = 25000
             
         order.discount = discount_amount
+        order.vat_rate = vat_rate
         
         # Get first asset of this customer if any
         customer_asset = order.customer.assets.first() if order.customer else None
@@ -249,6 +294,7 @@ def quotation_view(request, pk):
         return redirect("pos:quotation_sign", pk=order.pk)
         
     context = {
+        "active_nav": "pos",
         "order": order,
         "all_services": all_services,
         "order_services": order_services,
@@ -274,9 +320,9 @@ def quotation_sign_view(request, pk):
             
         return redirect("pos:invoice", pk=order.pk)
         
-    # Calculate tax (VAT 10%)
-    vat_amount = int((order.subtotal - order.discount) / 10)
-    total_amount = order.subtotal - order.discount + vat_amount
+    # Calculate tax based on order.vat_rate
+    vat_amount = order.vat_amount
+    total_amount = order.total
     
     context = {
         "order": order,

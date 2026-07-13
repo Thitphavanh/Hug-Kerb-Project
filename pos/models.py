@@ -67,6 +67,9 @@ class Order(models.Model):
     discount = models.DecimalField(
         "ສ່ວນຫຼຸດ", max_digits=12, decimal_places=2, default=0
     )
+    vat_rate = models.IntegerField(
+        "ອັດຕາ VAT (%)", default=10
+    )
     note = models.TextField("ໝາຍເຫດ", blank=True)
     created_at = models.DateTimeField("ວັນທີສ້າງ", auto_now_add=True)
     updated_at = models.DateTimeField("ອັບເດດລ່າສຸດ", auto_now=True)
@@ -84,8 +87,12 @@ class Order(models.Model):
         return sum((item.subtotal for item in self.items.all()), start=0)
 
     @property
+    def vat_amount(self):
+        return int((self.subtotal - self.discount) * self.vat_rate / 100)
+
+    @property
     def total(self):
-        return self.subtotal - self.discount
+        return self.subtotal - self.discount + self.vat_amount
 
 
 class OrderItem(models.Model):

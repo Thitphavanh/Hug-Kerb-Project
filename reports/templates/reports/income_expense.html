@@ -2,9 +2,11 @@
 {% load custom_filters %}
 {% load i18n humanize %}
 
-{% block title %}{% trans "Financial Overview — Hug ເກີບ AI" %}{% endblock %}
+{% block title %}{% trans "Financial overview" %} — Hug ເກີບ AI{% endblock %}
 
 {% block content %}
+{% trans "Income" as chart_income_label %}
+{% trans "Expenses" as chart_expense_label %}
 <!-- Chart.js for visualizations -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -39,8 +41,8 @@
 <!-- Header Section -->
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-xl gap-md w-full">
     <div>
-        <h1 class="font-display-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-xs font-bold">Financial Overview</h1>
-        <p class="font-body-md text-body-md text-on-surface-variant">ລາຍຮັບ-ລາຍຈ່າຍ &amp; AI Analysis (ການວິເຄາະ AI)</p>
+        <h1 class="font-display-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-xs font-bold">{% trans "Financial overview" %}</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">{% trans "Income, expenses and AI analysis" %}</p>
     </div>
     <div class="flex gap-sm w-full md:w-auto">
         <div class="flex bg-surface-container rounded-lg p-0.5 border border-outline-variant/30">
@@ -52,7 +54,7 @@
         </div>
         <button class="flex items-center justify-center gap-xs px-4 py-2 bg-primary text-on-primary rounded-lg font-bold text-xs shadow-sm hover:opacity-90 transition-opacity">
             <span class="material-symbols-outlined text-sm">download</span>
-            Export
+            {% trans "Export" %}
         </button>
     </div>
 </div>
@@ -72,7 +74,7 @@
                 </span>
             </div>
             <div>
-                <p class="font-bold text-xs text-on-surface-variant mb-1">Total Revenue (ລາຍຮັບ)</p>
+                <p class="font-bold text-xs text-on-surface-variant mb-1">{% trans "Total revenue" %}</p>
                 <h2 class="font-display-lg text-headline-md text-on-surface font-bold">₭ {{ income_total|money }}</h2>
             </div>
         </div>
@@ -88,7 +90,7 @@
                 </span>
             </div>
             <div>
-                <p class="font-bold text-xs text-on-surface-variant mb-1">Total Expenses (ລາຍຈ່າຍ)</p>
+                <p class="font-bold text-xs text-on-surface-variant mb-1">{% trans "Total expenses" %}</p>
                 <h2 class="font-display-lg text-headline-md text-on-surface font-bold">₭ {{ expense_total|money }}</h2>
             </div>
         </div>
@@ -104,7 +106,7 @@
                 </span>
             </div>
             <div>
-                <p class="font-bold text-xs text-on-surface-variant mb-1">Net Profit</p>
+                <p class="font-bold text-xs text-on-surface-variant mb-1">{% trans "Net profit" %}</p>
                 <h2 class="font-display-lg text-headline-md text-on-surface font-bold">₭ {{ net_total|money }}</h2>
             </div>
         </div>
@@ -116,11 +118,11 @@
                 <div class="p-2 bg-surface-container-lowest rounded-lg text-secondary">
                     <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">psychology</span>
                 </div>
-                <span class="font-bold text-[10px] text-secondary">AI Insight</span>
+                <span class="font-bold text-[10px] text-secondary">{% trans "AI insight" %}</span>
             </div>
             <div class="relative z-10">
                 <p class="font-body-md text-xs text-on-surface-variant leading-snug">
-                    Cash flow is projected to remain positive for Q3 based on current historical trends.
+                    {% trans "Cash flow is projected to remain positive for Q3 based on current historical trends." %}
                 </p>
             </div>
         </div>
@@ -130,10 +132,10 @@
     <div class="md:col-span-8 bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm p-6 flex flex-col min-h-[400px]">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Cashflow Overview</h3>
-                <p class="font-body-sm text-xs text-on-surface-variant">Income vs Expenses (Monthly)</p>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Cashflow overview" %}</h3>
+                <p class="font-body-sm text-xs text-on-surface-variant">{% trans "Income vs expenses (monthly)" %}</p>
             </div>
-            <button class="p-1 hover:bg-surface-container rounded transition-colors text-on-surface-variant">
+            <button class="p-1 hover:bg-surface-container rounded transition-colors text-on-surface-variant" aria-label="{% trans 'More options' %}">
                 <span class="material-symbols-outlined">more_vert</span>
             </button>
         </div>
@@ -146,9 +148,9 @@
     <div class="md:col-span-4 bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm p-6 flex flex-col justify-between">
         <div class="flex justify-between items-center mb-4">
             <div>
-                <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Customer Segments</h3>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Customer segments" %}</h3>
                 <p class="font-label-sm text-xs text-primary flex items-center gap-1 font-bold">
-                    <span class="material-symbols-outlined text-[14px]">auto_awesome</span> AI RFM Analysis
+                    <span class="material-symbols-outlined text-[14px]">auto_awesome</span> {% trans "AI RFM analysis" %}
                 </p>
             </div>
         </div>
@@ -172,20 +174,20 @@
     <div class="md:col-span-12 bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm overflow-hidden flex flex-col mt-2">
         <div class="p-5 border-b border-outline-variant/30 bg-surface-container-low/50 flex justify-between items-center">
             <div>
-                <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">RFM AI Segment Detail (ການວິເຄາະ AI)</h3>
-                <p class="font-body-sm text-xs text-on-surface-variant">Actionable insights based on Recency, Frequency, Monetary value.</p>
+                <h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "RFM AI segment details" %}</h3>
+                <p class="font-body-sm text-xs text-on-surface-variant">{% trans "Actionable insights based on recency, frequency and monetary value." %}</p>
             </div>
-            <a href="/admin/crm/customer/" class="text-primary font-bold text-xs hover:underline">View Full Report</a>
+            <a href="/admin/crm/customer/" class="text-primary font-bold text-xs hover:underline">{% trans "View full report" %}</a>
         </div>
         <div class="overflow-x-auto w-full">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-surface-container-low font-bold text-xs text-on-surface-variant uppercase tracking-wider">
-                        <th class="p-4 border-b border-outline-variant/20">Customer Name</th>
-                        <th class="p-4 border-b border-outline-variant/20">Segment</th>
-                        <th class="p-4 border-b border-outline-variant/20">Last Order</th>
-                        <th class="p-4 border-b border-outline-variant/20 text-right">Total Spend</th>
-                        <th class="p-4 border-b border-outline-variant/20">AI Recommended Action</th>
+                        <th class="p-4 border-b border-outline-variant/20">{% trans "Customer name" %}</th>
+                        <th class="p-4 border-b border-outline-variant/20">{% trans "Segment" %}</th>
+                        <th class="p-4 border-b border-outline-variant/20">{% trans "Last order" %}</th>
+                        <th class="p-4 border-b border-outline-variant/20 text-right">{% trans "Total spend" %}</th>
+                        <th class="p-4 border-b border-outline-variant/20">{% trans "AI recommended action" %}</th>
                     </tr>
                 </thead>
                 <tbody class="text-sm text-on-surface divide-y divide-outline-variant/10">
@@ -194,7 +196,7 @@
                         <td class="p-4 font-bold">{{ customer.name }}</td>
                         <td class="p-4">
                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border {% if customer.segment == 'VIP' %}bg-secondary-container/20 text-secondary border-secondary/20{% elif customer.segment == 'Loyal' %}bg-primary-container/20 text-primary border-primary/20{% else %}bg-error-container/20 text-status-error border-error-container{% endif %}">
-                                {{ customer.segment }}
+                                {{ customer.segment_label }}
                             </span>
                         </td>
                         <td class="p-4 text-on-surface-variant text-xs">{{ customer.last_order }}</td>
@@ -205,7 +207,7 @@
                         </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="5" class="p-8 text-center text-on-surface-variant italic text-xs">No customer data available yet.</td></tr>
+                    <tr><td colspan="5" class="p-8 text-center text-on-surface-variant italic text-xs">{% trans "No customer data available yet." %}</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -230,7 +232,7 @@
                 labels: {{ chart_labels|safe }},
                 datasets: [
                     {
-                        label: 'Income (ລາຍຮັບ)',
+                        label: '{{ chart_income_label|escapejs }}',
                         data: {{ chart_income|safe }},
                         backgroundColor: primaryColor,
                         borderRadius: 4,
@@ -238,7 +240,7 @@
                         categoryPercentage: 0.8
                     },
                     {
-                        label: 'Expenses (ລາຍຈ່າຍ)',
+                        label: '{{ chart_expense_label|escapejs }}',
                         data: {{ chart_expense|safe }},
                         backgroundColor: expenseColor,
                         borderRadius: 4,

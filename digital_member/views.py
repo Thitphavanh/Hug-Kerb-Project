@@ -117,3 +117,12 @@ def member_card_view(request, card_number):
         "digital_member/member_card.html",
         {"card": card, "transactions": card.transactions.all()[:10]},
     )
+
+
+def logout_portal(request, token):
+    """ອອກຈາກລະບົບ (ລຶບ session ສຳລັບໃບບິນນີ້)"""
+    asset = get_object_or_404(Asset, public_token=token)
+    session_key = _session_key(asset)
+    if session_key in request.session:
+        del request.session[session_key]
+    return redirect("digital_member:lookup")

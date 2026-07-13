@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from xhtml2pdf import pisa
 
 from ai_mart_grading.models import ChecklistItem
@@ -26,6 +27,15 @@ def intake_list(request):
     assets = Asset.objects.select_related("customer").exclude(
         status=Asset.Status.RETURNED
     )
+    status_labels = {
+        Asset.Status.RECEIVED: _("Received"),
+        Asset.Status.CLEANING: _("Cleaning"),
+        Asset.Status.REPAIRING: _("Repairing"),
+        Asset.Status.READY: _("Ready for pickup"),
+        Asset.Status.RETURNED: _("Completed"),
+    }
+    for asset in assets:
+        asset.localized_status = status_labels.get(asset.status, asset.status)
     return render(
         request,
         "asset_intake/intake_list.html",
@@ -291,11 +301,11 @@ def kanban_board(request):
     )
 
     stages = [
-        {"id": "received", "name": "Intake (ຮັບເຂົ້າ)"},
-        {"id": "cleaning", "name": "Cleaning (ຊັກ)"},
-        {"id": "repairing", "name": "Repairing (ສ້ອມແປງ)"},
-        {"id": "ready", "name": "Ready (ລໍຖ້າຮັບ)"},
-        {"id": "returned", "name": "Completed (ສົ່ງມອບແລ້ວ)", "hint": "7 ວັນຫຼ້າສຸດ"},
+        {"id": "received", "name": _("Intake")},
+        {"id": "cleaning", "name": _("Cleaning")},
+        {"id": "repairing", "name": _("Repairing")},
+        {"id": "ready", "name": _("Ready for pickup")},
+        {"id": "returned", "name": _("Completed"), "hint": _("Last 7 days")},
     ]
     
     return render(

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{{ page_title }} — Hug ເກີບ AI{% endblock %}
+
+{% block content %}
+<section class="mx-auto max-w-4xl space-y-6">
+    <div class="flex items-center justify-between gap-4">
+        <div><p class="text-xs font-bold uppercase tracking-widest text-ai-cyan">{% trans "Manual ledger entry" %}</p><h1 class="mt-1 text-3xl font-bold">{{ page_title }}</h1><p class="mt-1 text-sm text-on-surface-variant">{% trans "POS income is recorded automatically, so you do not need to enter it again." %}</p></div>
+        <a href="{% url 'accounting:dashboard' %}" class="rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-4 py-2 text-sm font-bold hover:border-ai-cyan">{% trans "Back" %}</a>
+    </div>
+    <form method="post" enctype="multipart/form-data" class="overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest shadow-sm">
+        {% csrf_token %}
+        <div class="border-b border-outline-variant/20 bg-surface-container-low px-6 py-4"><h2 class="font-bold">{% trans "Transaction details" %}</h2></div>
+        <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+            {% if form.non_field_errors %}<div class="md:col-span-2 rounded-lg bg-status-error/10 p-3 text-sm text-status-error">{{ form.non_field_errors }}</div>{% endif %}
+            {% for field in form %}
+            <label class="{% if field.name == 'description' or field.name == 'note' or field.name == 'attachment' %}md:col-span-2{% endif %}">
+                <span class="mb-1.5 block text-sm font-bold text-on-surface">{{ field.label }}{% if field.field.required %}<span class="text-status-error"> *</span>{% endif %}</span>
+                {{ field }}
+                {% if field.help_text %}<span class="mt-1 block text-xs text-on-surface-variant">{{ field.help_text }}</span>{% endif %}
+                {% for error in field.errors %}<span class="mt-1 block text-xs text-status-error">{{ error }}</span>{% endfor %}
+            </label>
+            {% endfor %}
+        </div>
+        <div class="flex flex-col-reverse gap-3 border-t border-outline-variant/20 bg-surface-container-low px-6 py-4 sm:flex-row sm:justify-end">
+            <a href="{% url 'accounting:dashboard' %}" class="rounded-lg border border-outline-variant/40 px-5 py-2.5 text-center font-bold text-on-surface-variant">{% trans "Cancel" %}</a>
+            <button class="btn-gradient inline-flex items-center justify-center gap-2 rounded-lg px-6 py-2.5 font-bold text-on-primary"><span class="material-symbols-outlined">save</span> {% trans "Save transaction" %}</button>
+        </div>
+    </form>
+</section>
+{% endblock %}

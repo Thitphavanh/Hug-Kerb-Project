@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}AI Grading Queue — Hug ເກີບ AI{% endblock %}
+{% block title %}{% trans "AI grading queue" %} — Hug ເກີບ AI{% endblock %}
 
 {% block content %}
 <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
     <div>
-        <h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">ລະບົບກວດສອບ ແລະ ປະເມີນລາຄາ AI</h2>
-        <p class="text-on-surface-variant font-body-md mt-2">Asset intake queue for sneaker condition assessment and valuation.</p>
+        <h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">{% trans "AI inspection and valuation system" %}</h2>
+        <p class="text-on-surface-variant font-body-md mt-2">{% trans "Asset intake queue for sneaker condition assessment and valuation." %}</p>
     </div>
     <div class="flex items-center gap-3">
         <span class="relative flex h-3 w-3">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-ai-cyan opacity-75"></span>
             <span class="relative inline-flex rounded-full h-3 w-3 bg-ai-cyan"></span>
         </span>
-        <span class="font-data-mono text-data-mono text-ai-cyan">AI Engine Active</span>
+        <span class="font-data-mono text-data-mono text-ai-cyan">{% trans "AI engine active" %}</span>
         <a href="{% url 'asset_intake:create' %}" class="btn-gradient text-on-primary font-label-caps text-label-caps py-2.5 px-4 rounded-lg font-bold flex items-center gap-2">
             <span class="material-symbols-outlined text-sm">add_a_photo</span>
-            New Intake
+            {% trans "New intake" %}
         </a>
     </div>
 </div>
@@ -25,10 +25,10 @@
 <section class="glass-card rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center">
     <div class="relative flex-1 w-full">
         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-        <input class="w-full bg-surface-container border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-ai-cyan focus:ring-1 focus:ring-ai-cyan transition-all" placeholder="Search ticket, customer, brand, model...">
+        <input class="w-full bg-surface-container border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-ai-cyan focus:ring-1 focus:ring-ai-cyan transition-all" placeholder="{% trans 'Search ticket, customer, brand or model...' %}">
     </div>
     <select class="bg-surface-container border border-white/10 rounded-lg py-2.5 px-4 text-on-surface focus:outline-none focus:border-ai-cyan">
-        <option>All statuses</option><option>Waiting</option><option>Grading</option><option>Ready</option>
+        <option>{% trans "All statuses" %}</option><option>{% trans "Waiting" %}</option><option>{% trans "Grading" %}</option><option>{% trans "Ready" %}</option>
     </select>
 </section>
 
@@ -37,12 +37,12 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="border-b border-white/10 bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
-                    <th class="px-5 py-3">ເລກໃບຮັບ</th>
-                    <th class="px-5 py-3">ລູກຄ້າ</th>
-                    <th class="px-5 py-3">ເກີບ</th>
-                    <th class="px-5 py-3">ສະຖານະ</th>
-                    <th class="px-5 py-3">ວັນທີຮັບເຂົ້າ</th>
-                    <th class="px-5 py-3 text-right">Action</th>
+                    <th class="px-5 py-3">{% trans "Ticket number" %}</th>
+                    <th class="px-5 py-3">{% trans "Customer" %}</th>
+                    <th class="px-5 py-3">{% trans "Sneaker" %}</th>
+                    <th class="px-5 py-3">{% trans "Status" %}</th>
+                    <th class="px-5 py-3">{% trans "Intake date" %}</th>
+                    <th class="px-5 py-3 text-right">{% trans "Actions" %}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-white/5">
@@ -61,12 +61,12 @@
                             </div>
                         </div>
                     </td>
-                    <td class="px-5 py-4"><span class="px-2 py-1 rounded-full text-xs bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/20">{{ asset.get_status_display }}</span></td>
+                    <td class="px-5 py-4"><span class="px-2 py-1 rounded-full text-xs bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/20">{{ asset.localized_status }}</span></td>
                     <td class="px-5 py-4 text-on-surface-variant">{{ asset.intake_date|date:"d/m/Y H:i" }}</td>
-                    <td class="px-5 py-4 text-right"><a href="{% url 'asset_intake:detail' asset.pk %}" class="text-ai-cyan hover:underline">Open →</a></td>
+                    <td class="px-5 py-4 text-right"><a href="{% url 'asset_intake:detail' asset.pk %}" class="text-ai-cyan hover:underline">{% trans "Open" %} →</a></td>
                 </tr>
                 {% empty %}
-                <tr><td colspan="6" class="px-5 py-8 text-center text-on-surface-variant">ຍັງບໍ່ມີເຄື່ອງຮັບຝາກ</td></tr>
+                <tr><td colspan="6" class="px-5 py-8 text-center text-on-surface-variant">{% trans "No intake items yet." %}</td></tr>
                 {% endfor %}
             </tbody>
         </table>

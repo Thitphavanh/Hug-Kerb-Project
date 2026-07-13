@@ -1,12 +1,16 @@
 {% extends 'base.html' %}
 {% load i18n %}
 
-{% block title %}Kanban - Job Tracking{% endblock %}
+{% block title %}{% trans "Kanban Job Tracking" %} — Hug ເກີບ AI{% endblock %}
 
 {% block content %}
 <div class="h-full flex flex-col space-y-6">
     <div class="flex items-center justify-between">
-        <h1 class="text-2xl font-bold font-heading text-on-surface">Kanban Job Tracking</h1>
+        <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-ai-cyan">{% trans "Live workflow" %}</p>
+            <h1 class="mt-1 text-2xl font-bold font-heading text-on-surface">{% trans "Kanban Job Tracking" %}</h1>
+            <p class="mt-1 text-sm text-on-surface-variant">{% trans "Drag each job to update its service status." %}</p>
+        </div>
     </div>
 
     <!-- Kanban Board Container -->
@@ -34,12 +38,13 @@
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-xs font-mono bg-primary-container text-on-primary-container px-2 py-0.5 rounded">{{ asset.ticket_number }}</span>
                             <!-- QR Tag Print Button -->
-                            <a href="{% url 'asset_intake:ticket_view' asset.pk %}" target="_blank" class="text-on-surface-variant hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="Print Tag">
+                            <a href="{% url 'asset_intake:ticket_view' asset.pk %}" target="_blank" class="text-on-surface-variant hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="{% trans 'Print tag' %}">
                                 <span class="material-symbols-outlined text-sm">qr_code_2</span>
                             </a>
                         </div>
                         <h4 class="font-semibold text-on-surface text-sm mb-1">{{ asset.brand }} {{ asset.model_name }}</h4>
-                        <p class="text-xs text-on-surface-variant line-clamp-2 mb-2">{{ asset.condition_note|default:"No notes provided." }}</p>
+                        {% trans "No notes provided." as no_notes %}
+                        <p class="text-xs text-on-surface-variant line-clamp-2 mb-2">{{ asset.condition_note|default:no_notes }}</p>
                         {% if asset.assigned_to %}
                         <p class="text-xs text-ai-cyan flex items-center gap-1 mb-3">
                             <span class="material-symbols-outlined text-[14px]">engineering</span>
@@ -55,7 +60,7 @@
                                 <span class="text-xs font-medium text-on-surface-variant truncate max-w-[100px]">{{ asset.customer.name }}</span>
                             </div>
                             <a href="{% url 'asset_intake:detail' asset.pk %}" class="text-primary text-xs font-medium hover:underline flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                View <span class="material-symbols-outlined text-[14px] ml-1">arrow_forward</span>
+                                {% trans "View" %} <span class="material-symbols-outlined text-[14px] ml-1">arrow_forward</span>
                             </a>
                         </div>
                     </div>
@@ -68,6 +73,8 @@
     </div>
 </div>
 
+{% trans "Failed to update status." as failed_update_message %}
+{% trans "Error updating status." as error_update_message %}
 <script>
     // Initialize counts
     function updateCounts() {
@@ -154,12 +161,12 @@
         .then(response => response.json())
         .then(data => {
             if(!data.success) {
-                alert("Failed to update status.");
+                alert("{{ failed_update_message|escapejs }}");
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert("Error updating status.");
+            alert("{{ error_update_message|escapejs }}");
         });
     }
 

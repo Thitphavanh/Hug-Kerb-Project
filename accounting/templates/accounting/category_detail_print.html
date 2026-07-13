@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load i18n static humanize l10n %}
+
+{% block title %}
+    {% if request.LANGUAGE_CODE == 'en' %}{{ title_en }} Detail{% else %}ລາຍລະອຽດ {{ title_lo }}{% endif %} | Hug ເກີບ AI
+{% endblock %}
+
+{% block content %}
+<style>
+    .document-page {
+        background-color: white;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 15mm 12mm;
+        margin: 0 auto;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        position: relative;
+        box-sizing: border-box;
+    }
+    @media (max-width: 900px) {
+        .document-page {
+            width: 100%;
+            min-height: auto;
+            padding: 8mm 5mm;
+            font-size: 9pt;
+        }
+    }
+    @media print {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        aside#sidebar, nav#bottom-nav, #bottom-nav, header, .no-print, button, .btn, form {
+            display: none !important;
+        }
+        body, html { background: #fff !important; color: #000 !important; margin: 0 !important; padding: 0 !important; height: auto !important; }
+        main, .flex-1 { padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+        .document-page { box-shadow: none !important; border: none !important; width: 100% !important; min-height: 100% !important; padding: 5mm !important; margin: 0 !important; }
+        @page { size: A4; margin: 0; }
+    }
+</style>
+
+<div class="flex flex-col xl:flex-row gap-6 h-full">
+
+    <!-- Filter / Actions sidebar (not printed) -->
+    <div class="w-full xl:w-72 shrink-0 space-y-4 no-print">
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+            <h3 class="font-black text-slate-800 text-lg">
+                {% if request.LANGUAGE_CODE == 'en' %}Filter{% else %}ການກັ່ນຕອງ{% endif %}
+            </h3>
+            <form method="get" class="space-y-4">
+                <input type="hidden" name="key" value="{{ key }}">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">{% if request.LANGUAGE_CODE == 'en' %}Month / Year:{% else %}ເດືອນ / ປີ:{% endif %}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select name="month" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="01" {% if selected_month == '01' %}selected{% endif %}>01</option>
+                            <option value="02" {% if selected_month == '02' %}selected{% endif %}>02</option>
+                            <option value="03" {% if selected_month == '03' %}selected{% endif %}>03</option>
+                            <option value="04" {% if selected_month == '04' %}selected{% endif %}>04</option>
+                            <option value="05" {% if selected_month == '05' %}selected{% endif %}>05</option>
+                            <option value="06" {% if selected_month == '06' %}selected{% endif %}>06</option>
+                            <option value="07" {% if selected_month == '07' %}selected{% endif %}>07</option>
+                            <option value="08" {% if selected_month == '08' %}selected{% endif %}>08</option>
+                            <option value="09" {% if selected_month == '09' %}selected{% endif %}>09</option>
+                            <option value="10" {% if selected_month == '10' %}selected{% endif %}>10</option>
+                            <option value="11" {% if selected_month == '11' %}selected{% endif %}>11</option>
+                            <option value="12" {% if selected_month == '12' %}selected{% endif %}>12</option>
+                        </select>
+                        <input type="number" name="year" value="{{ selected_year|unlocalize }}" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">{% if request.LANGUAGE_CODE == 'en' %}Currency:{% else %}ສະກຸນເງິນ:{% endif %}</label>
+                    <select name="currency" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="LAK" {% if currency == 'LAK' %}selected{% endif %}>LAK (ກີບ)</option>
+                        <option value="THB" {% if currency == 'THB' %}selected{% endif %}>THB (ບາດ)</option>
+                        <option value="USD" {% if currency == 'USD' %}selected{% endif %}>USD (ໂດລາ)</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl transition">
+                    {% if request.LANGUAGE_CODE == 'en' %}Apply{% else %}ສະແດງ{% endif %}
+                </button>
+            </form>
+
+            <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                <button onclick="window.print()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fas fa-print"></i>
+                    {% if request.LANGUAGE_CODE == 'en' %}Print{% else %}ພິມ{% endif %}
+                </button>
+                <a href="{% url 'accounting:dashboard' %}" class="w-full py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-sm rounded-xl text-center transition">
+                    {% if request.LANGUAGE_CODE == 'en' %}Back{% else %}ກັບຄືນ{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable sheet -->
+    <div class="flex-1 overflow-x-auto p-2">
+        <div class="document-page text-black">
+
+            <!-- Country header -->
+            <div class="text-center space-y-0.5 mb-5">
+                <p class="font-black text-sm leading-tight" style="font-family: 'Lexend', 'Phetsarath', 'Phetsarath OT', sans-serif;">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</p>
+                <p class="text-[10px] font-semibold" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">ສັນຕິພາບ ເອກະພາບ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</p>
+            </div>
+
+            <!-- Brand header -->
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-[#efefef] flex items-center justify-center border border-slate-300">
+                    <span class="material-symbols-outlined text-[#00ADEF] text-2xl fill" style="font-variation-settings: 'FILL' 1;">steps</span>
+                </div>
+                <div>
+                    <h2 class="text-base font-black tracking-tight" style="font-family: 'Lexend', sans-serif;"><span style="color:#00ADEF;">Hug เກີບ AI</span></h2>
+                    <p class="text-[9px] text-slate-500 font-medium">Premium Shoe Cleaning & Care</p>
+                </div>
+            </div>
+
+            <!-- Title banner -->
+            <div class="w-full bg-[#3b82f6] text-white py-2 px-4 rounded-md text-center mb-3">
+                <h1 class="text-sm font-black tracking-wider leading-tight" style="font-family: 'Lexend', sans-serif;">
+                    {{ title_en }} Detail ({{ currency }}) {{ selected_month }}/{{ selected_year|unlocalize }}
+                </h1>
+                <h2 class="text-xs font-bold leading-tight" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                    ລາຍລະອຽດ {{ title_lo }} ({{ currency }}) ປະຈຳເດືອນ {{ selected_month }}/{{ selected_year|unlocalize }}
+                </h2>
+            </div>
+
+            <!-- Detail table -->
+            <table class="w-full border-collapse border border-slate-800 text-[11px] mb-5" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-800">
+                        <th class="border border-slate-800 px-3 py-2 text-center font-black w-10">#</th>
+                        <th class="border border-slate-800 px-3 py-2 text-center font-black w-24">ວັນທີ (Date)</th>
+                        <th class="border border-slate-800 px-3 py-2 text-left font-black">ລາຍການ (Description)</th>
+                        <th class="border border-slate-800 px-3 py-2 text-right font-black w-32">ຈຳນວນເງິນ (Amount)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for it in items %}
+                    <tr>
+                        <td class="border border-slate-800 px-2 py-1.5 text-center text-slate-500">{{ forloop.counter }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-center">{{ it.date|date:'d/m/Y' }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-left font-semibold text-slate-800">{{ it.description }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-right font-bold text-slate-900">{{ it.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="border border-slate-800 px-3 py-8 text-center text-slate-400">
+                            {% if request.LANGUAGE_CODE == 'en' %}No records for this period{% else %}ບໍ່ມີລາຍການໃນເດືອນນີ້{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="font-black bg-amber-300 text-slate-900">
+                        <td colspan="3" class="border border-slate-800 px-3 py-2 text-right">{% if request.LANGUAGE_CODE == 'en' %}TOTAL{% else %}ລວມທັງໝົດ{% endif %} ({{ currency }})</td>
+                        <td class="border border-slate-800 px-3 py-2 text-right">{{ total|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Signatures -->
+            <div class="grid grid-cols-3 gap-4 pt-8 text-center text-[10px] font-bold" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <div class="space-y-12"><p>ຜູ້ກວດສອບ</p><p class="text-slate-400 font-normal text-[9px]">..............................</p></div>
+                <div class="space-y-12"><p>ຫົວໜ້າບັນຊີ</p><p class="text-slate-400 font-normal text-[9px]">..............................</p></div>
+                <div class="space-y-12"><p>ຜູ້ລາຍງານ</p><p class="text-slate-400 font-normal text-[9px]">..............................</p></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

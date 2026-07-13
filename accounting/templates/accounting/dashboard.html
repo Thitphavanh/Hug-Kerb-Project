@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load humanize i18n %}
+
+{% block title %}{% trans "Accounting system" %} — Hug ເກີບ AI{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+    <div class="flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+        <div>
+            <div class="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-[.18em] text-ai-cyan">
+                <span class="h-2 w-2 rounded-full bg-ai-cyan pulse-dot"></span> {% trans "Finance command center" %}
+            </div>
+            <h1 class="font-display-lg text-3xl font-bold text-on-surface md:text-4xl">{% trans "Income and expense accounting" %}</h1>
+            <p class="mt-2 text-on-surface-variant">{% trans "POS and manual entries are combined in one place." %}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{% url 'accounting:transaction_create' %}" class="btn-gradient inline-flex items-center gap-2 rounded-lg px-5 py-3 font-bold text-on-primary shadow-lg transition hover:-translate-y-0.5">
+                <span class="material-symbols-outlined">add_circle</span> {% trans "Add transaction" %}
+            </a>
+            <a href="{% url 'accounting:report' %}" class="inline-flex items-center gap-2 rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-5 py-3 font-bold text-on-surface hover:border-ai-cyan">
+                <span class="material-symbols-outlined">analytics</span> {% trans "View report" %}
+            </a>
+        </div>
+    </div>
+
+    {% include "accounting/_nav.html" %}
+
+    <form method="get" class="glass-card grid grid-cols-1 gap-3 rounded-xl p-4 sm:grid-cols-2 lg:grid-cols-6">
+        <label class="lg:col-span-1">
+            <span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "Date" %}</span>
+            <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}" class="w-full rounded-lg border-outline-variant/40 bg-surface-container-lowest text-sm">
+        </label>
+        <label>
+            <span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "Transaction type" %}</span>
+            <select name="type" class="w-full rounded-lg border-outline-variant/40 bg-surface-container-lowest text-sm">
+                <option value="">{% trans "All" %}</option>
+                <option value="IN" {% if filters.type == 'IN' %}selected{% endif %}>{% trans "Income" %}</option>
+                <option value="OUT" {% if filters.type == 'OUT' %}selected{% endif %}>{% trans "Expense" %}</option>
+            </select>
+        </label>
+        <label>
+            <span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "Currency" %}</span>
+            <select name="currency" class="w-full rounded-lg border-outline-variant/40 bg-surface-container-lowest text-sm">
+                <option value="">{% trans "All currencies" %}</option>
+                {% for code in currencies %}<option value="{{ code }}" {% if filters.currency == code %}selected{% endif %}>{{ code }}</option>{% endfor %}
+            </select>
+        </label>
+        <label>
+            <span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "Category" %}</span>
+            <select name="category" class="w-full rounded-lg border-outline-variant/40 bg-surface-container-lowest text-sm">
+                <option value="">{% trans "All categories" %}</option>
+                {% for category in categories %}<option value="{{ category.pk }}" {% if filters.category == category.pk|stringformat:'s' %}selected{% endif %}>{{ category.name }}</option>{% endfor %}
+            </select>
+        </label>
+        <label class="sm:col-span-2 lg:col-span-2">
+            <span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "Search" %}</span>
+            <span class="flex gap-2">
+                <input type="search" name="q" value="{{ filters.q }}" placeholder="{% trans 'Description or reference number...' %}" class="min-w-0 flex-1 rounded-lg border-outline-variant/40 bg-surface-container-lowest text-sm">
+                <button class="rounded-lg bg-ai-cyan px-4 text-on-primary" aria-label="{% trans 'Search' %}"><span class="material-symbols-outlined align-middle">search</span></button>
+            </span>
+        </label>
+    </form>
+
+    <div class="grid grid-cols-1 gap-4 xl:grid-cols-3">
+        {% for currency, stats in daily_totals.items %}
+        <article class="metric-card relative overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5 shadow-sm">
+            <div class="absolute -right-8 -top-8 h-28 w-28 rounded-full bg-ai-cyan/10 blur-2xl"></div>
+            <div class="relative flex items-start justify-between">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{{ currency }} · {{ selected_date|date:"d/m/Y" }}</p>
+                    <h2 class="mt-2 font-data-mono text-3xl font-bold {% if stats.balance < 0 %}text-status-error{% else %}text-on-surface{% endif %}">{{ stats.balance|floatformat:0|intcomma }}</h2>
+                    <p class="mt-1 text-xs text-on-surface-variant">{% trans "Daily net balance" %}</p>
+                </div>
+                <span class="material-symbols-outlined rounded-xl bg-ai-cyan/10 p-3 text-ai-cyan">account_balance</span>
+            </div>
+            <div class="relative mt-5 grid grid-cols-2 gap-3 border-t border-outline-variant/20 pt-4 text-sm">
+                <div><p class="text-xs text-on-surface-variant">{% trans "Income" %}</p><p class="mt-1 font-data-mono font-bold text-emerald-500">+{{ stats.income|floatformat:0|intcomma }}</p></div>
+                <div><p class="text-xs text-on-surface-variant">{% trans "Expense" %}</p><p class="mt-1 font-data-mono font-bold text-status-error">-{{ stats.expense|floatformat:0|intcomma }}</p></div>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+        <article class="overflow-hidden rounded-xl border border-outline-variant/30 bg-surface-container-lowest xl:col-span-2">
+            <div class="flex items-center justify-between border-b border-outline-variant/20 px-5 py-4">
+                <div><h2 class="text-lg font-bold">{% trans "Daily transactions" %}</h2><p class="text-xs text-on-surface-variant">{% blocktrans count counter=transactions|length %}{{ counter }} transaction{% plural %}{{ counter }} transactions{% endblocktrans %} · {% trans "POS entries are read-only" %}</p></div>
+                <span class="rounded-full bg-surface-container px-3 py-1 text-xs text-on-surface-variant">{{ selected_date|date:"d M Y" }}</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[850px] text-left text-sm">
+                    <thead class="bg-surface-container-low text-xs uppercase tracking-wider text-on-surface-variant">
+                        <tr><th class="px-5 py-3">{% trans "Time / transaction" %}</th><th class="px-4 py-3">{% trans "Category" %}</th><th class="px-4 py-3">{% trans "Source" %}</th><th class="px-4 py-3">{% trans "Method" %}</th><th class="px-4 py-3 text-right">{% trans "Amount" %}</th><th class="px-5 py-3 text-right">{% trans "Actions" %}</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant/15">
+                        {% for row in transactions %}
+                        <tr class="data-row transition hover:bg-surface-container-low/80">
+                            {% trans "No reference number" as no_reference %}
+                            <td class="px-5 py-4"><div class="flex gap-3"><span class="mt-1 h-2.5 w-2.5 shrink-0 rounded-full {% if row.type == 'IN' %}bg-emerald-500{% else %}bg-status-error{% endif %}"></span><div><p class="font-semibold text-on-surface">{{ row.description }}</p><p class="mt-1 text-xs text-on-surface-variant">{% if row.time %}{{ row.time|time:"H:i" }} · {% endif %}{{ row.reference|default:no_reference }}</p></div></div></td>
+                            <td class="px-4 py-4"><span class="inline-flex rounded-full border px-2.5 py-1 text-xs" style="border-color:{{ row.category_color }}55;color:{{ row.category_color }}">{{ row.category }}</span></td>
+                            <td class="px-4 py-4"><span class="rounded-md bg-surface-container px-2 py-1 text-xs font-bold">{{ row.source_label }}</span>{% if row.status != 'confirmed' %}<p class="mt-1 text-[10px] text-status-alert">{{ row.status_label }}</p>{% endif %}</td>
+                            <td class="px-4 py-4 text-on-surface-variant">{{ row.method }}</td>
+                            <td class="px-4 py-4 text-right font-data-mono font-bold {% if row.type == 'IN' %}text-emerald-500{% else %}text-status-error{% endif %}">{% if row.type == 'IN' %}+{% else %}-{% endif %}{{ row.amount|floatformat:0|intcomma }} <span class="text-[10px] text-on-surface-variant">{{ row.currency }}</span></td>
+                            <td class="px-5 py-4 text-right">
+                                {% if row.source == 'manual' %}
+                                <a href="{% url 'accounting:transaction_edit' row.object.pk %}" class="inline-flex rounded-lg p-2 text-ai-cyan hover:bg-ai-cyan/10" title="{% trans 'Edit' %}"><span class="material-symbols-outlined text-lg">edit</span></a>
+                                {% trans "Are you sure you want to delete this transaction?" as delete_confirm %}
+                                <form method="post" action="{% url 'accounting:transaction_delete' row.object.pk %}" class="inline" onsubmit="return confirm('{{ delete_confirm|escapejs }}')">{% csrf_token %}<button class="rounded-lg p-2 text-status-error hover:bg-status-error/10" title="{% trans 'Delete' %}"><span class="material-symbols-outlined text-lg">delete</span></button></form>
+                                {% else %}<span class="material-symbols-outlined text-outline">lock</span>{% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="px-6 py-16 text-center"><span class="material-symbols-outlined mb-3 text-5xl text-outline">receipt_long</span><p class="font-bold">{% trans "No transactions found" %}</p><p class="mt-1 text-sm text-on-surface-variant">{% trans "Try changing the filters or adding a new transaction." %}</p></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </article>
+
+        <aside class="space-y-6">
+            <article class="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5">
+                <div class="flex items-center justify-between"><div><h2 class="font-bold">{% trans "This month overview" %}</h2><p class="text-xs text-on-surface-variant">{% blocktrans with date=selected_date|date:"d/m/Y" %}Through {{ date }}{% endblocktrans %}</p></div><span class="material-symbols-outlined text-ai-purple">calendar_month</span></div>
+                <div class="mt-4 space-y-4">
+                    {% for currency, stats in monthly_totals.items %}
+                    <div class="rounded-lg bg-surface-container-low p-3">
+                        <div class="flex justify-between text-xs"><span class="font-bold">{{ currency }}</span><span class="font-data-mono font-bold {% if stats.balance < 0 %}text-status-error{% else %}text-ai-cyan{% endif %}">{{ stats.balance|floatformat:0|intcomma }}</span></div>
+                        <div class="mt-2 flex justify-between text-[11px] text-on-surface-variant"><span>{% trans "In" %} {{ stats.income|floatformat:0|intcomma }}</span><span>{% trans "Out" %} {{ stats.expense|floatformat:0|intcomma }}</span></div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </article>
+
+            <article class="rounded-xl border border-outline-variant/30 bg-surface-container-lowest p-5">
+                <div class="flex items-center justify-between"><div><h2 class="font-bold">{% trans "Budget control" %}</h2><p class="text-xs text-on-surface-variant">{% trans "Monthly expense categories" %}</p></div><a href="{% url 'accounting:settings' %}" class="text-xs font-bold text-ai-cyan">+ {% trans "Set budget" %}</a></div>
+                <div class="mt-4 space-y-4">
+                    {% for item in budget_rows %}
+                    <div><div class="mb-1 flex justify-between text-xs"><a href="{% url 'accounting:category_detail' item.budget.category.pk %}" class="font-bold hover:text-ai-cyan">{{ item.category_name }}</a><span class="font-data-mono">{{ item.actual|floatformat:0|intcomma }}/{{ item.budget.amount|floatformat:0|intcomma }} {{ item.budget.currency }}</span></div><div class="h-2 overflow-hidden rounded-full bg-surface-container"><div class="h-full rounded-full {% if item.percent >= 90 %}bg-status-error{% else %}progress-fill{% endif %}" style="width:{{ item.percent }}%"></div></div></div>
+                    {% empty %}<div class="rounded-lg border border-dashed border-outline-variant/40 p-5 text-center text-xs text-on-surface-variant">{% trans "No monthly budget has been set." %}</div>{% endfor %}
+                </div>
+            </article>
+        </aside>
+    </div>
+</section>
+{% endblock %}

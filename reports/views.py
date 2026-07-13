@@ -4,8 +4,9 @@ from datetime import timedelta
 from django.db.models import Count, Max, Sum
 from django.db.models.functions import TruncDate
 from django.shortcuts import render
-from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from django.utils.formats import date_format
+from django.utils.translation import gettext_lazy as _, ngettext
 
 from crm.models import Customer
 from pos.models import Expense, Payment
@@ -87,22 +88,22 @@ def income_expense(request):
 
     rfm_segments = [
         {
-            "label": "VIP Customers",
-            "description": "3+ recorded orders",
+            "label": _("VIP customers"),
+            "description": _("3+ recorded orders"),
             "count": segment_counts["vip"],
             "percent": percentage(segment_counts["vip"]),
             "tone": "cyan",
         },
         {
-            "label": "Loyal",
-            "description": "1–2 recorded orders",
+            "label": _("Loyal customers"),
+            "description": _("1–2 recorded orders"),
             "count": segment_counts["loyal"],
             "percent": percentage(segment_counts["loyal"]),
             "tone": "surface",
         },
         {
-            "label": "At-Risk",
-            "description": "No recorded orders yet",
+            "label": _("At-risk customers"),
+            "description": _("No recorded orders yet"),
             "count": segment_counts["at_risk"],
             "percent": percentage(segment_counts["at_risk"]),
             "tone": "alert",
@@ -119,7 +120,7 @@ def income_expense(request):
     for i in range(5, -1, -1):
         first_of_this_month = today.replace(day=1)
         target_month_date = first_of_this_month
-        for _ in range(i):
+        for step in range(i):
             target_month_date = (target_month_date - timedelta(days=1)).replace(day=1)
             
         month_start = timezone.make_aware(datetime.datetime(target_month_date.year, target_month_date.month, 1))
@@ -133,24 +134,29 @@ def income_expense(request):
         m_income = Payment.objects.filter(paid_at__range=(month_start, month_end)).aggregate(s=Sum("amount"))["s"] or 0
         m_expense = Expense.objects.filter(date__range=(month_start.date(), month_end.date())).aggregate(s=Sum("amount"))["s"] or 0
         
-        months_labels.append(target_month_date.strftime("%b"))
+        months_labels.append(date_format(target_month_date, "M"))
         income_data.append(float(m_income))
         expense_data.append(float(m_expense))
 
     # Build customer list with relative times and actions
     def get_relative_time(dt):
         if not dt:
-            return "Never"
+            return _("Never")
         now = timezone.now()
         diff = now - dt
         if diff.days == 0:
-            return "Today"
+            return _("Today")
         elif diff.days == 1:
-            return "Yesterday"
+            return _("Yesterday")
         elif diff.days < 7:
-            return f"{diff.days} days ago"
+            return ngettext(
+                "%(count)d day ago", "%(count)d days ago", diff.days
+            ) % {"count": diff.days}
         elif diff.days < 30:
-            return f"{diff.days // 7} weeks ago"
+            weeks = diff.days // 7
+            return ngettext(
+                "%(count)d week ago", "%(count)d weeks ago", weeks
+            ) % {"count": weeks}
         else:
             return dt.strftime("%Y-%m-%d")
 
@@ -158,16 +164,20 @@ def income_expense(request):
     for c in customers.order_by("-total_spend"):
         segment = "VIP" if c.order_count >= 3 else ("Loyal" if c.order_count >= 1 else "At-Risk")
         if segment == "VIP":
-            action = "Offer exclusive early access"
+            segment_label = _("VIP")
+            action = _("Offer exclusive early access")
         elif segment == "Loyal":
-            action = "Send standard newsletter"
+            segment_label = _("Loyal")
+            action = _("Send standard newsletter")
         else:
-            action = "Trigger win-back email sequence"
+            segment_label = _("At-risk")
+            action = _("Trigger win-back email sequence")
             
         customer_list.append({
             "pk": c.pk,
             "name": c.name,
             "segment": segment,
+            "segment_label": segment_label,
             "last_order": get_relative_time(c.last_order),
             "total_spend": float(c.total_spend or 0),
             "action": action

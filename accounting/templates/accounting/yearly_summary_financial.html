@@ -1,0 +1,797 @@
+{% extends "base.html" %}
+{% load i18n static l10n %}
+
+{% block title %}
+    Yearly Summary Financial | Hug ເກີບ AI
+{% endblock %}
+
+{% block content %}
+<style>
+    .hide-stamp {
+        display: none !important;
+    }
+    /* Styling for the screen editor */
+    .glass-panel {
+        background: #ffffff;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+    }
+    
+    /* Dark Mode Settings Panel UI overrides */
+    .dark .glass-panel {
+        background: var(--glass-card-bg);
+        border: 1px solid var(--glass-card-border);
+    }
+    .dark .glass-panel select,
+    .dark .glass-panel input {
+        background-color: rgb(var(--color-surface-container-lowest)) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        color: rgb(var(--color-on-surface)) !important;
+    }
+    .dark .glass-panel label,
+    .dark .glass-panel p,
+    .dark .glass-panel span {
+        color: rgb(var(--color-on-surface-variant)) !important;
+    }
+    .dark .glass-panel h3,
+    .dark .glass-panel h4 {
+        color: rgb(var(--color-on-surface)) !important;
+    }
+    .dark .glass-panel a {
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        color: rgb(var(--color-on-surface-variant)) !important;
+    }
+    .dark .glass-panel a:hover {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+    }
+    .dark .settings-toggle-btn {
+        background-color: rgb(var(--color-surface-container-lowest)) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        color: rgb(var(--color-on-surface)) !important;
+    }
+    /* Dynamic item container elements added in JS */
+    .dark #configItemsContainer > div {
+        background-color: rgb(var(--color-surface-container-low)) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .dark #configItemsContainer input,
+    .dark #configItemsContainer select {
+        color: rgb(var(--color-on-surface)) !important;
+    }
+    .dark .glass-panel .bg-slate-50 {
+        background-color: rgb(var(--color-surface-container-low)) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    .dark .glass-panel .text-slate-700,
+    .dark .glass-panel .text-slate-600 {
+        color: rgb(var(--color-on-surface)) !important;
+    }
+    .dark .glass-panel .text-slate-500 {
+        color: rgb(var(--color-on-surface-variant)) !important;
+    }
+    .dark .glass-panel .border-slate-100,
+    .dark .glass-panel .border-t {
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+    
+    /* Document A4 Page Layout on screen */
+    .document-page {
+        background-color: white;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 15mm 12mm;
+        margin: 0 auto;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        position: relative;
+        box-sizing: border-box;
+    }
+
+    /* Scale down A4 sheet on small screens */
+    @media (max-width: 900px) {
+        .document-page {
+            width: 100%;
+            min-height: auto;
+            padding: 8mm 5mm;
+            font-size: 9pt;
+        }
+    }
+
+    /* Collapsible sidebar panel on mobile */
+    #settingsSidebar.collapsed { display: none; }
+    .settings-toggle-btn {
+        display: none;
+    }
+    @media (max-width: 1279px) {
+        .settings-toggle-btn { display: flex; }
+    }
+
+    /* Print specific settings */
+    @media print {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        /* Hide all non-printable backoffice elements */
+        aside#sidebar,
+        nav#bottom-nav,
+        #bottom-nav,
+        header,
+        .no-print,
+        button,
+        .btn,
+        form {
+            display: none !important;
+        }
+        
+        /* Adjust body for printing */
+        body, html {
+            background-color: white !important;
+            color: black !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: auto !important;
+            font-size: 10pt;
+        }
+        
+        main {
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+        }
+        
+        .flex-1 {
+            overflow: visible !important;
+            padding: 0 !important;
+        }
+        
+        /* Remove shadow and borders of the sheet */
+        .document-page {
+            box-shadow: none !important;
+            border: none !important;
+            width: 100% !important;
+            min-height: 100% !important;
+            padding: 5mm 5mm !important;
+            margin: 0 !important;
+            page-break-after: avoid;
+            page-break-inside: avoid;
+        }
+        
+        /* Set page size to A4 */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+    }
+</style>
+{% include "accounting/_financial_summary_theme.html" %}
+
+<section class="financial-summary-shell space-y-6">
+<header class="summary-hero no-print rounded-xl p-5 md:p-6">
+    <div class="relative z-10 flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <div>
+            <p class="font-label-caps text-xs font-bold uppercase tracking-[0.18em] text-ai-cyan">
+                {% if request.LANGUAGE_CODE == 'en' %}Accounting document{% else %}ເອກະສານບັນຊີ{% endif %}
+            </p>
+            <h1 class="mt-2 font-headline-lg text-3xl font-bold text-on-surface">
+                {% if request.LANGUAGE_CODE == 'en' %}Yearly financial summary{% else %}ໃບສະຫຼຸບການເງິນປະຈຳປີ{% endif %}
+            </h1>
+            <p class="mt-2 max-w-2xl text-sm text-on-surface-variant">
+                {% if request.LANGUAGE_CODE == 'en' %}Review, adjust and print the selected accounting year.{% else %}ກວດສອບ, ປັບຂໍ້ມູນ ແລະ ພິມເອກະສານຂອງປີບັນຊີທີ່ເລືອກ{% endif %}
+            </p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <span class="summary-period-chip"><span class="material-symbols-outlined text-base">calendar_month</span>{{ selected_year }}</span>
+            <span class="summary-period-chip"><span class="material-symbols-outlined text-base">payments</span>{{ selected_currency|default:"ALL" }}</span>
+        </div>
+    </div>
+</header>
+
+<div class="no-print">
+    {% include "accounting/_nav.html" %}
+</div>
+
+<!-- Mobile Settings Toggle Button -->
+<button id="settingsToggleBtn" onclick="toggleSettings()"
+    class="settings-toggle-btn summary-settings-toggle xl:hidden w-full items-center justify-between gap-3 px-4 py-3 border font-bold text-sm no-print">
+    <span class="flex items-center gap-2">
+        <i class="fas fa-sliders-h text-indigo-500"></i>
+        {% if request.LANGUAGE_CODE == 'en' %}Yearly Settings{% else %}ຕັ້ງຄ່າໃບສະຫຼຸບປະຈຳປີ{% endif %}
+    </span>
+    <i id="settingsChevron" class="fas fa-chevron-down text-slate-400 transition-transform duration-200"></i>
+</button>
+
+<div class="flex flex-col xl:flex-row gap-6 no-print-layout min-h-full">
+    
+    <!-- Left Configuration Sidebar (Hidden on Print) -->
+    <div class="w-full xl:w-80 shrink-0 space-y-6 no-print">
+        <!-- Collapsible wrapper on mobile/tablet -->
+        <div id="settingsSidebar" class="space-y-6">
+
+            <!-- Settings Panel -->
+            <div class="glass-panel rounded-3xl p-6 shadow-sm space-y-6">
+                <div>
+                    <h3 class="font-black text-slate-800 text-lg">
+                        {% if request.LANGUAGE_CODE == 'en' %}Yearly Settings{% else %}ຕັ້ງຄ່າໃບສະຫຼຸບປະຈຳປີ{% endif %}
+                    </h3>
+                    <p class="text-xs text-slate-500 font-medium mt-1">
+                        {% if request.LANGUAGE_CODE == 'en' %}Modify fields to update the yearly report in real-time.{% else %}ປ່ຽນຂໍ້ມູນຕ່າງໆ ເພື່ອອັບເດດບົດສະຫຼຸບການເງິນປະຈຳປີ{% endif %}
+                    </p>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Year Selector -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">{% if request.LANGUAGE_CODE == 'en' %}Year:{% else %}ປີ (Year):{% endif %}</label>
+                        <input type="number" id="configYear" value="{{ selected_year|unlocalize }}" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <!-- Date -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">{% if request.LANGUAGE_CODE == 'en' %}Voucher Date:{% else %}ວັນທີອອກເອກະສານ (Voucher Date):{% endif %}</label>
+                        <input type="date" id="configDate" value="{{ voucher_date }}" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <!-- Run Count -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">{% if request.LANGUAGE_CODE == 'en' %}Run Count:{% else %}ຄັ້ງທີ (Run count):{% endif %}</label>
+                        <input type="number" id="configRunCount" value="{{ run_count }}" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+
+                    <!-- Currency Selector -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1.5">{% if request.LANGUAGE_CODE == 'en' %}Currency:{% else %}ສະກຸນເງິນ (Currency):{% endif %}</label>
+                        <select id="configCurrency" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="ALL" {% if selected_currency == 'ALL' or not selected_currency %}selected{% endif %}>{% if request.LANGUAGE_CODE == 'en' %}All Currencies{% else %}ທັງໝົດ (All Currencies){% endif %}</option>
+                            <option value="LAK" {% if selected_currency == 'LAK' %}selected{% endif %}>LAK (ກີບ)</option>
+                            <option value="THB" {% if selected_currency == 'THB' %}selected{% endif %}>THB (ບາດ)</option>
+                            <option value="USD" {% if selected_currency == 'USD' %}selected{% endif %}>USD (ໂດລາ)</option>
+                        </select>
+                    </div>
+
+                    <!-- Stamp Toggle -->
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="text-xs font-bold text-slate-700">
+                            {% if request.LANGUAGE_CODE == 'en' %}Show Signature & Stamp:{% else %}ສະແດງລາຍເຊັນ ແລະ ກາປະທັບ:{% endif %}
+                        </span>
+                        <label class="relative inline-flex items-center cursor-pointer select-none">
+                            <input type="checkbox" id="toggleStamp" checked onchange="toggleStampVisibility(this.checked)" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-650"></div>
+                        </label>
+                    </div>
+
+                    <!-- Signature Adjust -->
+                    <div class="space-y-2.5 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="block text-xs font-black text-slate-700">{% if request.LANGUAGE_CODE == 'en' %}Adjust Signature{% else %}ປັບລາຍເຊັນ{% endif %}</span>
+                        <div>
+                            <label class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>{% if request.LANGUAGE_CODE == 'en' %}Size{% else %}ຂະໜາດ{% endif %}</span><span id="sigSizeVal">100%</span></label>
+                            <input type="range" id="sigSize" min="40" max="220" value="100" step="1" oninput="updateSignature()" class="w-full accent-indigo-600 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>{% if request.LANGUAGE_CODE == 'en' %}Horizontal{% else %}ຊ້າຍ-ຂວາ{% endif %}</span><span id="sigXVal">0</span></label>
+                            <input type="range" id="sigX" min="-200" max="200" value="0" step="1" oninput="updateSignature()" class="w-full accent-indigo-600 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>{% if request.LANGUAGE_CODE == 'en' %}Vertical{% else %}ຂຶ້ນ-ລົງ{% endif %}</span><span id="sigYVal">0</span></label>
+                            <input type="range" id="sigY" min="-200" max="200" value="0" step="1" oninput="updateSignature()" class="w-full accent-indigo-600 cursor-pointer">
+                        </div>
+                        <button type="button" onclick="resetSignature()" class="w-full text-[10px] font-bold text-slate-500 hover:text-slate-700 underline">{% if request.LANGUAGE_CODE == 'en' %}Reset{% else %}ຕັ້ງຄ່າເລີ່ມຕົ້ນ{% endif %}</button>
+                    </div>
+
+                    <!-- Stamp Adjust -->
+                    <div class="space-y-2.5 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <span class="block text-xs font-black text-slate-700">{% if request.LANGUAGE_CODE == 'en' %}Adjust Stamp{% else %}ປັບກາຈ້ຳ{% endif %}</span>
+                        <div>
+                            <label class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>{% if request.LANGUAGE_CODE == 'en' %}Size{% else %}ຂະໜາດ{% endif %}</span><span id="stampSizeVal">100%</span></label>
+                            <input type="range" id="stampSize" min="40" max="220" value="100" step="1" oninput="updateStamp()" class="w-full accent-rose-500 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>{% if request.LANGUAGE_CODE == 'en' %}Horizontal{% else %}ຊ້າຍ-ຂວາ{% endif %}</span><span id="stampXVal">0</span></label>
+                            <input type="range" id="stampX" min="-200" max="200" value="0" step="1" oninput="updateStamp()" class="w-full accent-rose-500 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="flex justify-between text-[10px] font-bold text-slate-500 mb-1"><span>{% if request.LANGUAGE_CODE == 'en' %}Vertical{% else %}ຂຶ້ນ-ລົງ{% endif %}</span><span id="stampYVal">0</span></label>
+                            <input type="range" id="stampY" min="-200" max="200" value="0" step="1" oninput="updateStamp()" class="w-full accent-rose-500 cursor-pointer">
+                        </div>
+                        <button type="button" onclick="resetStamp()" class="w-full text-[10px] font-bold text-slate-500 hover:text-slate-700 underline">{% if request.LANGUAGE_CODE == 'en' %}Reset{% else %}ຕັ້ງຄ່າເລີ່ມຕົ້ນ{% endif %}</button>
+                    </div>
+
+                    <!-- Cash Items for LAK, THB, USD -->
+                    <div class="space-y-3 pt-2 border-t border-slate-100">
+                        <span class="block text-xs font-black text-slate-700">{% if request.LANGUAGE_CODE == 'en' %}Cash Inflow Totals:{% else %}ລາຍການເງິນສົດ (Cash Inflow Totals):{% endif %}</span>
+                        <div id="divCashLAK">
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">LAK (ກີບ):</label>
+                            <input type="number" id="configCashLAK" value="{{ default_cash_lak }}" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-right">
+                        </div>
+                        <div id="divCashTHB">
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">THB (ບາດ):</label>
+                            <input type="number" id="configCashTHB" value="{{ default_cash_thb }}" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-right">
+                        </div>
+                        <div id="divCashUSD">
+                            <label class="block text-[10px] font-bold text-slate-500 mb-1">USD (ໂດລາ):</label>
+                            <input type="number" id="configCashUSD" value="{{ default_cash_usd }}" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-right">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Print Actions -->
+                <div class="pt-4 border-t border-slate-100 flex flex-col gap-2">
+                    <button onclick="window.print()" class="summary-primary-action w-full py-3 font-bold text-sm transition flex items-center justify-center gap-2">
+                        <i class="fas fa-print"></i>
+                        {% if request.LANGUAGE_CODE == 'en' %}Print Summary{% else %}ພິມບົດສະຫຼຸບປະຈຳປີ{% endif %}
+                    </button>
+                    <a href="{% url 'accounting:report' %}" class="summary-secondary-action w-full py-2.5 border font-bold text-sm text-center transition">
+                        {% if request.LANGUAGE_CODE == 'en' %}Back to Reports{% else %}ກັບຄືນໜ້າລາຍງານ{% endif %}
+                    </a>
+                </div>
+            </div><!-- end Settings glass-panel -->
+
+            <!-- Dynamic Paid Items Panel -->
+            <div class="glass-panel rounded-3xl p-6 shadow-sm space-y-4">
+                <div class="flex justify-between items-center">
+                    <h4 class="font-bold text-slate-800 text-sm">
+                        {% if request.LANGUAGE_CODE == 'en' %}Yearly Payment Items{% else %}ລາຍການຈ່າຍ/ຫັກເງິນປະຈຳປີ{% endif %}
+                    </h4>
+                    <button onclick="addPaidItem()" class="summary-add-action text-xs font-bold flex items-center gap-1">
+                        <i class="fas fa-plus-circle"></i> {% if request.LANGUAGE_CODE == 'en' %}Add Item{% else %}ເພີ່ມລາຍການ{% endif %}
+                    </button>
+                </div>
+                
+                <!-- Items Scroll container -->
+                <div id="configItemsContainer" class="max-h-[300px] overflow-y-auto space-y-3 pr-1">
+                    <!-- Loaded items will go here -->
+                </div>
+            </div><!-- end Payment Items glass-panel -->
+
+        </div><!-- end settingsSidebar -->
+    </div><!-- end left column -->
+    
+    <!-- Right Voucher Sheet Printable Container -->
+    <div class="summary-preview-stage flex-1 overflow-x-auto p-4">
+        
+        <div class="document-page text-black" id="printableVoucherSheet">
+            
+            <!-- Country Name Header (Lao PDR) -->
+            <div class="text-center space-y-0.5 mb-6">
+                <p class="font-black text-sm leading-tight" style="font-family: 'Lexend', 'Phetsarath', 'Phetsarath OT', sans-serif;">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</p>
+                <p class="text-[10px] font-semibold" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">ສັນຕິພາບ ເອກະລາດ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນາຖາວອນ</p>
+            </div>
+            
+            <!-- Logo & Brand Header -->
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-12 h-12 rounded-full bg-[#efefef] flex items-center justify-center border border-slate-300">
+                    <span class="material-symbols-outlined text-[#00ADEF] text-2xl fill" style="font-variation-settings: 'FILL' 1;">steps</span>
+                </div>
+                <div>
+                    <h2 class="text-base font-black tracking-tight" style="font-family: 'Lexend', sans-serif;">
+                        <span style="color:#00ADEF;">Hug เກີບ AI</span>
+                    </h2>
+                    <p class="text-[9px] text-slate-500 font-medium">Premium Shoe Cleaning & Care</p>
+                </div>
+            </div>
+            
+            <!-- Blue Title Banner -->
+            <div class="document-brand-banner w-full text-white py-2.5 px-4 rounded-md text-center mb-3">
+                <h1 class="text-sm font-black tracking-wider leading-tight" style="font-family: 'Lexend', sans-serif;" id="voucherTitleEN">
+                    Yearly Summary Financial of 2026
+                </h1>
+                <h2 class="text-xs font-bold leading-tight" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;" id="voucherTitleLA">
+                    ໃບມອບເງິນສົດປະຈຳປີ 2026
+                </h2>
+            </div>
+            
+            <!-- Date & Run Number Info row -->
+            <div class="text-right text-xs font-bold mb-3" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <span id="voucherDateText">ວັນທີ 05-05-2026</span>
+                <span class="mx-2">/</span>
+                <span id="voucherRunText">ຄັ້ງທີ 1</span>
+            </div>
+            
+            <!-- Ledger Table Sheet -->
+            <table class="w-full border-collapse border border-slate-800 text-[11px] mb-5" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-800">
+                        <th class="border border-slate-800 px-3 py-2 text-left font-black w-2/3">ເນື້ອໃນລາຍການ (Item Content)</th>
+                        <th class="border border-slate-800 px-3 py-2 text-center font-black w-1/12">Currency</th>
+                        <th class="border border-slate-800 px-3 py-2 text-right font-black w-3/12">ຈຳນວນເງິນ (Amount)</th>
+                    </tr>
+                </thead>
+                <tbody id="voucherTableBody">
+                    <!-- Dynamic Rows populated by JS -->
+                </tbody>
+                <tfoot id="voucherTableFoot">
+                    <!-- Dynamic Rows populated by JS -->
+                </tfoot>
+            </table>
+            
+            <!-- Signatures Section -->
+            <div class="grid grid-cols-3 gap-4 pt-8 text-center text-[10px] font-bold relative" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <!-- Owner -->
+                <div class="flex flex-col items-center justify-between" style="height: 340px;">
+                    <p>ເຈົ້າຂອງວິສາຫະກິດ</p>
+                    <div class="relative flex items-center justify-center my-0.5">
+                        <img id="owner-stamp-img" class="h-72 w-auto object-contain transition-all" src="{% static 'images/owner_stamp.png' %}" alt="Owner Stamp">
+                        <img id="owner-signature-img" class="h-44 w-auto object-contain absolute left-1/2 top-1/2 transition-all" style="z-index:5; transform: translate(-50%, -50%);" src="{% static 'images/owner_signature.png' %}" alt="Owner Signature">
+                    </div>
+                    <p class="text-slate-400 font-normal text-[9px]">....................................................</p>
+                </div>
+                
+                <!-- Accountant -->
+                <div class="flex flex-col items-center justify-between" style="height: 340px;">
+                    <p>ຫົວໜ້າບັນຊີ</p>
+                    <div class="flex-1"></div>
+                    <p class="text-slate-400 font-normal text-[9px]">....................................................</p>
+                </div>
+                
+                <!-- Reporter -->
+                <div class="flex flex-col items-center justify-between" style="height: 340px;">
+                    <p>ຜູ້ລາຍງານ</p>
+                    <div class="flex-1"></div>
+                    <p class="text-slate-400 font-normal text-[9px]">....................................................</p>
+                </div>
+            </div>
+            
+        </div>
+        
+    </div>
+    
+</div>
+</section>
+
+<!-- JavaScript to handle interactive state -->
+<script>
+    // Load initial data
+    // Manual extra adjustment lines (start empty; real data comes from REPORT below)
+    let items = [];
+    const lang = "{{ request.LANGUAGE_CODE }}";
+
+    // Income / Expense breakdown grouped by category, keyed by currency.
+    // { LAK: {income:[{description,amount}], expense:[...]}, THB:{...}, USD:{...} }
+    const REPORT = {{ report_json|safe }};
+    const taxByCur = { LAK: 0, THB: 0, USD: 0 };
+    let balByCur = {};
+
+    const configYear = document.getElementById('configYear');
+    const configDate = document.getElementById('configDate');
+    const configRunCount = document.getElementById('configRunCount');
+    const configCurrency = document.getElementById('configCurrency');
+    
+    const configCashLAK = document.getElementById('configCashLAK');
+    const configCashTHB = document.getElementById('configCashTHB');
+    const configCashUSD = document.getElementById('configCashUSD');
+    
+    const configItemsContainer = document.getElementById('configItemsContainer');
+    
+    const voucherTitleEN = document.getElementById('voucherTitleEN');
+    const voucherTitleLA = document.getElementById('voucherTitleLA');
+    const voucherDateText = document.getElementById('voucherDateText');
+    const voucherRunText = document.getElementById('voucherRunText');
+    const voucherTableBody = document.getElementById('voucherTableBody');
+    const voucherTableFoot = document.getElementById('voucherTableFoot');
+
+    // Format number with commas and decimals
+    function formatCurrency(val) {
+        return Number(val).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    // Format ISO Date YYYY-MM-DD to DD-MM-YYYY
+    function formatDateString(isoString) {
+        if (!isoString) return '';
+        const parts = isoString.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[1]}-${parts[0]}`;
+        }
+        return isoString;
+    }
+
+    // Render configuration list and print preview list
+    function render() {
+        // Update Title & Top Metadata
+        const displayYear = configYear.value;
+        const currencyFilter = configCurrency.value;
+        
+        let titleSuffixEN = "";
+        let titleSuffixLA = "";
+        if (currencyFilter !== 'ALL') {
+            titleSuffixEN = ` (${currencyFilter})`;
+            titleSuffixLA = ` (${currencyFilter})`;
+        }
+        
+        voucherTitleEN.innerText = `Yearly Summary Financial${titleSuffixEN} of ${displayYear}`;
+        voucherTitleLA.innerText = `ໃບມອບເງິນສົດປະຈຳປີ${titleSuffixLA} ${displayYear}`;
+        
+        voucherDateText.innerText = `${lang === 'en' ? 'Date' : 'ວັນທີ'} ${formatDateString(configDate.value)}`;
+        voucherRunText.innerText = `${lang === 'en' ? 'Run No.' : 'ຄັ້ງທີ'} ${configRunCount.value}`;
+        
+        // Show/hide sidebar cash inputs based on currency selection
+        document.getElementById('divCashLAK').style.display = (currencyFilter === 'ALL' || currencyFilter === 'LAK') ? 'block' : 'none';
+        document.getElementById('divCashTHB').style.display = (currencyFilter === 'ALL' || currencyFilter === 'THB') ? 'block' : 'none';
+        document.getElementById('divCashUSD').style.display = (currencyFilter === 'ALL' || currencyFilter === 'USD') ? 'block' : 'none';
+        
+        // Prepare filtered list with original index mapping
+        const filteredItemsWithIndex = [];
+        items.forEach((item, index) => {
+            if (currencyFilter === 'ALL' || item.currency === currencyFilter) {
+                filteredItemsWithIndex.push({ item, index });
+            }
+        });
+        
+        // Render inputs in configuration panel
+        configItemsContainer.innerHTML = '';
+        if (filteredItemsWithIndex.length === 0) {
+            configItemsContainer.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">${lang === 'en' ? 'No payment items' : 'ບໍ່ມີລາຍການຈ່າຍ'}</p>`;
+        } else {
+            filteredItemsWithIndex.forEach(({item, index}) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'flex flex-col gap-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100 relative';
+                itemDiv.innerHTML = `
+                    <div class="flex gap-2 items-center">
+                        <input type="text" value="${item.description}" oninput="updateItemDesc(${index}, this.value)"
+                               placeholder="${lang === 'en' ? 'Description...' : 'ລາຍການ...'}"
+                               class="flex-1 text-[11px] font-semibold border-none bg-transparent focus:ring-0 p-0 text-slate-800">
+                        <button onclick="removePaidItem(${index})" class="text-rose-500 hover:text-rose-700 opacity-70 transition p-1">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <select onchange="updateItemCurrency(${index}, this.value)"
+                                class="text-[10px] font-bold border border-slate-200 rounded px-1.5 py-0.5 bg-white text-slate-600 focus:outline-none">
+                            <option value="LAK" ${item.currency === 'LAK' ? 'selected' : ''}>LAK</option>
+                            <option value="THB" ${item.currency === 'THB' ? 'selected' : ''}>THB</option>
+                            <option value="USD" ${item.currency === 'USD' ? 'selected' : ''}>USD</option>
+                        </select>
+                        <input type="number" value="${item.amount}" oninput="updateItemAmount(${index}, this.value)"
+                               placeholder="${lang === 'en' ? 'Amount...' : 'ຈຳນວນ...'}"
+                               class="flex-1 text-[11px] font-bold border-none bg-transparent focus:ring-0 p-0 text-indigo-650 text-right">
+                    </div>
+                `;
+                configItemsContainer.appendChild(itemDiv);
+            });
+        }
+        
+        // ── Build the Income / Expense (P&L) table ──
+        const SYM = { LAK: '₭', THB: '฿', USD: '$' };
+        const curList = (currencyFilter === 'ALL') ? ['LAK', 'THB', 'USD'] : [currencyFilter];
+        balByCur = {};
+        let bodyHtml = '';
+
+        curList.forEach(cur => {
+            const data = REPORT[cur] || { income: [], expense: [] };
+            const income = (data.income || []).slice();
+            const expense = (data.expense || []).slice();
+
+            // Merge any manual extra adjustment lines for this currency into expenses
+            items.forEach(it => {
+                if (it.currency === cur && (Number(it.amount) || 0) !== 0) {
+                    expense.push({ description: it.description, amount: Number(it.amount) || 0 });
+                }
+            });
+
+            // In "All currencies" view, skip a currency that has no activity
+            if (currencyFilter === 'ALL' && income.length === 0 && expense.length === 0) {
+                return;
+            }
+
+            // Currency band header (only useful when showing all)
+            if (currencyFilter === 'ALL') {
+                bodyHtml += `<tr class="bg-slate-800 text-white"><td colspan="3" class="border border-slate-800 px-3 py-1.5 font-black text-center">${cur} (${SYM[cur]})</td></tr>`;
+            }
+
+            // + Income
+            bodyHtml += `<tr class="bg-emerald-50 text-emerald-800"><td colspan="3" class="border border-slate-800 px-3 py-1.5 font-black">+ ${lang === 'en' ? 'Income' : 'ລາຍຮັບ'}</td></tr>`;
+            let totInc = 0;
+            if (income.length === 0) {
+                bodyHtml += emptyRow();
+            } else {
+                income.forEach(it => { totInc += Number(it.amount) || 0; bodyHtml += rowLine(it.description, cur, it.amount); });
+            }
+            bodyHtml += subtotalRow(lang === 'en' ? 'Total Income' : 'ລວມລາຍຮັບ', cur, totInc, 'bg-emerald-100 text-emerald-800');
+
+            // + Expense
+            bodyHtml += `<tr class="bg-rose-50 text-rose-800"><td colspan="3" class="border border-slate-800 px-3 py-1.5 font-black">+ ${lang === 'en' ? 'Expense' : 'ລາຍຈ່າຍ'}</td></tr>`;
+            let totExp = 0;
+            if (expense.length === 0) {
+                bodyHtml += emptyRow();
+            } else {
+                expense.forEach(it => { totExp += Number(it.amount) || 0; bodyHtml += rowLine(it.description, cur, it.amount); });
+            }
+            bodyHtml += subtotalRow(lang === 'en' ? 'Total Expense' : 'ລວມລາຍຈ່າຍ', cur, totExp, 'bg-rose-100 text-rose-800');
+
+            // Balance
+            const bal = totInc - totExp;
+            balByCur[cur] = bal;
+            bodyHtml += `<tr class="font-black bg-amber-300 text-slate-900">
+                <td class="border border-slate-800 px-3 py-2 text-left">${lang === 'en' ? 'Balance' : 'ຍອດເງິນຄົງເຫຼືອ'}</td>
+                <td class="border border-slate-800 px-3 py-2 text-center">${cur}</td>
+                <td class="border border-slate-800 px-3 py-2 text-right">${formatCurrency(bal)}</td></tr>`;
+
+            // Tax (manual, editable)
+            bodyHtml += `<tr class="font-bold text-slate-700">
+                <td class="border border-slate-800 px-3 py-1.5 text-left">${lang === 'en' ? 'Tax' : 'ອາກອນ'}</td>
+                <td class="border border-slate-800 px-3 py-1.5 text-center">${cur}</td>
+                <td class="border border-slate-800 px-1.5 py-1 text-right">
+                    <input type="number" value="${taxByCur[cur] || 0}" oninput="updateTax('${cur}', this.value)"
+                        class="w-full text-right font-bold bg-yellow-50 border border-slate-300 rounded px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 print:bg-transparent print:border-0"></td></tr>`;
+
+            // Net profit
+            const net = bal - (Number(taxByCur[cur]) || 0);
+            bodyHtml += `<tr class="font-black bg-blue-600 text-white">
+                <td class="border border-slate-800 px-3 py-2 text-left">${lang === 'en' ? 'Net Profit' : 'ກຳໄລສຸດທິ (Net Profit)'}</td>
+                <td class="border border-slate-800 px-3 py-2 text-center">${cur}</td>
+                <td class="border border-slate-800 px-3 py-2 text-right" id="net_${cur}">${formatCurrency(net)}</td></tr>`;
+
+            // Spacer between currency blocks
+            if (currencyFilter === 'ALL' && curList.length > 1) {
+                bodyHtml += `<tr><td colspan="3" class="py-1.5 border-0"></td></tr>`;
+            }
+        });
+
+        if (!bodyHtml) {
+            bodyHtml = `<tr><td colspan="3" class="border border-slate-800 px-3 py-6 text-center text-slate-400">${lang === 'en' ? 'No data for this period' : 'ບໍ່ມີຂໍ້ມູນໃນປີນີ້'}</td></tr>`;
+        }
+
+        voucherTableBody.innerHTML = bodyHtml;
+        voucherTableFoot.innerHTML = '';
+    }
+
+    // ── P&L row helpers ──
+    function rowLine(desc, cur, amt) {
+        return `<tr>
+            <td class="border border-slate-800 px-3 py-1.5 text-left pl-6 text-slate-800">${desc}</td>
+            <td class="border border-slate-800 px-3 py-1.5 text-center text-slate-500">${cur}</td>
+            <td class="border border-slate-800 px-3 py-1.5 text-right font-bold text-slate-900">${formatCurrency(amt)}</td></tr>`;
+    }
+    function subtotalRow(label, cur, amt, cls) {
+        return `<tr class="font-black ${cls}">
+            <td class="border border-slate-800 px-3 py-1.5 text-left">${label}</td>
+            <td class="border border-slate-800 px-3 py-1.5 text-center">${cur}</td>
+            <td class="border border-slate-800 px-3 py-1.5 text-right">${formatCurrency(amt)}</td></tr>`;
+    }
+    function emptyRow() {
+        return `<tr>
+            <td class="border border-slate-800 px-3 py-2 text-left pl-6 text-slate-300">-</td>
+            <td class="border border-slate-800 px-3 py-2"></td>
+            <td class="border border-slate-800 px-3 py-2 text-right text-slate-300">-</td></tr>`;
+    }
+    function updateTax(cur, val) {
+        taxByCur[cur] = Number(val) || 0;
+        const net = (balByCur[cur] || 0) - taxByCur[cur];
+        const cell = document.getElementById('net_' + cur);
+        if (cell) cell.textContent = formatCurrency(net);
+    }
+    
+    // Handler functions
+    function updateItemDesc(index, val) {
+        items[index].description = val;
+        render();
+    }
+    
+    // Keep original handlers
+    function updateItemCurrency(index, val) {
+        items[index].currency = val;
+        render();
+    }
+    
+    function updateItemAmount(index, val) {
+        items[index].amount = Number(val) || 0;
+        render();
+    }
+    
+    function addPaidItem() {
+        const currencyFilter = configCurrency.value;
+        items.push({
+            description: lang === 'en' ? 'New Item' : 'ລາຍການໃຫມ່',
+            currency: currencyFilter === 'ALL' ? 'LAK' : currencyFilter,
+            amount: 0
+        });
+        render();
+        setTimeout(() => {
+            configItemsContainer.scrollTop = configItemsContainer.scrollHeight;
+        }, 50);
+    }
+    
+    function removePaidItem(index) {
+        items.splice(index, 1);
+        render();
+    }
+    
+    // Attach event listeners
+    configYear.addEventListener('input', render);
+    configDate.addEventListener('input', render);
+    configRunCount.addEventListener('input', render);
+    configCurrency.addEventListener('change', render);
+    configCashLAK.addEventListener('input', render);
+    configCashTHB.addEventListener('input', render);
+    configCashUSD.addEventListener('input', render);
+    
+    // Initial Render
+    render();
+
+    // Mobile settings toggle
+    window.toggleSettings = function() {
+        const sidebar = document.getElementById('settingsSidebar');
+        const chevron = document.getElementById('settingsChevron');
+        sidebar.classList.toggle('collapsed');
+        chevron.classList.toggle('rotate-180');
+    };
+
+    // On mobile, start collapsed so voucher sheet is visible first
+    if (window.innerWidth < 1280) {
+        document.getElementById('settingsSidebar').classList.add('collapsed');
+    }
+
+    // Toggle Stamp Visibility function
+    window.toggleStampVisibility = function(show) {
+        ['owner-stamp-img', 'owner-signature-img'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                if (show) {
+                    el.classList.remove('hide-stamp');
+                } else {
+                    el.classList.add('hide-stamp');
+                }
+            }
+        });
+    };
+
+    // ── Signature size / position adjuster (persists per browser) ──
+    window.updateSignature = function() {
+        const img = document.getElementById('owner-signature-img');
+        const s = document.getElementById('sigSize').value;
+        const x = document.getElementById('sigX').value;
+        const y = document.getElementById('sigY').value;
+        document.getElementById('sigSizeVal').textContent = s + '%';
+        document.getElementById('sigXVal').textContent = x;
+        document.getElementById('sigYVal').textContent = y;
+        if (img) {
+            img.style.transform = 'translate(calc(-50% + ' + x + 'px), calc(-50% + ' + y + 'px)) scale(' + (s / 100) + ')';
+        }
+        localStorage.setItem('ch_sigSize', s);
+        localStorage.setItem('ch_sigX', x);
+        localStorage.setItem('ch_sigY', y);
+    };
+    window.resetSignature = function() {
+        document.getElementById('sigSize').value = 100;
+        document.getElementById('sigX').value = 0;
+        document.getElementById('sigY').value = 0;
+        updateSignature();
+    };
+
+    // ── Stamp size / position adjuster (persists per browser) ──
+    window.updateStamp = function() {
+        const img = document.getElementById('owner-stamp-img');
+        const s = document.getElementById('stampSize').value;
+        const x = document.getElementById('stampX').value;
+        const y = document.getElementById('stampY').value;
+        document.getElementById('stampSizeVal').textContent = s + '%';
+        document.getElementById('stampXVal').textContent = x;
+        document.getElementById('stampYVal').textContent = y;
+        if (img) {
+            img.style.transform = 'translate(' + x + 'px, ' + y + 'px) scale(' + (s / 100) + ')';
+        }
+        localStorage.setItem('ch_stampSize', s);
+        localStorage.setItem('ch_stampX', x);
+        localStorage.setItem('ch_stampY', y);
+    };
+    window.resetStamp = function() {
+        document.getElementById('stampSize').value = 100;
+        document.getElementById('stampX').value = 0;
+        document.getElementById('stampY').value = 0;
+        updateStamp();
+    };
+
+    (function() {
+        const ls = localStorage;
+        if (ls.getItem('ch_sigSize') !== null) document.getElementById('sigSize').value = ls.getItem('ch_sigSize');
+        if (ls.getItem('ch_sigX') !== null) document.getElementById('sigX').value = ls.getItem('ch_sigX');
+        if (ls.getItem('ch_sigY') !== null) document.getElementById('sigY').value = ls.getItem('ch_sigY');
+        if (ls.getItem('ch_stampSize') !== null) document.getElementById('stampSize').value = ls.getItem('ch_stampSize');
+        if (ls.getItem('ch_stampX') !== null) document.getElementById('stampX').value = ls.getItem('ch_stampX');
+        if (ls.getItem('ch_stampY') !== null) document.getElementById('stampY').value = ls.getItem('ch_stampY');
+        updateSignature();
+        updateStamp();
+    })();
+</script>
+{% endblock %}

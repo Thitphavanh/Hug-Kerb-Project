@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.humanize",
     # Local apps
+    "accounting",
     "ai_mart_grading",
     "asset_intake",
     "crm",
@@ -121,6 +122,10 @@ TIME_ZONE = "Asia/Vientiane"
 USE_I18N = True
 
 USE_TZ = True
+
+FORMAT_MODULE_PATH = [
+    "core.formats",
+]
 
 
 # Static files (CSS, JavaScript, Images)
