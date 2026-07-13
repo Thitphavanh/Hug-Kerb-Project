@@ -1,6 +1,6 @@
 {% extends "digital_member/portal_base.html" %}
 
-{% block title %}ບັດສະມາຊິກ {{ card.card_number }} — Hug Kerb{% endblock %}
+{% block title %}ບັດສະມາຊິກ {{ card.card_number }} — Hug ເກີບ{% endblock %}
 
 {% block extra_style %}
 <style>
@@ -8,6 +8,7 @@
         background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
         border-radius: 18px; padding: 24px; margin-bottom: 16px;
         box-shadow: 0 10px 30px rgba(14,165,233,.25);
+        color: #fff; /* ຄົງສີຂາວທັງສອງ theme — ພື້ນຫຼັງບັດເປັນ gradient ຄົງທີ່ */
     }
     .member-card .tier {
         display: inline-block; background: rgba(255,255,255,.2);
@@ -15,10 +16,10 @@
         letter-spacing: .08em; text-transform: uppercase;
     }
     .points { font-size: 40px; font-weight: 700; }
-    .tx { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 14px; }
+    .tx { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--surface-border); font-size: 14px; }
     .tx:last-child { border-bottom: none; }
-    .plus { color: #4ade80; font-weight: 700; }
-    .minus { color: #f87171; font-weight: 700; }
+    .plus { color: #22c55e; font-weight: 700; }
+    .minus { color: #ef4444; font-weight: 700; }
 </style>
 {% endblock %}
 

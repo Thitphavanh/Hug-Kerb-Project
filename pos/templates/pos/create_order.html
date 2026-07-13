@@ -2,7 +2,7 @@
 {% load custom_filters %}
 {% load i18n humanize %}
 
-{% block title %}{% trans "Point of Sale — Hug Kerb AI" %}{% endblock %}
+{% block title %}{% trans "Point of Sale — Hug ເກີບ AI" %}{% endblock %}
 
 {% block content %}
 <style>
@@ -38,7 +38,7 @@
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
                 <input class="w-full pl-10 pr-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all shadow-sm" placeholder="{% trans 'Search customer (Phone, Name)...' %}" type="text"/>
             </div>
-            <button class="bg-surface-container-highest text-on-surface p-2 rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex-shrink-0" title="{% trans 'Scan Barcode' %}">
+            <button type="button" onclick="openScanModal()" class="bg-surface-container-highest text-on-surface p-2 rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex-shrink-0" title="{% trans 'Scan Barcode' %}">
                 <span class="material-symbols-outlined">barcode_scanner</span>
             </button>
         </div>
@@ -353,5 +353,197 @@
 
     // Initial run
     updateCart();
+</script>
+
+<!-- Scan Modal (ເຄື່ອງສະແກນ USB + ກ້ອງມືຖື/iPad) -->
+<div id="scan-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4" onclick="if(event.target===this)closeScanModal()">
+    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-xl w-full max-w-md overflow-hidden">
+        <div class="border-b border-outline-variant/20 px-6 py-4 bg-surface-bright flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">barcode_scanner</span>
+                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Scan Barcode" %}</h2>
+            </div>
+            <button type="button" onclick="closeScanModal()" class="text-on-surface-variant hover:text-status-error transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4">
+            <p class="text-xs text-on-surface-variant">{% trans "Point the USB scanner at the QR tag, or type the ticket / order number (e.g. TK-DEMO-004)." %}</p>
+            <input id="scan-input" type="text" autocomplete="off"
+                   class="w-full px-4 py-3 bg-surface border border-outline-variant/50 rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                   placeholder="TK-XXXXXX / ORDXXXXXX"/>
+            <div id="scan-status" class="text-xs font-semibold min-h-[1rem]"></div>
+            <div class="flex items-center gap-3">
+                <div class="flex-1 border-t border-outline-variant/30"></div>
+                <span class="text-[10px] uppercase tracking-wider text-on-surface-variant">{% trans "or" %}</span>
+                <div class="flex-1 border-t border-outline-variant/30"></div>
+            </div>
+            <button type="button" id="scan-camera-btn" onclick="toggleCameraScan()"
+                    class="w-full bg-primary-container text-on-primary-container font-bold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+                <span class="material-symbols-outlined text-[20px]">photo_camera</span>
+                <span id="scan-camera-label">{% trans "Scan with Camera" %}</span>
+            </button>
+            <div id="camera-reader" class="hidden rounded-lg overflow-hidden"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SCAN_LOOKUP_URL = "{% url 'pos:scan_lookup' %}";
+    let cameraScanner = null;
+    let cameraActive = false;
+
+    function openScanModal() {
+        const modal = document.getElementById('scan-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setScanStatus('', '');
+        const input = document.getElementById('scan-input');
+        input.value = '';
+        input.focus();
+    }
+
+    function closeScanModal() {
+        stopCameraScan();
+        const modal = document.getElementById('scan-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function setScanStatus(msg, type) {
+        const el = document.getElementById('scan-status');
+        el.textContent = msg;
+        el.className = 'text-xs font-semibold min-h-[1rem] ' +
+            (type === 'ok' ? 'text-primary' : type === 'error' ? 'text-status-error' : 'text-on-surface-variant');
+    }
+
+    async function lookupScanCode(code) {
+        code = (code || '').trim();
+        if (!code) return;
+        setScanStatus('{% trans "Searching..." %} ' + code, '');
+        try {
+            const res = await fetch(SCAN_LOOKUP_URL + '?code=' + encodeURIComponent(code), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const data = await res.json();
+            if (!data.found) {
+                setScanStatus('{% trans "Not found:" %} ' + code, 'error');
+                return;
+            }
+            // ຕື່ມຂໍ້ມູນລູກຄ້າໃສ່ຟອມ
+            if (data.customer) {
+                const nameInput = document.querySelector('input[name="customer_name"]');
+                const phoneInput = document.querySelector('input[name="customer_phone"]');
+                if (data.customer.name) nameInput.value = data.customer.name;
+                if (data.customer.phone) phoneInput.value = data.customer.phone;
+            }
+            // ຕື່ມຂໍ້ມູນເຄື່ອງໃສ່ Item #1
+            if (data.asset) {
+                const brandSelect = document.getElementById('brand-select-0');
+                if (data.asset.brand) {
+                    const opt = [...brandSelect.options].find(o => o.value.toLowerCase() === data.asset.brand.toLowerCase());
+                    brandSelect.value = opt ? opt.value : 'Other';
+                }
+                if (data.asset.model_name) document.getElementById('model-input-0').value = data.asset.model_name;
+                if (data.asset.size) document.querySelector('input[name="size_0"]').value = data.asset.size;
+                updateCart();
+            }
+            setScanStatus('✓ ' + data.label + ' — ' + (data.customer.name || ''), 'ok');
+            setTimeout(closeScanModal, 900);
+        } catch (err) {
+            setScanStatus('{% trans "Lookup failed. Check connection." %}', 'error');
+        }
+    }
+
+    // Enter ໃນຊ່ອງສະແກນ (ເຄື່ອງສະແກນ USB ຈະສົ່ງ Enter ທ້າຍລະຫັດອັດຕະໂນມັດ)
+    document.getElementById('scan-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            lookupScanCode(this.value);
+            this.value = '';
+        }
+    });
+
+    // ກ້ອງມືຖື/iPad/ຄອມ — ໂຫຼດ html5-qrcode ເມື່ອກົດໃຊ້ເທົ່ານັ້ນ
+    function loadCameraLib() {
+        return new Promise((resolve, reject) => {
+            if (window.Html5Qrcode) return resolve();
+            const s = document.createElement('script');
+            s.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    async function toggleCameraScan() {
+        if (cameraActive) { stopCameraScan(); return; }
+        const label = document.getElementById('scan-camera-label');
+        label.textContent = '{% trans "Starting camera..." %}';
+        try {
+            await loadCameraLib();
+            document.getElementById('camera-reader').classList.remove('hidden');
+            cameraScanner = new Html5Qrcode('camera-reader');
+            await cameraScanner.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decodedText) => {
+                    stopCameraScan();
+                    lookupScanCode(decodedText);
+                }
+            );
+            cameraActive = true;
+            label.textContent = '{% trans "Stop Camera" %}';
+        } catch (err) {
+            label.textContent = '{% trans "Scan with Camera" %}';
+            document.getElementById('camera-reader').classList.add('hidden');
+            setScanStatus('{% trans "Camera unavailable. Check permission / use HTTPS." %}', 'error');
+        }
+    }
+
+    function stopCameraScan() {
+        const label = document.getElementById('scan-camera-label');
+        if (cameraScanner && cameraActive) {
+            cameraScanner.stop().catch(() => {});
+        }
+        cameraScanner = null;
+        cameraActive = false;
+        label.textContent = '{% trans "Scan with Camera" %}';
+        document.getElementById('camera-reader').classList.add('hidden');
+    }
+
+    // ESC ປິດ modal
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeScanModal();
+    });
+
+    // Keyboard-wedge: ຍິງເຄື່ອງສະແກນ USB ໄດ້ເລີຍ ບໍ່ຕ້ອງເປີດ modal ກ່ອນ
+    // (ເຄື່ອງສະແກນພິມໄວກວ່າຄົນຫຼາຍ — ຈັບຈາກໄລຍະຫ່າງລະຫວ່າງໂຕອັກສອນ)
+    (function () {
+        let buf = '';
+        let lastTs = 0;
+        document.addEventListener('keydown', function (e) {
+            if (document.getElementById('scan-modal').classList.contains('flex')) return;
+            const now = Date.now();
+            if (now - lastTs > 80) buf = '';
+            lastTs = now;
+            if (e.key === 'Enter') {
+                if (buf.length >= 5) {
+                    e.preventDefault();
+                    const code = buf;
+                    // ລຶບໂຕອັກສອນທີ່ເຄື່ອງສະແກນພິມຄ້າງໃນຊ່ອງທີ່ focus ຢູ່
+                    const el = document.activeElement;
+                    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && el.value.endsWith(code)) {
+                        el.value = el.value.slice(0, -code.length);
+                    }
+                    openScanModal();
+                    lookupScanCode(code);
+                }
+                buf = '';
+            } else if (e.key.length === 1) {
+                buf += e.key;
+            }
+        }, true);
+    })();
 </script>
 {% endblock %}

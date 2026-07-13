@@ -5,7 +5,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{% block title %}{% trans "Hug Kerb AI — SME Command Center" %}{% endblock %}</title>
+<title>{% block title %}{% trans "Hug ເກີບ AI — SME Command Center" %}{% endblock %}</title>
 <script>
     (function () {
         const storageKey = "hug-kerb-theme";
@@ -14,6 +14,10 @@
         const theme = savedTheme || (prefersDark ? "dark" : "light");
         document.documentElement.classList.toggle("dark", theme === "dark");
         document.documentElement.dataset.theme = theme;
+        // ຕັ້ງສະຖານະ sidebar ກ່ອນ render ເພື່ອບໍ່ໃຫ້ກະພິບ
+        if (localStorage.getItem("hug-kerb-sidebar") === "collapsed") {
+            document.documentElement.classList.add("sidebar-collapsed");
+        }
     })();
 </script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
@@ -148,16 +152,29 @@
     :root:not(.dark) .hover\:bg-white\/5:hover { background-color: rgba(0, 88, 190, 0.08) !important; }
     :root:not(.dark) .text-red-300 { color: rgb(var(--color-status-alert)) !important; }
     :root:not(.dark) .text-cyan-200 { color: rgb(var(--color-ai-cyan)) !important; }
+
+    /* ---- Sidebar ພັບເຂົ້າ/ອອກ ---- */
+    #sidebar { transition: width .25s ease; }
+    html.sidebar-collapsed #sidebar { width: 4.75rem; }
+    html.sidebar-collapsed #sidebar .sidebar-brand h1,
+    html.sidebar-collapsed #sidebar .sidebar-brand p { display: none; }
+    html.sidebar-collapsed #sidebar .sidebar-brand > div { margin-bottom: 0; }
+    html.sidebar-collapsed #sidebar nav a { justify-content: center; gap: 0; padding-left: 0; padding-right: 0; }
+    html.sidebar-collapsed #sidebar nav a > span + span { display: none; }
+    html.sidebar-collapsed #sidebar .sidebar-footer { padding-left: .5rem; padding-right: .5rem; }
+    html.sidebar-collapsed #sidebar .sidebar-footer .sidebar-user { display: none; }
+    html.sidebar-collapsed #sidebar .sidebar-footer a.block { font-size: 0 !important; }
+    html.sidebar-collapsed #sidebar .sidebar-footer a.block::before { content: "+"; font-size: 20px; line-height: 1; }
 </style>
 </head>
 <body class="bg-background text-on-surface font-body-md min-h-screen flex">
 
-<aside class="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-surface-container border-r border-white/10 shrink-0 py-6 z-50">
-    <div class="px-6 mb-8 flex flex-col items-center text-center">
+<aside id="sidebar" class="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-surface-container border-r border-white/10 shrink-0 py-6 z-50 overflow-hidden">
+    <div class="sidebar-brand px-6 mb-8 flex flex-col items-center text-center">
         <div class="w-14 h-14 rounded-full bg-surface-variant border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_24px_rgba(34,211,238,.16)]">
             <span class="material-symbols-outlined text-ai-cyan text-3xl fill">steps</span>
         </div>
-        <h1 class="font-display-lg text-ai-cyan font-bold tracking-tight" style="font-size:24px;line-height:1.1;">Hug Kerb AI</h1>
+        <h1 class="font-display-lg text-ai-cyan font-bold tracking-tight" style="font-size:24px;line-height:1.1;">Hug ເກີບ AI</h1>
         <p class="font-body-sm text-on-surface-variant mt-1">{% trans "SME Command Center" %}</p>
     </div>
     <nav class="flex-1 px-4 space-y-1">
@@ -200,12 +217,12 @@
             <span class="font-label-caps tracking-widest">{% trans "Admin" %}</span>
         </a>
     </nav>
-    <div class="px-6 mt-auto pt-6 space-y-3">
+    <div class="sidebar-footer px-6 mt-auto pt-6 space-y-3">
         <a href="{% url 'pos:create' %}" class="block text-center btn-gradient text-on-primary font-headline-md font-bold py-3 rounded-lg hover:scale-105 active:scale-95 transition-transform" style="font-size:15px;">
             + {% trans "Create Order" %}
         </a>
         {% if user.is_authenticated %}
-        <div class="flex items-center justify-between text-xs text-on-surface-variant px-1">
+        <div class="sidebar-user flex items-center justify-between text-xs text-on-surface-variant px-1">
             <span class="truncate">{{ user.username }}</span>
             <a href="{% url 'admin:logout' %}" class="hover:text-ai-cyan">{% trans "Logout" %}</a>
         </div>
@@ -214,8 +231,11 @@
 </aside>
 
 <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-    <header class="backdrop-blur-xl border-b border-white/10 bg-surface-glass flex justify-between items-center px-4 md:px-margin-desktop h-16 shrink-0 z-40">
-        <h1 class="font-headline-md text-on-surface font-bold md:hidden">Hug Kerb AI</h1>
+    <header class="backdrop-blur-xl border-b border-white/10 bg-surface-glass flex justify-between items-center gap-4 px-4 md:px-margin-desktop h-16 shrink-0 z-40">
+        <h1 class="font-headline-md text-on-surface font-bold md:hidden">Hug ເກີບ AI</h1>
+        <button id="sidebar-toggle" type="button" class="hidden md:inline-flex text-on-surface-variant hover:text-ai-cyan transition-colors shrink-0" aria-label="{% trans 'Toggle sidebar' %}" title="{% trans 'Toggle sidebar' %}">
+            <span id="sidebar-toggle-icon" class="material-symbols-outlined">left_panel_close</span>
+        </button>
         <div class="hidden md:flex items-center w-full max-w-md">
             <div class="relative w-full">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
@@ -290,6 +310,55 @@
             toggle.addEventListener("click", function () {
                 applyTheme(getTheme() === "dark" ? "light" : "dark", true);
             });
+        }
+
+        // ---- Sidebar ພັບເຂົ້າ/ອອກ ----
+        const sidebarKey = "hug-kerb-sidebar";
+        const sidebarToggle = document.getElementById("sidebar-toggle");
+        const sidebarIcon = document.getElementById("sidebar-toggle-icon");
+
+        function applySidebar(collapsed, persist) {
+            root.classList.toggle("sidebar-collapsed", collapsed);
+            if (persist) {
+                localStorage.setItem(sidebarKey, collapsed ? "collapsed" : "open");
+            }
+            if (sidebarIcon) {
+                sidebarIcon.textContent = collapsed ? "left_panel_open" : "left_panel_close";
+            }
+        }
+
+        applySidebar(root.classList.contains("sidebar-collapsed"), false);
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener("click", function () {
+                applySidebar(!root.classList.contains("sidebar-collapsed"), true);
+            });
+        }
+
+        // tooltip ຕອນພັບ — ເອົາຂໍ້ຄວາມຈາກ label ຂອງແຕ່ລະເມນູ
+        document.querySelectorAll("#sidebar nav a").forEach(function (a) {
+            const label = a.querySelector("span + span");
+            if (label) a.title = label.textContent.trim();
+        });
+
+        // ---- Sync ຂ້າມ tab/ໜ້າ: ຟັງ localStorage ຈາກ tab ອື່ນ ----
+        const langKey = "hug-kerb-lang";
+        window.addEventListener("storage", function (e) {
+            if (e.key === storageKey && (e.newValue === "dark" || e.newValue === "light")) {
+                applyTheme(e.newValue, false);
+            }
+            if (e.key === sidebarKey && e.newValue) {
+                applySidebar(e.newValue === "collapsed", false);
+            }
+            // ພາສາຖືກປ່ຽນຈາກ tab ອື່ນ (session ປ່ຽນແລ້ວ) — reload ໃຫ້ render ພາສາໃໝ່
+            if (e.key === langKey && e.newValue && e.newValue !== root.lang) {
+                location.reload();
+            }
+        });
+
+        // ບັນທຶກພາສາປັດຈຸບັນຫຼັງ render ແລ້ວ — storage event ຈະແຈ້ງ tab ອື່ນໃຫ້ reload ຕາມ
+        // (ເຮັດແບບນີ້ແທນຕອນກົດປຸ່ມ ເພື່ອໃຫ້ session ປ່ຽນສຳເລັດກ່ອນ tab ອື່ນ reload)
+        if (root.lang) {
+            localStorage.setItem(langKey, root.lang);
         }
     })();
 </script>

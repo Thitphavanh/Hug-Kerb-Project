@@ -1,10 +1,10 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Hug Kerb AI\n"
+"Project-Id-Version: Hug ເກີບ AI\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-09 23:58+0700\n"
 "PO-Revision-Date: 2026-07-09 00:00+0700\n"
-"Last-Translator: Hug Kerb AI\n"
+"Last-Translator: Hug ເກີບ AI\n"
 "Language-Team: Lao\n"
 "Language: lo\n"
 "MIME-Version: 1.0\n"
@@ -56,16 +56,16 @@ msgid "Save Changes"
 msgstr "ບັນທຶກການແກ້ໄຂ"
 
 #: core/urls.py:11
-msgid "Hug Kerb — Shop Management"
-msgstr "Hug Kerb — ລະບົບບໍລິຫານຮ້ານ"
+msgid "Hug ເກີບ — Shop Management"
+msgstr "Hug ເກີບ — ລະບົບບໍລິຫານຮ້ານ"
 
 #: core/urls.py:13
 msgid "Management"
 msgstr "ບໍລິຫານຈັດການ"
 
 #: crm/templates/crm/index.html:4
-msgid "CRM — Hug Kerb AI"
-msgstr "CRM — Hug Kerb AI"
+msgid "CRM — Hug ເກີບ AI"
+msgstr "CRM — Hug ເກີບ AI"
 
 #: crm/templates/crm/index.html:15
 msgid "Customer & Membership Management"
@@ -233,8 +233,8 @@ msgid "Email"
 msgstr "ອີເມວ"
 
 #: dashboard/templates/dashboard/index.html:5
-msgid "Dashboard — Hug Kerb AI"
-msgstr "ແດຊບອດ — Hug Kerb AI"
+msgid "Dashboard — Hug ເກີບ AI"
+msgstr "ແດຊບອດ — Hug ເກີບ AI"
 
 #: dashboard/templates/dashboard/index.html:9
 #, python-format
@@ -311,12 +311,12 @@ msgid "No activities yet."
 msgstr "ຍັງບໍ່ມີກິດຈະກຳ."
 
 #: home/templates/home/index.html:4 templates/base.html:8
-msgid "Hug Kerb AI — SME Command Center"
-msgstr "Hug Kerb AI — ສູນຄວບຄຸມ SME"
+msgid "Hug ເກີບ AI — SME Command Center"
+msgstr "Hug ເກີບ AI — ສູນຄວບຄຸມ SME"
 
 #: home/templates/home/index.html:15
-msgid "Hug Kerb AI Command Center"
-msgstr "ສູນຄວບຄຸມ Hug Kerb AI"
+msgid "Hug ເກີບ AI Command Center"
+msgstr "ສູນຄວບຄຸມ Hug ເກີບ AI"
 
 #: home/templates/home/index.html:16
 msgid ""
@@ -399,8 +399,8 @@ msgid "Manage source data, users, and advanced records."
 msgstr "ຈັດການຂໍ້ມູນຕົ້ນທາງ, ຜູ້ໃຊ້ ແລະ records ຂັ້ນສູງ."
 
 #: inventory/templates/inventory/index.html:4
-msgid "Inventory — Hug Kerb AI"
-msgstr "ສາງສິນຄ້າ — Hug Kerb AI"
+msgid "Inventory — Hug ເກີບ AI"
+msgstr "ສາງສິນຄ້າ — Hug ເກີບ AI"
 
 #: inventory/templates/inventory/index.html:10
 msgid "Manage materials, stock velocity, and audit history."
@@ -595,9 +595,9 @@ msgstr "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶ
 
 #: pos/templates/pos/create_order.html:5
 #, fuzzy
-#| msgid "Inventory — Hug Kerb AI"
-msgid "Point of Sale — Hug Kerb AI"
-msgstr "ສາງສິນຄ້າ — Hug Kerb AI"
+#| msgid "Inventory — Hug ເກີບ AI"
+msgid "Point of Sale — Hug ເກີບ AI"
+msgstr "ສາງສິນຄ້າ — Hug ເກີບ AI"
 
 #: pos/templates/pos/create_order.html:33
 msgid "Point of Sale"
@@ -719,12 +719,12 @@ msgid "You must keep at least one item."
 msgstr "ທ່ານຕ້ອງຮັກສາລາຍການໄວ້ຢ່າງໜ້ອຍໜຶ່ງລາຍການ."
 
 #: pos/templates/pos/quotation.html:5
-msgid "Interactive Quotation — Hug Kerb AI"
-msgstr "ການສະເໜີລາຄາອັດສະລິຍະ — Hug Kerb AI"
+msgid "Interactive Quotation — Hug ເກີບ AI"
+msgstr "ການສະເໜີລາຄາອັດສະລິຍະ — Hug ເກີບ AI"
 
 #: reports/templates/reports/income_expense.html:5
-msgid "Financial Overview — Hug Kerb AI"
-msgstr "ພາບລວມການເງິນ — Hug Kerb AI"
+msgid "Financial Overview — Hug ເກີບ AI"
+msgstr "ພາບລວມການເງິນ — Hug ເກີບ AI"
 
 #: reports/views.py:16
 msgid "Today"
@@ -774,8 +774,8 @@ msgstr "ຄົ້ນຫາອໍເດີ, ລູກຄ້າ, ສາງ..."
 msgid "Toggle color theme"
 msgstr "ສະຫຼັບສີໜ້າຈໍ"
 
-#~ msgid "Create Order — Hug Kerb AI"
-#~ msgstr "ສ້າງອໍເດີ — Hug Kerb AI"
+#~ msgid "Create Order — Hug ເກີບ AI"
+#~ msgstr "ສ້າງອໍເດີ — Hug ເກີບ AI"
 
 #~ msgid "Intake Asset"
 #~ msgstr "ຮັບສິນຄ້າ"
@@ -857,8 +857,8 @@ msgstr "ສະຫຼັບສີໜ້າຈໍ"
 #~ msgid "Points balance"
 #~ msgstr "ຄະແນນສະສົມ"
 
-#~ msgid "Reports — Hug Kerb AI"
-#~ msgstr "ລາຍງານ — Hug Kerb AI"
+#~ msgid "Reports — Hug ເກີບ AI"
+#~ msgstr "ລາຍງານ — Hug ເກີບ AI"
 
 #~ msgid "Income, expense, and AI analysis · %(period_label)s since %(start)s"
 #~ msgstr "ລາຍຮັບ, ລາຍຈ່າຍ ແລະ ການວິເຄາະ AI · %(period_label)s ຕັ້ງແຕ່ %(start)s"

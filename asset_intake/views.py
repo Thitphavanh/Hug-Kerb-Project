@@ -1,10 +1,14 @@
+from datetime import timedelta
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils import timezone
 from xhtml2pdf import pisa
 
 from ai_mart_grading.models import ChecklistItem
@@ -174,7 +178,7 @@ def intake_detail(request, pk):
         "promo_contents": asset.promo_contents.all()[:5],
         "status_choices": Asset.Status.choices,
         "wa_link": build_wa_link(asset),
-        "portal_url": absolute_url(asset.get_portal_url()),
+        "portal_url": absolute_url(asset.get_portal_url(), request),
         "technicians": get_user_model()
         .objects.filter(staff_profile__is_active=True)
         .select_related("staff_profile"),
@@ -182,14 +186,14 @@ def intake_detail(request, pk):
     return render(request, "asset_intake/intake_detail.html", context)
 
 
-def _ticket_context(asset, **extra):
+def _ticket_context(asset, request, **extra):
     """context ຮ່ວມຂອງໃບນັດຮັບເຄື່ອງ — QR ຊີ້ໄປໜ້າຕິດຕາມສະຖານະຂອງລູກຄ້າ"""
-    portal_url = absolute_url(asset.get_portal_url())
+    portal_url = absolute_url(asset.get_portal_url(), request)
     return {
         "asset": asset,
         "portal_url": portal_url,
         "portal_qr": qr_data_uri(portal_url),
-        "lookup_url": absolute_url(reverse("digital_member:lookup")),
+        "lookup_url": absolute_url(reverse("digital_member:lookup"), request),
         **extra,
     }
 
@@ -197,30 +201,32 @@ def _ticket_context(asset, **extra):
 @login_required
 def ticket_view(request, pk):
     asset = get_object_or_404(Asset.objects.select_related("customer"), pk=pk)
-    return render(request, "asset_intake/pickup_ticket.html", _ticket_context(asset))
+    return render(
+        request, "asset_intake/pickup_ticket.html", _ticket_context(asset, request)
+    )
 
 
 @login_required
 def ticket_pdf(request, pk):
     asset = get_object_or_404(Asset.objects.select_related("customer"), pk=pk)
+    from core.pdf_fonts import pdf_font_context, pdf_response
+
     html = render_to_string(
-        "asset_intake/pickup_ticket.html", _ticket_context(asset, for_pdf=True)
+        "asset_intake/pickup_ticket.html",
+        _ticket_context(asset, request, for_pdf=True, **pdf_font_context()),
     )
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'inline; filename="{asset.ticket_number}.pdf"'
-    pisa.CreatePDF(html, dest=response)
-    return response
+    return pdf_response(html, f"{asset.ticket_number}.pdf")
 
 
 @login_required
 def tag_label(request, pk):
-    """ປ້າຍແທັກ QR ນ້ອຍ ສຳລັບພິມຫ້ອຍຕິດເກີບ — ສະແກນແລ້ວເປີດໜ້າລາຍລະອຽດ (ພະນັກງານ)"""
+    """ປ້າຍແທັກ QR ນ້ອຍ ສຳລັບພິມຫ້ອຍຕິດເກີບ — ສະແກນແລ້ວເປີດໜ້າ portal ລູກຄ້າ (ຢືນຢັນດ້ວຍເບີໂທ)"""
     asset = get_object_or_404(Asset.objects.select_related("customer"), pk=pk)
-    detail_url = absolute_url(reverse("asset_intake:detail", args=[asset.pk]))
+    portal_url = absolute_url(asset.get_portal_url(), request)
     return render(
         request,
         "asset_intake/tag_label.html",
-        {"asset": asset, "tag_qr": qr_data_uri(detail_url, box_size=6)},
+        {"asset": asset, "tag_qr": qr_data_uri(portal_url, box_size=12)},
     )
 
 
@@ -278,15 +284,18 @@ def social_image(request, pk):
 
 @login_required
 def kanban_board(request):
-    assets = Asset.objects.select_related("customer", "assigned_to").exclude(
-        status=Asset.Status.RETURNED
+    # ວຽກຄ້າງທັງໝົດ + ວຽກທີ່ສົ່ງມອບພາຍໃນ 7 ວັນຫຼ້າສຸດ (ຖັນ Completed ບໍ່ຮົກ)
+    week_ago = timezone.now() - timedelta(days=7)
+    assets = Asset.objects.select_related("customer", "assigned_to").filter(
+        ~Q(status=Asset.Status.RETURNED) | Q(updated_at__gte=week_ago)
     )
-    
+
     stages = [
         {"id": "received", "name": "Intake (ຮັບເຂົ້າ)"},
         {"id": "cleaning", "name": "Cleaning (ຊັກ)"},
         {"id": "repairing", "name": "Repairing (ສ້ອມແປງ)"},
         {"id": "ready", "name": "Ready (ລໍຖ້າຮັບ)"},
+        {"id": "returned", "name": "Completed (ສົ່ງມອບແລ້ວ)", "hint": "7 ວັນຫຼ້າສຸດ"},
     ]
     
     return render(

@@ -166,6 +166,12 @@
             const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
             const theme = savedTheme || (prefersDark ? "dark" : "light");
             document.documentElement.classList.toggle("dark", theme === "dark");
+            // Sync ຂ້າມ tab: ປ່ຽນ theme ຈາກໜ້າໃດກໍຕາມ ໜ້ານີ້ປ່ຽນຕາມທັນທີ
+            window.addEventListener("storage", function (e) {
+                if (e.key === storageKey && (e.newValue === "dark" || e.newValue === "light")) {
+                    document.documentElement.classList.toggle("dark", e.newValue === "dark");
+                }
+            });
         })();
     </script>
 </head>

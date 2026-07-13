@@ -18,6 +18,11 @@ def qr_data_uri(text, box_size=8):
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
-def absolute_url(path):
-    """ຕໍ່ SITE_BASE_URL ໃສ່ໜ້າ path — ສຳລັບລິ້ງທີ່ຕ້ອງໃຊ້ນອກເວັບ (QR, ຂໍ້ຄວາມ)"""
+def absolute_url(path, request=None):
+    """ສ້າງ URL ເຕັມສຳລັບລິ້ງທີ່ຕ້ອງໃຊ້ນອກເວັບ (QR, ຂໍ້ຄວາມ)
+
+    ຖ້າມີ request ຈະໃຊ້ host ຕົວຈິງທີ່ເປີດຢູ່ (ເຊັ່ນ ngrok) ເພື່ອໃຫ້ QR
+    ສະແກນຈາກມືຖືໄດ້ — ຖ້າບໍ່ມີ ຈຶ່ງຖອຍໄປໃຊ້ SITE_BASE_URL"""
+    if request is not None:
+        return request.build_absolute_uri(path)
     return settings.SITE_BASE_URL.rstrip("/") + path

@@ -1,37 +1,69 @@
 {% extends "digital_member/portal_base.html" %}
 
-{% block title %}ຕິດຕາມສະຖານະ {{ asset.ticket_number }} — Hug Kerb{% endblock %}
+{% block title %}ຕິດຕາມສະຖານະ {{ asset.ticket_number }} — Hug ເກີບ{% endblock %}
 
 {% block extra_style %}
 <style>
     .step { display: flex; gap: 14px; }
     .step .dot-col { display: flex; flex-direction: column; align-items: center; }
     .dot {
-        width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+        width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
         display: flex; align-items: center; justify-content: center;
-        font-size: 13px; border: 2px solid #334155; background: #1e293b; color: #64748b;
+        font-size: 13px; font-weight: 600;
+        border: 2px solid var(--dot-border); background: var(--dot-bg); color: var(--dot-text);
+        transition: background .3s ease, border-color .3s ease;
     }
-    .dot.done { background: #38bdf8; border-color: #38bdf8; color: #0b0f19; }
-    .dot.current { border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 12px rgba(56,189,248,.5); }
-    .line { width: 2px; flex: 1; min-height: 22px; background: #334155; }
-    .line.done { background: #38bdf8; }
-    .step-label { padding-bottom: 18px; font-size: 15px; color: #94a3b8; }
-    .step-label.current { color: #f8fafc; font-weight: 700; }
-    .step-label.done { color: #cbd5e1; }
+    .dot.done {
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        border-color: transparent; color: #fff;
+    }
+    .dot.current {
+        border-color: var(--accent); color: var(--accent);
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent),
+                    0 0 14px color-mix(in srgb, var(--accent) 45%, transparent);
+    }
+    .line { width: 2px; flex: 1; min-height: 24px; background: var(--line); border-radius: 1px; }
+    .line.done { background: linear-gradient(180deg, var(--accent), var(--accent-2)); }
+    .step-label { padding: 3px 0 20px; font-size: 15px; color: var(--text-muted); }
+    .step-label.current { color: var(--text); font-weight: 700; }
+    .step-label.done { color: var(--text-soft); }
+
     .ready-banner {
         background: linear-gradient(90deg, #0ea5e9, #8b5cf6);
-        border-radius: 12px; padding: 14px 16px; text-align: center;
-        font-weight: 700; margin-bottom: 16px;
+        border-radius: 14px; padding: 15px 16px; text-align: center;
+        font-weight: 700; margin-bottom: 16px; color: #fff;
+        box-shadow: 0 6px 22px rgba(14, 165, 233, 0.35);
+    }
+    .ready-banner.returned {
+        background: linear-gradient(90deg, #059669, #10b981);
+        box-shadow: 0 6px 22px rgba(16, 185, 129, 0.35);
+    }
+
+    .ticket-no {
+        font-size: 24px; font-weight: 600; letter-spacing: .03em;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
     }
     .photos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-    .photos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; }
-    .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
-    .row .k { color: #94a3b8; }
-    .member-btn {
-        display: block; text-align: center; background: rgba(56,189,248,.12);
-        border: 1px solid rgba(56,189,248,.4); color: #38bdf8;
-        border-radius: 12px; padding: 12px; text-decoration: none; font-weight: 700;
+    .photos img {
+        width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px;
+        border: 1px solid var(--surface-border);
     }
+    .row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 14px; gap: 12px; }
+    .row + .row { border-top: 1px solid var(--surface-border); }
+    .row .k { color: var(--text-muted); flex-shrink: 0; }
+    .row .v { text-align: right; }
+
+    .member-btn {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+        border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+        color: var(--accent);
+        border-radius: 14px; padding: 14px; text-decoration: none; font-weight: 700;
+        transition: background .2s ease, transform .15s ease;
+    }
+    .member-btn:hover { background: color-mix(in srgb, var(--accent) 16%, transparent); transform: translateY(-1px); }
 </style>
 {% endblock %}
 
@@ -39,24 +71,24 @@
     {% if is_ready %}
     <div class="ready-banner">🎉 ເກີບຂອງທ່ານພ້ອມແລ້ວ — ເຊີນມາຮັບຄືນທີ່ຮ້ານໄດ້ເລີຍ!</div>
     {% elif is_returned %}
-    <div class="ready-banner" style="background:#166534;">✅ ສົ່ງມອບແລ້ວ — ຂອບໃຈທີ່ໃຊ້ບໍລິການ</div>
+    <div class="ready-banner returned">✅ ສົ່ງມອບແລ້ວ — ຂອບໃຈທີ່ໃຊ້ບໍລິການ</div>
     {% endif %}
 
     <div class="card">
         <p class="muted">ໃບຮັບເຄື່ອງເລກທີ</p>
-        <p class="mono" style="font-size:22px;font-weight:600;color:#38bdf8;">{{ asset.ticket_number }}</p>
-        <div style="margin-top:10px;">
-            <div class="row"><span class="k">ເກີບ</span><span>{{ asset.brand }} {{ asset.model_name }}</span></div>
-            <div class="row"><span class="k">ສີ / ເບີ</span><span>{{ asset.color|default:"—" }} / {{ asset.size|default:"—" }}</span></div>
-            <div class="row"><span class="k">ວັນທີຮັບເຂົ້າ</span><span>{{ asset.intake_date|date:"d/m/Y" }}</span></div>
+        <p class="mono ticket-no">{{ asset.ticket_number }}</p>
+        <div style="margin-top:12px;">
+            <div class="row"><span class="k">ເກີບ</span><span class="v">{{ asset.brand }} {{ asset.model_name }}</span></div>
+            <div class="row"><span class="k">ສີ / ເບີ</span><span class="v">{{ asset.color|default:"—" }} / {{ asset.size|default:"—" }}</span></div>
+            <div class="row"><span class="k">ວັນທີຮັບເຂົ້າ</span><span class="v">{{ asset.intake_date|date:"d/m/Y" }}</span></div>
             {% if asset.pickup_date %}
-            <div class="row"><span class="k">ວັນນັດຮັບເຄື່ອງ</span><span style="font-weight:700;">{{ asset.pickup_date|date:"d/m/Y" }}</span></div>
+            <div class="row"><span class="k">ວັນນັດຮັບເຄື່ອງ</span><span class="v" style="font-weight:700;color:var(--accent);">{{ asset.pickup_date|date:"d/m/Y" }}</span></div>
             {% endif %}
         </div>
     </div>
 
     <div class="card">
-        <p style="font-weight:700;margin-bottom:14px;">ສະຖານະການບໍລິການ</p>
+        <p style="font-weight:700;margin-bottom:16px;">ສະຖານະການບໍລິການ</p>
         {% for step in timeline %}
         <div class="step">
             <div class="dot-col">
@@ -78,13 +110,13 @@
         {% if before_media %}
         <p class="muted" style="margin-top:8px;">ກ່ອນຊັກ</p>
         <div class="photos">
-            {% for m in before_media %}<img src="{{ m.file.url }}" alt="before" loading="lazy">{% endfor %}
+            {% for m in before_media %}<img src="{{ m.file.url }}" alt="ຮູບກ່ອນຊັກ" loading="lazy">{% endfor %}
         </div>
         {% endif %}
         {% if after_media %}
         <p class="muted" style="margin-top:12px;">ຫຼັງຊັກ</p>
         <div class="photos">
-            {% for m in after_media %}<img src="{{ m.file.url }}" alt="after" loading="lazy">{% endfor %}
+            {% for m in after_media %}<img src="{{ m.file.url }}" alt="ຮູບຫຼັງຊັກ" loading="lazy">{% endfor %}
         </div>
         {% endif %}
     </div>

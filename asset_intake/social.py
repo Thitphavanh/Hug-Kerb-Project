@@ -1,8 +1,12 @@
 """ສ້າງຮູບ Before/After ສຳລັບໂພສ social media ດ້ວຍ Pillow"""
 
 from io import BytesIO
+from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
+
+# font ລາວຂອງໂປຣເຈັກ (core/static/fonts/) — ຊື່ຮ້ານ "Hug ເກີບ" ມີໂຕລາວ
+_PROJECT_FONT = Path(__file__).resolve().parents[1] / "static" / "fonts" / "NotoSansLao-Bold.ttf"
 
 CANVAS = 1080
 HEADER_H = 120
@@ -15,6 +19,7 @@ WHITE = (255, 255, 255)
 def _font(size):
     """ໂຫຼດ font ທີ່ມີໃນເຄື່ອງ — fallback ເປັນ font default ຂອງ Pillow"""
     for path in (
+        str(_PROJECT_FONT),  # Noto Sans Lao — ຮອງຮັບທັງລາວ ແລະ ອັງກິດ
         "/System/Library/Fonts/Helvetica.ttc",  # macOS
         "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  # Linux
     ):
@@ -64,7 +69,7 @@ def compose_before_after(before_path, after_path, caption=""):
     )
 
     # Header: ຊື່ຮ້ານ + caption
-    draw.text((40, 30), "HUG KERB", font=_font(56), fill=ACCENT_COLOR)
+    draw.text((40, 30), "Hug ເກີບ", font=_font(56), fill=ACCENT_COLOR)
     if caption:
         title_font = _font(34)
         w = draw.textlength(caption, font=title_font)

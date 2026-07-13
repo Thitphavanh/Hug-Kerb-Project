@@ -5,42 +5,143 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>{% block title %}Hug Kerb{% endblock %}</title>
+<meta name="color-scheme" content="light dark">
+<title>{% block title %}Hug ເກີບ{% endblock %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ---- Theme tokens: dark ເປັນຄ່າເລີ່ມຕົ້ນ, light override ດ້ວຍ data-theme ---- */
+    :root {
+        --bg-1: #0b0f19; --bg-2: #131b2e; --bg-3: #1e293b;
+        --surface: rgba(15, 23, 42, 0.75);
+        --surface-border: rgba(255, 255, 255, 0.08);
+        --text: #f8fafc; --text-soft: #cbd5e1; --text-muted: #94a3b8;
+        --accent: #38bdf8; --accent-2: #818cf8;
+        --field-bg: rgba(30, 41, 59, 0.6);
+        --field-border: rgba(255, 255, 255, 0.15);
+        --dot-bg: #1e293b; --dot-border: #334155; --dot-text: #64748b;
+        --line: #334155;
+        --error-bg: rgba(248, 113, 113, 0.12);
+        --error-border: rgba(248, 113, 113, 0.4);
+        --error-text: #fca5a5;
+        --toggle-bg: rgba(255, 255, 255, 0.06);
+        --toggle-border: rgba(255, 255, 255, 0.12);
+    }
+    :root[data-theme="light"] {
+        --bg-1: #f0f6ff; --bg-2: #e8f0fb; --bg-3: #dbe7f5;
+        --surface: rgba(255, 255, 255, 0.82);
+        --surface-border: rgba(15, 23, 42, 0.08);
+        --text: #0f172a; --text-soft: #334155; --text-muted: #64748b;
+        --accent: #0284c7; --accent-2: #6366f1;
+        --field-bg: rgba(255, 255, 255, 0.9);
+        --field-border: rgba(15, 23, 42, 0.15);
+        --dot-bg: #e2e8f0; --dot-border: #cbd5e1; --dot-text: #64748b;
+        --line: #cbd5e1;
+        --error-bg: rgba(220, 38, 38, 0.08);
+        --error-border: rgba(220, 38, 38, 0.35);
+        --error-text: #b91c1c;
+        --toggle-bg: rgba(15, 23, 42, 0.05);
+        --toggle-border: rgba(15, 23, 42, 0.12);
+    }
+
     body {
         font-family: "Noto Sans Lao", sans-serif;
-        background: linear-gradient(160deg, #0b0f19 0%, #131b2e 60%, #1e293b 100%);
-        color: #f8fafc; min-height: 100vh;
+        background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 60%, var(--bg-3) 100%);
+        color: var(--text); min-height: 100dvh;
         display: flex; flex-direction: column; align-items: center;
         padding: 20px 16px 40px;
+        transition: background .3s ease, color .3s ease;
     }
     .wrap { width: 100%; max-width: 430px; }
-    .brand { text-align: center; margin-bottom: 20px; }
-    .brand h1 { color: #38bdf8; font-size: 26px; letter-spacing: .02em; }
-    .brand p { color: #94a3b8; font-size: 13px; }
+
+    /* ---- ປຸ່ມສະຫຼັບ theme ---- */
+    .theme-toggle {
+        position: fixed; top: 14px; right: 14px; z-index: 10;
+        width: 44px; height: 44px; border-radius: 50%;
+        background: var(--toggle-bg); border: 1px solid var(--toggle-border);
+        color: var(--text-muted); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(8px);
+        transition: color .2s ease, transform .2s ease;
+    }
+    .theme-toggle:hover { color: var(--accent); transform: rotate(15deg); }
+    .theme-toggle svg { width: 20px; height: 20px; }
+    :root[data-theme="light"] .icon-sun { display: none; }
+    :root:not([data-theme="light"]) .icon-moon { display: none; }
+
+    .brand { text-align: center; margin-bottom: 22px; }
+    .brand h1 {
+        font-size: 27px; letter-spacing: .02em;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+    }
+    .brand p { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
+
     .card {
-        background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255,255,255,0.08);
-        border-radius: 16px; padding: 20px; margin-bottom: 16px;
-        backdrop-filter: blur(10px);
+        background: var(--surface); border: 1px solid var(--surface-border);
+        border-radius: 18px; padding: 20px; margin-bottom: 16px;
+        backdrop-filter: blur(12px);
+        transition: background .3s ease, border-color .3s ease;
     }
     .mono { font-family: "JetBrains Mono", monospace; }
-    .muted { color: #94a3b8; font-size: 13px; }
-    a { color: #38bdf8; }
+    .muted { color: var(--text-muted); font-size: 13px; }
+    a { color: var(--accent); }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; }
+    }
 </style>
+<script>
+    // ຕັ້ງ theme ກ່ອນ render ເພື່ອບໍ່ໃຫ້ຈໍກະພິບ — key ດຽວກັບໜ້າ admin ເພື່ອ sync ກັນທຸກໜ້າ
+    (function () {
+        const saved = localStorage.getItem("hug-kerb-theme");
+        if (saved === "light" || (!saved && matchMedia("(prefers-color-scheme: light)").matches)) {
+            document.documentElement.dataset.theme = "light";
+        }
+    })();
+</script>
 {% block extra_style %}{% endblock %}
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="ສະຫຼັບໂໝດມືດ/ແຈ້ງ">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+    </button>
+
     <div class="wrap">
         <div class="brand">
-            <h1>HUG KERB 👟</h1>
+            <h1>Hug ເກີບ 👟</h1>
             <p>Shoe Cleaning &amp; Care — Savannakhet</p>
         </div>
         {% block content %}{% endblock %}
-        <p class="muted" style="text-align:center;margin-top:24px;">© Hug Kerb · ຂອບໃຈທີ່ໃຊ້ບໍລິການ 🙏</p>
+        <p class="muted" style="text-align:center;margin-top:24px;">© Hug ເກີບ · ຂອບໃຈທີ່ໃຊ້ບໍລິການ 🙏</p>
     </div>
+
+    <script>
+        function applyPortalTheme(theme) {
+            if (theme === "light") document.documentElement.dataset.theme = "light";
+            else delete document.documentElement.dataset.theme;
+        }
+        function toggleTheme() {
+            const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+            applyPortalTheme(next);
+            localStorage.setItem("hug-kerb-theme", next);
+        }
+        // Sync ຂ້າມ tab: ປ່ຽນ theme ຈາກໜ້າໃດກໍຕາມ ໜ້ານີ້ປ່ຽນຕາມທັນທີ
+        window.addEventListener("storage", function (e) {
+            if (e.key === "hug-kerb-theme" && (e.newValue === "dark" || e.newValue === "light")) {
+                applyPortalTheme(e.newValue);
+            }
+        });
+    </script>
 </body>
 </html>

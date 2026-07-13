@@ -1,25 +1,31 @@
 {% extends "digital_member/portal_base.html" %}
 
-{% block title %}ຕິດຕາມສະຖານະເກີບ — Hug Kerb{% endblock %}
+{% block title %}ຕິດຕາມສະຖານະເກີບ — Hug ເກີບ{% endblock %}
 
 {% block extra_style %}
 <style>
     .field {
-        width: 100%; background: rgba(30, 41, 59, .6); border: 1px solid rgba(255,255,255,.15);
-        border-radius: 12px; padding: 14px 16px; color: #f8fafc; font-size: 16px;
+        width: 100%; background: var(--field-bg); border: 1px solid var(--field-border);
+        border-radius: 12px; padding: 14px 16px; color: var(--text); font-size: 16px;
         font-family: "Noto Sans Lao", sans-serif;
     }
-    .field:focus { outline: none; border-color: #38bdf8; }
+    .field:focus {
+        outline: none; border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+    }
     .field.mono-input { font-family: "JetBrains Mono", monospace; text-transform: uppercase; }
     .btn {
         width: 100%; margin-top: 14px; border: none; cursor: pointer;
         background: linear-gradient(90deg, #0ea5e9, #8b5cf6); color: #fff;
         border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700;
         font-family: "Noto Sans Lao", sans-serif;
+        box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+        transition: transform .15s ease, box-shadow .15s ease;
     }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(14, 165, 233, 0.45); }
     .error {
-        background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.4);
-        color: #fca5a5; border-radius: 10px; padding: 10px 14px; font-size: 14px;
+        background: var(--error-bg); border: 1px solid var(--error-border);
+        color: var(--error-text); border-radius: 10px; padding: 10px 14px; font-size: 14px;
         margin-bottom: 14px;
     }
     label { display: block; margin: 14px 0 6px; }

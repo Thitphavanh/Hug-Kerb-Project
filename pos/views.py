@@ -1,12 +1,87 @@
+import re
+
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.loader import render_to_string
-from xhtml2pdf import pisa
 
 from inventory.models import StockMovement, Supply
 
 from .models import Order, OrderItem, Payment, ServiceType, generate_order_number
+
+
+@login_required
+def scan_lookup(request):
+    """ຄົ້ນຫາຈາກຄ່າທີ່ສະແກນໄດ້ (ປ້າຍແທັກ QR, ໃບຮັບເຄື່ອງ, ເລກອໍເດີ)
+    ຮັບ ?code= ເປັນ: ເລກໃບຮັບເຄື່ອງ TK-..., ເລກອໍເດີ ORD...,
+    ຫຼື URL ຈາກ QR ໃນລະບົບ (/t/<token>/ ຂອງ portal, /<pk>/ ຂອງປ້າຍແທັກ)
+    """
+    from asset_intake.models import Asset
+
+    code = request.GET.get("code", "").strip()
+    if not code:
+        return JsonResponse({"found": False, "error": "empty"}, status=400)
+
+    asset = None
+    order = None
+
+    if code.lower().startswith(("http://", "https://")):
+        # QR ໜ້າ portal ລູກຄ້າ: .../t/<token>/
+        m = re.search(r"/t/([A-Za-z0-9_-]+)/?", code)
+        if m:
+            asset = Asset.objects.select_related("customer").filter(
+                public_token=m.group(1)
+            ).first()
+        else:
+            # QR ປ້າຍແທັກຫ້ອຍເກີບ: ເປັນ URL ໜ້າລາຍລະອຽດ ລົງທ້າຍດ້ວຍ /<pk>/
+            m = re.search(r"/(\d+)/?(?:[?#].*)?$", code)
+            if m:
+                asset = Asset.objects.select_related("customer").filter(
+                    pk=int(m.group(1))
+                ).first()
+    elif code.upper().startswith("ORD"):
+        order = Order.objects.select_related("customer").filter(
+            order_number__iexact=code
+        ).first()
+    else:
+        asset = Asset.objects.select_related("customer").filter(
+            ticket_number__iexact=code
+        ).first()
+        if asset is None:
+            asset = Asset.objects.select_related("customer").filter(
+                public_token=code
+            ).first()
+
+    if order is not None:
+        # ດຶງເຄື່ອງໂຕທຳອິດຂອງອໍເດີມານຳ ເພື່ອຕື່ມຟອມລາຍການ
+        first_item = order.items.select_related("asset").filter(
+            asset__isnull=False
+        ).first()
+        asset = first_item.asset if first_item else None
+        customer = order.customer
+        label = order.order_number
+        source = "order"
+    elif asset is not None:
+        customer = asset.customer
+        label = asset.ticket_number
+        source = "asset"
+    else:
+        return JsonResponse({"found": False})
+
+    return JsonResponse({
+        "found": True,
+        "source": source,
+        "label": label,
+        "customer": {
+            "name": customer.name if customer else "",
+            "phone": customer.phone if customer else "",
+        },
+        "asset": {
+            "brand": asset.brand,
+            "model_name": asset.model_name,
+            "size": asset.size,
+        } if asset else None,
+    })
 
 
 @login_required
@@ -226,8 +301,10 @@ def invoice_pdf(request, pk):
         Order.objects.select_related("customer").prefetch_related("items", "payments"),
         pk=pk,
     )
-    html = render_to_string("pos/invoice.html", {"order": order, "for_pdf": True})
-    response = HttpResponse(content_type="application/pdf")
-    response["Content-Disposition"] = f'inline; filename="{order.order_number}.pdf"'
-    pisa.CreatePDF(html, dest=response)
-    return response
+    from core.pdf_fonts import pdf_font_context, pdf_response
+
+    html = render_to_string(
+        "pos/invoice.html",
+        {"order": order, "for_pdf": True, **pdf_font_context()},
+    )
+    return pdf_response(html, f"{order.order_number}.pdf")

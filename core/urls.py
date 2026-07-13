@@ -8,8 +8,8 @@ from django.contrib import admin
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 
-admin.site.site_header = _("Hug Kerb — Shop Management")
-admin.site.site_title = "Hug Kerb Admin"
+admin.site.site_header = _("Hug ເກີບ — Shop Management")
+admin.site.site_title = "Hug ເກີບ Admin"
 admin.site.index_title = _("Management")
 
 urlpatterns = [

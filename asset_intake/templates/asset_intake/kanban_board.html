@@ -16,7 +16,12 @@
         <div class="flex-none w-80 bg-surface-container-low rounded-2xl p-4 flex flex-col h-full max-h-full kanban-column border border-outline-variant/30" data-status="{{ stage.id }}" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
             
             <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-on-surface">{{ stage.name }}</h3>
+                <div class="flex items-baseline gap-2">
+                    <h3 class="font-bold text-on-surface">{{ stage.name }}</h3>
+                    {% if stage.hint %}
+                    <span class="text-xs text-on-surface-variant">{{ stage.hint }}</span>
+                    {% endif %}
+                </div>
                 <span class="bg-surface-container-high text-on-surface-variant text-xs font-semibold px-2 py-1 rounded-full count-badge">
                     0
                 </span>

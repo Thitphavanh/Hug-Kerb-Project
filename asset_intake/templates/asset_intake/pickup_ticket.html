@@ -5,6 +5,13 @@
 <meta charset="UTF-8">
 <title>ໃບນັດຮັບເຄື່ອງ {{ asset.ticket_number }}</title>
 <style>
+    {% if for_pdf %}
+    /* ຝັງ font ລາວເຂົ້າ PDF — ບໍ່ມີແລ້ວໂຕໜັງສືລາວຈະເປັນສີ່ຫຼ່ຽມດຳ */
+    @font-face { font-family: "NotoSansLao"; src: url("{{ pdf_font_regular }}"); }
+    @font-face { font-family: "NotoSansLaoBold"; src: url("{{ pdf_font_bold }}"); }
+    body, p, td, span, div { font-family: "NotoSansLao"; }
+    h1, h2, th, strong, b { font-family: "NotoSansLaoBold"; }
+    {% endif %}
     body { font-family: "Noto Sans Lao", sans-serif; font-size: 13px; color: #1e293b; margin: 24px; }
     h1 { font-size: 18px; margin-bottom: 0; }
     .muted { color: #64748b; }
@@ -20,7 +27,7 @@
 <body>
     <div class="header">
         <div>
-            <h1>AINSTEINX SOLE CO., LTD</h1>
+            <h1>Hug ເກີບ</h1>
             <p class="muted">ບ້ານ ທ່າແຮ່, ນະຄອນໄກສອນ ພົມວິຫານ, ແຂວງສະຫວັນນະເຂດ, ສປປ ລາວ</p>
         </div>
         <div style="text-align:right;">
@@ -59,7 +66,7 @@
         </tr>
     </table>
 
-    <p class="muted" style="margin-top:30px;">ຂອບໃຈທີ່ໃຊ້ບໍລິການ Hug Kerb 👟</p>
+    <p class="muted" style="margin-top:30px;">ຂອບໃຈທີ່ໃຊ້ບໍລິການ Hug ເກີບ 👟</p>
 
     {% if not for_pdf %}
     <div class="noprint">

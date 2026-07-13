@@ -21,7 +21,9 @@ from dotenv import load_dotenv
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # ໂຫຼດ environment variables ຈາກໄຟລ໌ .env (ຢູ່ຂ້າງ manage.py)
-load_dotenv(BASE_DIR / ".env")
+# override=True — ໃຫ້ .env ຊະນະຄ່າເກົ່າທີ່ຄ້າງໃນ environment ສະເໝີ
+# (ບໍ່ດັ່ງນັ້ນ autoreload ຂອງ runserver ຈະສືບທອດຄ່າເກົ່າ ແກ້ .env ແລ້ວບໍ່ມີຜົນ)
+load_dotenv(BASE_DIR / ".env", override=True)
 
 
 # Application definition

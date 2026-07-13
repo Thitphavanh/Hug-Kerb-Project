@@ -23,6 +23,16 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
 
+# ເຊື່ອ X-Forwarded-Proto ຈາກ ngrok — ໃຫ້ build_absolute_uri ອອກເປັນ https
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+# ອະນຸຍາດ POST form ຜ່ານ ngrok (URL ຂອງ ngrok free ປ່ຽນທຸກຄັ້ງ ຈຶ່ງໃຊ້ wildcard)
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.ngrok-free.app",
+    "https://*.ngrok.app",
+    "https://*.ngrok.io",
+]
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
@@ -35,3 +45,13 @@ DATABASES = {
 
 # Show detailed error pages
 DEBUG_PROPAGATE_EXCEPTIONS = True
+
+# ໃຫ້ runserver ຮີສະຕາດເອງເມື່ອແກ້ໄຟລ໌ .env (ເຊັ່ນ ປ່ຽນ SITE_BASE_URL ເປັນ URL ngrok ໃໝ່)
+from django.utils.autoreload import autoreload_started  # noqa: E402
+
+
+def _watch_env_file(sender, **kwargs):
+    sender.extra_files.add(BASE_DIR / ".env")
+
+
+autoreload_started.connect(_watch_env_file)
