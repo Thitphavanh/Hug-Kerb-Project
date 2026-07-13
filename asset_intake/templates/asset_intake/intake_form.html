@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Asset Intake — Hug Kerb AI{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">Asset Intake</h2>
+        <p class="text-on-surface-variant">Capture customer, sneaker, and image evidence for AI grading.</p>
+    </div>
+    <a href="{% url 'asset_intake:list' %}" class="text-ai-cyan hover:underline">Back to queue</a>
+</div>
+
+<datalist id="customer-list">
+    {% for c in customers %}
+    <option value="{{ c.name }}">{{ c.phone }}</option>
+    {% endfor %}
+</datalist>
+
+<form method="post" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+    {% csrf_token %}
+    <div class="lg:col-span-8 space-y-gutter">
+        <section class="glass-card rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center gap-2">
+                <span class="material-symbols-outlined text-ai-cyan">person</span>
+                <h3 class="font-headline-md text-headline-md text-on-surface">Customer Details</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.customer_name.label }}</label>
+                    {{ form.customer_name }}
+                    {% for e in form.customer_name.errors %}<p class="text-xs text-status-alert mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.customer_phone.label }}</label>
+                    {{ form.customer_phone }}
+                    {% for e in form.customer_phone.errors %}<p class="text-xs text-status-alert mt-1">{{ e }}</p>{% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-card rounded-xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-white/10 flex items-center gap-2">
+                <span class="material-symbols-outlined text-ai-purple">steps</span>
+                <h3 class="font-headline-md text-headline-md text-on-surface">Sneaker Details</h3>
+            </div>
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.brand.label }}</label>
+                    {{ form.brand }}
+                    {% for e in form.brand.errors %}<p class="text-xs text-status-alert mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.model_name.label }}</label>
+                    {{ form.model_name }}
+                </div>
+                <div>
+                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.color.label }}</label>
+                    {{ form.color }}
+                </div>
+                <div>
+                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.size.label }}</label>
+                    {{ form.size }}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.condition_note.label }}</label>
+                    {{ form.condition_note }}
+                </div>
+                <div>
+                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.pickup_date.label }}</label>
+                    {{ form.pickup_date }}
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <aside class="lg:col-span-4 glass-card ai-glow-border rounded-xl p-6 sticky top-4">
+        <h3 class="font-headline-md text-headline-md text-on-surface mb-4">Asset Photos</h3>
+        <label class="min-h-[260px] border-2 border-dashed border-outline-variant hover:border-ai-cyan/60 rounded-lg flex flex-col items-center justify-center p-8 text-center transition-colors group cursor-pointer bg-surface-container-lowest/50 relative overflow-hidden">
+            <span class="material-symbols-outlined text-5xl text-on-surface-variant group-hover:text-ai-cyan mb-4">add_a_photo</span>
+            <span class="font-headline-md text-on-surface mb-2">Upload Sneaker Photos</span>
+            <span class="font-body-sm text-on-surface-variant max-w-[250px]">Use clear lighting. Include upper, sole, heel, laces, and insole if possible.</span>
+            <span class="font-label-caps text-label-caps text-outline mt-4">JPG, PNG, multiple files</span>
+            <input type="file" name="photos" multiple accept="image/*" capture="environment" class="sr-only">
+        </label>
+        <button type="submit" class="mt-6 w-full btn-gradient text-on-primary font-label-caps text-label-caps py-3 rounded-lg font-bold flex justify-center items-center gap-2">
+            <span class="material-symbols-outlined text-sm">save</span>
+            Save Intake
+        </button>
+    </aside>
+</form>
+{% endblock %}

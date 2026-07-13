@@ -1,0 +1,88 @@
+{% load static humanize %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<title>ໃບບິນ {{ order.order_number }}</title>
+<style>
+    body { font-family: "Noto Sans Lao", sans-serif; font-size: 13px; color: #1e293b; margin: 24px; }
+    h1 { font-size: 20px; margin-bottom: 0; }
+    h2 { font-size: 16px; margin: 0; }
+    .muted { color: #64748b; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border-bottom: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
+    th { background: #f1f5f9; }
+    .text-right { text-align: right; }
+    .totals td { border: none; padding: 4px 8px; }
+    .totals .label { color: #64748b; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; }
+    .noprint { margin-top: 20px; }
+    @media print { .noprint { display: none; } }
+</style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>AINSTEINX SOLE CO., LTD</h1>
+            <p class="muted">ບ້ານ ທ່າແຮ່, ນະຄອນໄກສອນ ພົມວິຫານ, ແຂວງສະຫວັນນະເຂດ, ສປປ ລາວ</p>
+        </div>
+        <div class="text-right">
+            <h2>ໃບບິນ / Invoice</h2>
+            <p class="muted">ເລກທີ: {{ order.order_number }}</p>
+            <p class="muted">ວັນທີ: {{ order.created_at|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+
+    <p><strong>ລູກຄ້າ:</strong> {{ order.customer.name|default:"ລູກຄ້າທົ່ວໄປ" }}
+       {% if order.customer.phone %}({{ order.customer.phone }}){% endif %}</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ລາຍການ</th>
+                <th class="text-right">ຈຳນວນ</th>
+                <th class="text-right">ລາຄາຕໍ່ໜ່ວຍ</th>
+                <th class="text-right">ລວມ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.items.all %}
+            <tr>
+                <td>{{ item.description|default:item.service_type }}</td>
+                <td class="text-right">{{ item.quantity }}</td>
+                <td class="text-right">{{ item.unit_price|money }}</td>
+                <td class="text-right">{{ item.subtotal|money }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="totals" style="width: 260px; margin-left: auto;">
+        <tr><td class="label">ລວມຍ່ອຍ</td><td class="text-right">{{ order.subtotal|money }}</td></tr>
+        <tr><td class="label">ສ່ວນຫຼຸດ</td><td class="text-right">-{{ order.discount|money }}</td></tr>
+        <tr><td class="label"><strong>ຍອດລວມ</strong></td><td class="text-right"><strong>{{ order.total|money }}</strong></td></tr>
+    </table>
+
+    {% if order.payments.all %}
+    <p style="margin-top:20px;"><strong>ການຊຳລະ:</strong></p>
+    <table>
+        <thead><tr><th>ວັນທີ</th><th>ຊ່ອງທາງ</th><th class="text-right">ຈຳນວນ</th></tr></thead>
+        <tbody>
+        {% for p in order.payments.all %}
+            <tr><td>{{ p.paid_at|date:"d/m/Y H:i" }}</td><td>{{ p.get_method_display }}</td><td class="text-right">{{ p.amount|money }} {{ p.currency }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+    <p class="muted" style="margin-top:30px;">ຂອບໃຈທີ່ໃຊ້ບໍລິການ Hug Kerb 👟</p>
+
+    {% if not for_pdf %}
+    <div class="noprint">
+        <button onclick="window.print()">🖨️ ພິມ</button>
+        <a href="{% url 'pos:invoice_pdf' order.pk %}" target="_blank">⬇️ ດາວໂຫຼດ PDF</a>
+    </div>
+    {% endif %}
+</body>
+</html>

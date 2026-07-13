@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load humanize i18n %}
+
+{% block title %}ຄອມມິດຊັນພະນັກງານ — Hug Kerb AI{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">ພະນັກງານ &amp; ຄອມມິດຊັນ 👥</h2>
+        <p class="text-on-surface-variant text-body-sm mt-1">ຄິດໄລ່ຈາກວຽກທີ່ສົ່ງມອບແລ້ວ (Completed) ຂອງຊ່າງແຕ່ລະຄົນ</p>
+    </div>
+    <form method="get" class="flex items-center gap-2">
+        <input type="month" name="month" value="{{ month_value }}"
+               class="bg-surface-container border border-white/10 rounded-lg px-3 py-2 text-sm text-on-surface">
+        <button class="btn-gradient text-on-primary rounded-lg px-4 py-2 text-sm font-bold">ເບິ່ງ</button>
+    </form>
+</div>
+
+<div class="glass-card rounded-xl overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="text-left text-on-surface-variant font-label-caps text-label-caps border-b border-white/10">
+                <th class="px-4 py-3">ຊ່າງ</th>
+                <th class="px-4 py-3 text-right">ວຽກສຳເລັດ</th>
+                <th class="px-4 py-3 text-right">ຍອດຄ່າບໍລິການ</th>
+                <th class="px-4 py-3 text-right">ອັດຕາ (%)</th>
+                <th class="px-4 py-3 text-right">ຄອມມິດຊັນ</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-white/5">
+            {% for row in rows %}
+            <tr class="data-row">
+                <td class="px-4 py-3 font-medium text-on-surface">
+                    {{ row.user.get_full_name|default:row.user.username }}
+                    {% if row.profile %}<span class="text-on-surface-variant text-xs ml-1">({{ row.profile.get_role_display }})</span>{% endif %}
+                </td>
+                <td class="px-4 py-3 text-right font-data-mono">{{ row.job_count }}</td>
+                <td class="px-4 py-3 text-right font-data-mono">{{ row.base_total|intcomma }}</td>
+                <td class="px-4 py-3 text-right font-data-mono">{{ row.rate }}</td>
+                <td class="px-4 py-3 text-right font-data-mono font-bold text-ai-cyan">{{ row.commission|intcomma }}</td>
+            </tr>
+            {% for job in row.jobs %}
+            <tr class="text-on-surface-variant text-xs">
+                <td class="px-4 py-1.5 pl-8">↳ {{ job.asset.ticket_number }} — {{ job.asset.brand }} {{ job.asset.model_name }} ({{ job.asset.customer.name }})</td>
+                <td></td>
+                <td class="px-4 py-1.5 text-right font-data-mono">{{ job.value|intcomma }}</td>
+                <td></td><td></td>
+            </tr>
+            {% endfor %}
+            {% empty %}
+            <tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">ຍັງບໍ່ມີວຽກສົ່ງມອບໃນເດືອນນີ້ ຫຼື ຍັງບໍ່ໄດ້ມອບວຽກໃຫ້ຊ່າງ</td></tr>
+            {% endfor %}
+        </tbody>
+        {% if rows %}
+        <tfoot>
+            <tr class="border-t border-white/10 font-bold">
+                <td class="px-4 py-3" colspan="4">ລວມຄອມມິດຊັນທັງໝົດ</td>
+                <td class="px-4 py-3 text-right font-data-mono text-ai-cyan">{{ grand_commission|intcomma }}</td>
+            </tr>
+        </tfoot>
+        {% endif %}
+    </table>
+</div>
+
+<div class="glass-card rounded-xl p-5">
+    <h3 class="font-headline-md text-headline-md text-on-surface mb-3">ລາຍຊື່ພະນັກງານ</h3>
+    <div class="grid md:grid-cols-3 gap-3">
+        {% for p in staff_members %}
+        <div class="bg-surface-container-lowest/60 border border-white/10 rounded-lg px-4 py-3">
+            <p class="font-medium text-on-surface">{{ p.user.get_full_name|default:p.user.username }}</p>
+            <p class="text-xs text-on-surface-variant">{{ p.get_role_display }} · ຄອມມິດຊັນ {{ p.commission_rate }}%
+                {% if not p.is_active %}· <span class="text-status-error">ພັກວຽກ</span>{% endif %}</p>
+        </div>
+        {% empty %}
+        <p class="text-on-surface-variant text-sm">ຍັງບໍ່ມີພະນັກງານ — ເພີ່ມໄດ້ທີ່ <a href="/admin/staff/staffprofile/add/" class="text-ai-cyan underline">Admin → ພະນັກງານ</a></p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

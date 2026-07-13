@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load i18n humanize %}
+
+{% block title %}{% trans "Dashboard — Hug Kerb AI" %}{% endblock %}
+
+{% block content %}
+<section>
+    <h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">{% blocktrans with name=user.get_short_name|default:user.username|default:"Admin" %}Hello, {{ name }}{% endblocktrans %}</h2>
+    <p class="font-body-lg text-body-lg text-on-surface-variant">{% trans "Today’s business performance overview across POS, inventory, CRM, and AI." %}</p>
+</section>
+
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-gutter">
+    <div class="glass-card metric-card rounded-xl p-6 flex flex-col justify-between">
+        <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-on-surface-variant text-3xl">payments</span>
+            <span class="text-ai-cyan font-data-mono text-data-mono">TODAY</span>
+        </div>
+        <div>
+            <p class="font-label-caps text-label-caps text-on-surface-variant mb-1">{% trans "Today revenue" %}</p>
+            <p class="font-headline-lg text-headline-lg text-on-surface">₭ {{ revenue_today|money }}</p>
+        </div>
+    </div>
+
+    <div class="glass-card ai-glow-border metric-card rounded-xl p-6 flex flex-col justify-between relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-32 h-32 bg-ai-purple/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-ai-purple text-3xl">psychology</span>
+            <span class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-ai-cyan pulse-dot"></span>
+                <span class="font-data-mono text-data-mono text-ai-cyan text-xs">AI QUEUE</span>
+            </span>
+        </div>
+        <div>
+            <p class="font-label-caps text-label-caps text-on-surface-variant mb-1">{% trans "Active assets in shop" %}</p>
+            <p class="font-headline-lg text-headline-lg text-on-surface">{{ active_assets }} <span class="font-body-md text-on-surface-variant">{% trans "pairs" %}</span></p>
+        </div>
+    </div>
+
+    <div class="glass-card metric-card rounded-xl p-6 flex flex-col justify-between">
+        <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-on-surface-variant text-3xl">account_balance</span>
+            <span class="text-ai-cyan font-data-mono text-data-mono">MONTH</span>
+        </div>
+        <div>
+            <p class="font-label-caps text-label-caps text-on-surface-variant mb-1">{% trans "Net profit this month" %}</p>
+            <p class="font-headline-lg text-headline-lg {% if net_month >= 0 %}text-ai-cyan{% else %}text-status-alert{% endif %}">₭ {{ net_month|money }}</p>
+        </div>
+    </div>
+
+    <div class="glass-card metric-card rounded-xl p-6 flex flex-col justify-between">
+        <div class="flex justify-between items-start mb-4">
+            <span class="material-symbols-outlined text-on-surface-variant text-3xl">workspace_premium</span>
+            <span class="text-ai-cyan font-data-mono text-data-mono">CRM</span>
+        </div>
+        <div>
+            <p class="font-label-caps text-label-caps text-on-surface-variant mb-1">{% trans "Active members" %}</p>
+            <p class="font-headline-lg text-headline-lg text-on-surface">{{ member_count }} <span class="font-body-md text-on-surface-variant">{% trans "people" %}</span></p>
+        </div>
+    </div>
+</section>
+
+{% if low_stock_supplies %}
+<section class="glass-card rounded-xl p-5 border-l-2 border-l-status-alert">
+    <div class="flex items-start gap-3">
+        <span class="material-symbols-outlined text-status-alert">warning</span>
+        <div>
+            <p class="font-label-caps text-label-caps text-status-alert mb-2">{% trans "AI Inventory Alert" %}</p>
+            <div class="flex flex-wrap gap-2">
+                {% for s in low_stock_supplies %}
+                <span class="px-3 py-1 rounded-full bg-status-alert/10 border border-status-alert/20 text-sm text-on-surface">{{ s.name }} · {{ s.quantity_on_hand }} {{ s.unit }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+    <div class="lg:col-span-8 glass-card rounded-xl p-6 flex flex-col min-h-[400px]">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Business Performance Overview" %}</h3>
+                <p class="font-body-sm text-body-sm text-on-surface-variant">{% trans "Sales vs AI Pricing Estimate" %}</p>
+            </div>
+            <a href="{% url 'reports:income_expense' %}" class="flex items-center gap-2 text-on-surface-variant hover:text-ai-cyan transition-colors text-sm border border-white/10 rounded-md px-3 py-1">
+                <span>{% trans "This week" %}</span>
+                <span class="material-symbols-outlined text-sm">expand_more</span>
+            </a>
+        </div>
+        <div class="flex-1 relative border-l border-b border-white/10 mt-4 mx-4 mb-4 flex items-end">
+            {% if chart_rows %}
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <p class="text-on-surface-variant/40 font-data-mono text-data-mono">{% trans "7-day DB data" %}</p>
+            </div>
+            <div class="w-full h-full flex items-end justify-around pb-1 px-4 gap-2">
+                {% for row in chart_rows %}
+                <div class="w-1/12 h-full flex items-end gap-1" title="{{ row.date }} · Sales {{ row.income|money }} · AI {{ row.pricing_estimate|money }}">
+                    <div class="w-1/2 bg-ai-cyan/80 rounded-t-sm min-h-[8px]" style="height: {{ row.income_height }}%"></div>
+                    <div class="w-1/2 bg-ai-purple/60 rounded-t-sm min-h-[8px]" style="height: {{ row.pricing_height }}%"></div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="absolute inset-0 flex items-center justify-center text-on-surface-variant">{% trans "No payments or valuations yet." %}</div>
+            {% endif %}
+        </div>
+        <div class="flex justify-center gap-6 mt-2">
+            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-ai-cyan rounded-full"></span><span class="font-body-sm text-on-surface-variant">{% trans "Sales" %}</span></div>
+            <div class="flex items-center gap-2"><span class="w-3 h-3 bg-ai-purple rounded-full"></span><span class="font-body-sm text-on-surface-variant">{% trans "AI Pricing Est." %}</span></div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-4 glass-card ai-glow-border rounded-xl p-6 flex flex-col min-h-[400px]">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Recent Activities" %}</h3>
+            <a href="{% url 'asset_intake:list' %}" class="text-ai-cyan hover:text-ai-cyan/80 font-body-sm">{% trans "View All" %}</a>
+        </div>
+        <div class="flex-1 overflow-y-auto pr-2 space-y-3">
+            {% for asset in recent_assets %}
+            <a href="{% url 'asset_intake:detail' asset.pk %}" class="flex items-start gap-4 p-3 rounded-lg hover:bg-white/5 transition-colors data-row">
+                <div class="w-10 h-10 bg-surface-variant rounded-md flex items-center justify-center shrink-0 border border-white/10">
+                    <span class="material-symbols-outlined text-ai-cyan">steps</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-body-md font-medium text-on-surface truncate">{{ asset.brand }} {{ asset.model_name }}</p>
+                    <p class="font-body-sm text-on-surface-variant truncate mt-1">{{ asset.ticket_number }} · {{ asset.customer.name }}</p>
+                </div>
+                <span class="font-data-mono text-[10px] text-ai-cyan">{{ asset.get_status_display }}</span>
+            </a>
+            {% empty %}
+            <p class="text-on-surface-variant text-sm">{% trans "No activities yet." %}</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

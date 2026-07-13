@@ -1,0 +1,912 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Hug Kerb AI\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-09 23:58+0700\n"
+"PO-Revision-Date: 2026-07-09 00:00+0700\n"
+"Last-Translator: Hug Kerb AI\n"
+"Language-Team: Lao\n"
+"Language: lo\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:47
+msgid "Are you sure you want to delete this intake asset?"
+msgstr "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບເກີບຝາກຄູ່ນີ້?"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:378
+msgid "Edit Intake Shoe Details"
+msgstr "ແກ້ໄຂຂໍ້ມູນເກີບຝາກ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:386
+#: pos/templates/pos/create_order.html:95
+#: pos/templates/pos/create_order.html:241
+msgid "Brand"
+msgstr "ຍີ່ຫໍ້ (Brand)"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:390
+msgid "Model Name"
+msgstr "ລຸ້ນ / ສີ (Model Name)"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:395
+msgid "Color"
+msgstr "ສີ (Color)"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:399
+msgid "Size"
+msgstr "ເບີ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:404
+msgid "Condition / Notes"
+msgstr "ໝາຍເຫດ/ສະພາບ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:408
+#: crm/templates/crm/index.html:255 crm/templates/crm/index.html:294
+#: inventory/templates/inventory/index.html:141
+#: inventory/templates/inventory/index.html:192
+#: inventory/templates/inventory/index.html:241
+msgid "Cancel"
+msgstr "ຍົກເລີກ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:409
+#: crm/templates/crm/index.html:295
+msgid "Save Changes"
+msgstr "ບັນທຶກການແກ້ໄຂ"
+
+#: core/urls.py:11
+msgid "Hug Kerb — Shop Management"
+msgstr "Hug Kerb — ລະບົບບໍລິຫານຮ້ານ"
+
+#: core/urls.py:13
+msgid "Management"
+msgstr "ບໍລິຫານຈັດການ"
+
+#: crm/templates/crm/index.html:4
+msgid "CRM — Hug Kerb AI"
+msgstr "CRM — Hug Kerb AI"
+
+#: crm/templates/crm/index.html:15
+msgid "Customer & Membership Management"
+msgstr "ການຈັດການລູກຄ້າ ແລະ ສະມາຊິກ"
+
+#: crm/templates/crm/index.html:16
+msgid "CRM Dashboard"
+msgstr "ແດຊບອດ CRM"
+
+#: crm/templates/crm/index.html:20
+msgid "Add New Customer"
+msgstr "ເພີ່ມລູກຄ້າໃໝ່"
+
+#: crm/templates/crm/index.html:32
+msgid "Search name, phone, or member ID..."
+msgstr "ຄົ້ນຫາຊື່, ເບີໂທ ຫຼື ເລກສະມາຊິກ..."
+
+#: crm/templates/crm/index.html:36
+msgid "All Tiers"
+msgstr "ທຸກລະດັບ"
+
+#: crm/templates/crm/index.html:41
+msgid "Filter"
+msgstr "ກອງ"
+
+#: crm/templates/crm/index.html:51
+msgid "Customer Name"
+msgstr "ຊື່ລູກຄ້າ"
+
+#: crm/templates/crm/index.html:52 crm/templates/crm/index.html:239
+#: crm/templates/crm/index.html:278 pos/templates/pos/create_order.html:68
+msgid "Phone Number"
+msgstr "ເບີໂທຕິດຕໍ່"
+
+#: crm/templates/crm/index.html:53
+msgid "Points"
+msgstr "ຄະແນນ"
+
+#: crm/templates/crm/index.html:54 crm/templates/crm/index.html:247
+#: crm/templates/crm/index.html:286
+msgid "Membership Tier"
+msgstr "ລະດັບສະມາຊິກ"
+
+#: crm/templates/crm/index.html:55
+msgid "Last Service Date"
+msgstr "ໃຊ້ບໍລິການຫຼ້າສຸດ"
+
+#: crm/templates/crm/index.html:72
+msgid "Gold"
+msgstr "ທອງ (Gold)"
+
+#: crm/templates/crm/index.html:74
+msgid "Silver"
+msgstr "ເງິນ (Silver)"
+
+#: crm/templates/crm/index.html:76
+msgid "Basic"
+msgstr "ທົ່ວໄປ (Basic)"
+
+#: crm/templates/crm/index.html:89
+msgid "No customer data"
+msgstr "ບໍ່ມີຂໍ້ມູນລູກຄ້າ"
+
+#: crm/templates/crm/index.html:109
+msgid "Digital Member Card"
+msgstr "ບັດສະມາຊິກດິຈິຕອນ"
+
+#: crm/templates/crm/index.html:116
+msgid "Member ID"
+msgstr "ເລກສະມາຊິກ"
+
+#: crm/templates/crm/index.html:127
+msgid "Member Name"
+msgstr "ຊື່ສະມາຊິກ"
+
+#: crm/templates/crm/index.html:131
+msgid "Accumulated Points"
+msgstr "ຄະແນນສະສົມ"
+
+#: crm/templates/crm/index.html:133
+msgid "pts"
+msgstr "ຄະແນນ"
+
+#: crm/templates/crm/index.html:141
+msgid "Edit"
+msgstr "ແກ້ໄຂ"
+
+#: crm/templates/crm/index.html:146
+msgid "Are you sure you want to delete this customer?"
+msgstr "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບລູກຄ້າຄົນນີ້?"
+
+#: crm/templates/crm/index.html:149
+#: inventory/templates/inventory/index.html:189
+msgid "Delete"
+msgstr "ລຶບ"
+
+#: crm/templates/crm/index.html:162
+msgid "Service History"
+msgstr "ປະຫວັດບໍລິການ"
+
+#: crm/templates/crm/index.html:164
+#: dashboard/templates/dashboard/index.html:117
+msgid "View All"
+msgstr "ເບິ່ງທັງໝົດ"
+
+#: crm/templates/crm/index.html:192
+msgid "No service history yet for this customer."
+msgstr "ຍັງບໍ່ມີປະຫວັດການໃຊ້ບໍລິການສຳລັບລູກຄ້ານີ້."
+
+#: crm/templates/crm/index.html:202
+msgid "Points History"
+msgstr "ປະຫວັດຄະແນນ"
+
+#: crm/templates/crm/index.html:216
+msgid "No points transaction history."
+msgstr "ຍັງບໍ່ມີປະຫວັດທຸລະກຳຄະແນນ."
+
+#: crm/templates/crm/index.html:227
+msgid "Add New Membership Customer"
+msgstr "ເພີ່ມລູກຄ້າສະມາຊິກໃໝ່"
+
+#: crm/templates/crm/index.html:235 crm/templates/crm/index.html:274
+#: pos/templates/pos/create_order.html:64
+msgid "Full Name"
+msgstr "ຊື່ ແລະ ນາມສະກຸນ"
+
+#: crm/templates/crm/index.html:236
+msgid "e.g. Somchay Sihalath"
+msgstr "e.g. ສົມຊາຍ ສີຫາລາດ"
+
+#: crm/templates/crm/index.html:240
+msgid "e.g. 020 55XX XXXX"
+msgstr "e.g. 020 55XX XXXX"
+
+#: crm/templates/crm/index.html:243
+msgid "Email (Optional)"
+msgstr "ອີເມວ (ຖ້າມີ)"
+
+#: crm/templates/crm/index.html:244
+msgid "e.g. somchay@example.com"
+msgstr "somchay@example.com"
+
+#: crm/templates/crm/index.html:249 crm/templates/crm/index.html:288
+msgid "Basic (General)"
+msgstr "Basic (ທົ່ວໄປ)"
+
+#: crm/templates/crm/index.html:250 crm/templates/crm/index.html:289
+msgid "Silver (Silver)"
+msgstr "Silver (ເງິນ)"
+
+#: crm/templates/crm/index.html:251 crm/templates/crm/index.html:290
+msgid "Gold (Gold)"
+msgstr "Gold (ທອງ)"
+
+#: crm/templates/crm/index.html:256
+msgid "Save Member"
+msgstr "ບັນທຶກສະມາຊິກ"
+
+#: crm/templates/crm/index.html:266
+msgid "Edit Customer Info"
+msgstr "ແກ້ໄຂຂໍ້ມູນລູກຄ້າ"
+
+#: crm/templates/crm/index.html:282
+msgid "Email"
+msgstr "ອີເມວ"
+
+#: dashboard/templates/dashboard/index.html:5
+msgid "Dashboard — Hug Kerb AI"
+msgstr "ແດຊບອດ — Hug Kerb AI"
+
+#: dashboard/templates/dashboard/index.html:9
+#, python-format
+msgid "Hello, %(name)s"
+msgstr "ສະບາຍດີ, ທ່ານ %(name)s"
+
+#: dashboard/templates/dashboard/index.html:10
+msgid ""
+"Today’s business performance overview across POS, inventory, CRM, and AI."
+msgstr "ພາບລວມປະສິດທິພາບມື້ນີ້ຂອງ POS, ສາງ, CRM ແລະ AI."
+
+#: dashboard/templates/dashboard/index.html:20
+msgid "Today revenue"
+msgstr "ຍອດຮັບມື້ນີ້"
+
+#: dashboard/templates/dashboard/index.html:35
+msgid "Active assets in shop"
+msgstr "ລາຍການກຳລັງຢູ່ໃນຮ້ານ"
+
+#: dashboard/templates/dashboard/index.html:36
+msgid "pairs"
+msgstr "ຄູ່"
+
+#: dashboard/templates/dashboard/index.html:46
+msgid "Net profit this month"
+msgstr "ກຳໄລສຸດທິເດືອນນີ້"
+
+#: dashboard/templates/dashboard/index.html:57
+msgid "Active members"
+msgstr "ສະມາຊິກທີ່ໃຊ້ງານຢູ່"
+
+#: dashboard/templates/dashboard/index.html:58
+msgid "people"
+msgstr "ຄົນ"
+
+#: dashboard/templates/dashboard/index.html:68
+msgid "AI Inventory Alert"
+msgstr "ແຈ້ງເຕືອນສາງໂດຍ AI"
+
+#: dashboard/templates/dashboard/index.html:83
+msgid "Business Performance Overview"
+msgstr "ພາບລວມຜົນປະກອບການ"
+
+#: dashboard/templates/dashboard/index.html:84
+msgid "Sales vs AI Pricing Estimate"
+msgstr "ຍອດຂາຍ ທຽບກັບ ລາຄາປະເມີນຈາກ AI"
+
+#: dashboard/templates/dashboard/index.html:87
+msgid "This week"
+msgstr "ອາທິດນີ້"
+
+#: dashboard/templates/dashboard/index.html:94
+msgid "7-day DB data"
+msgstr "ຂໍ້ມູນ DB 7 ວັນ"
+
+#: dashboard/templates/dashboard/index.html:105
+msgid "No payments or valuations yet."
+msgstr "ຍັງບໍ່ມີຂໍ້ມູນການຊຳລະເງິນ ຫຼື ປະເມີນລາຄາ."
+
+#: dashboard/templates/dashboard/index.html:109
+msgid "Sales"
+msgstr "ຍອດຂາຍ"
+
+#: dashboard/templates/dashboard/index.html:110
+msgid "AI Pricing Est."
+msgstr "ປະເມີນລາຄາ AI"
+
+#: dashboard/templates/dashboard/index.html:116
+msgid "Recent Activities"
+msgstr "ກິດຈະກຳຫຼ້າສຸດ"
+
+#: dashboard/templates/dashboard/index.html:132
+msgid "No activities yet."
+msgstr "ຍັງບໍ່ມີກິດຈະກຳ."
+
+#: home/templates/home/index.html:4 templates/base.html:8
+msgid "Hug Kerb AI — SME Command Center"
+msgstr "Hug Kerb AI — ສູນຄວບຄຸມ SME"
+
+#: home/templates/home/index.html:15
+msgid "Hug Kerb AI Command Center"
+msgstr "ສູນຄວບຄຸມ Hug Kerb AI"
+
+#: home/templates/home/index.html:16
+msgid ""
+"Back-office system for shoe care shops: POS, Inventory, CRM, AI Grading, "
+"Resell Pricing, and Reports."
+msgstr ""
+"ລະບົບຫຼັງບ້ານສຳລັບຮ້ານດູແລເກີບ: POS, ສາງ, CRM, ກວດສະພາບ AI, ປະເມີນລາຄາຂາຍຕໍ່ ແລະ ລາຍງານ."
+
+#: home/templates/home/index.html:20
+msgid "Orders"
+msgstr "ອໍເດີ"
+
+#: home/templates/home/index.html:24
+msgid "Active assets"
+msgstr "ສິນຄ້າກຳລັງບໍລິການ"
+
+#: home/templates/home/index.html:28
+msgid "Customers"
+msgstr "ລູກຄ້າ"
+
+#: home/templates/home/index.html:32
+msgid "Low stock"
+msgstr "ສະຕັອກຕ່ຳ"
+
+#: home/templates/home/index.html:36
+msgid "Open Dashboard"
+msgstr "ເປີດແດຊບອດ"
+
+#: home/templates/home/index.html:37 templates/base.html:195
+msgid "Create Order"
+msgstr "ສ້າງອໍເດີ"
+
+#: home/templates/home/index.html:45
+msgid "POS & Order Intake"
+msgstr "POS ແລະ ຮັບອໍເດີ"
+
+#: home/templates/home/index.html:46
+msgid "Process services, issue receipts, and start AI scans."
+msgstr "ດຳເນີນງານບໍລິການ, ອອກໃບບິນ ແລະ ເລີ່ມສະແກນ AI."
+
+#: home/templates/home/index.html:50 inventory/templates/inventory/index.html:9
+#: templates/base.html:174
+msgid "Inventory"
+msgstr "ສາງສິນຄ້າ"
+
+#: home/templates/home/index.html:51
+msgid "Track supplies, low stock, and movement history."
+msgstr "ຕິດຕາມວັດສະດຸ, ສິນຄ້າໃກ້ໝົດສາງ, ແລະ ປະຫວັດການເຄື່ອນໄຫວ."
+
+#: home/templates/home/index.html:55
+msgid "CRM Membership"
+msgstr "CRM ແລະ ສະມາຊິກ"
+
+#: home/templates/home/index.html:56
+msgid "Manage customers, digital cards, and service history."
+msgstr "ຈັດການລູກຄ້າ, ບັດດິຈິຕອນ ແລະ ປະຫວັດບໍລິການ."
+
+#: home/templates/home/index.html:60 templates/base.html:182
+msgid "AI Grading"
+msgstr "ກວດສະພາບ AI"
+
+#: home/templates/home/index.html:61
+msgid "Assess condition and generate pricing insights."
+msgstr "ປະເມີນສະພາບ ແລະ ສ້າງ insight ດ້ານລາຄາ."
+
+#: home/templates/home/index.html:65
+msgid "Finance Reports"
+msgstr "ລາຍງານການເງິນ"
+
+#: home/templates/home/index.html:66
+msgid "Review income, expenses, cashflow, and RFM insights."
+msgstr "ກວດລາຍຮັບ, ລາຍຈ່າຍ, ກະແສເງິນ ແລະ insight RFM."
+
+#: home/templates/home/index.html:70 templates/base.html:190
+msgid "Admin"
+msgstr "ຜູ້ດູແລ"
+
+#: home/templates/home/index.html:71
+msgid "Manage source data, users, and advanced records."
+msgstr "ຈັດການຂໍ້ມູນຕົ້ນທາງ, ຜູ້ໃຊ້ ແລະ records ຂັ້ນສູງ."
+
+#: inventory/templates/inventory/index.html:4
+msgid "Inventory — Hug Kerb AI"
+msgstr "ສາງສິນຄ້າ — Hug Kerb AI"
+
+#: inventory/templates/inventory/index.html:10
+msgid "Manage materials, stock velocity, and audit history."
+msgstr "ຈັດການວັດສະດຸ, ຄວາມໄວສະຕັອກ ແລະ ປະຫວັດ audit."
+
+#: inventory/templates/inventory/index.html:13
+msgid "Export"
+msgstr "ສົ່ງອອກ"
+
+#: inventory/templates/inventory/index.html:14
+msgid "Add Material"
+msgstr "ເພີ່ມວັດສະດຸ"
+
+#: inventory/templates/inventory/index.html:24
+msgid "AI Inventory Insights"
+msgstr "Insight ສາງຈາກ AI"
+
+#: inventory/templates/inventory/index.html:27
+#, python-format
+msgid ""
+"%(count)s material item is at or below reorder level. Draft a PO before "
+"service capacity is affected."
+msgid_plural ""
+"%(count)s material items are at or below reorder level. Draft a PO before "
+"service capacity is affected."
+msgstr[0] "ມີວັດສະດຸ %(count)s ລາຍການຢູ່ລະດັບຕ້ອງສັ່ງຊື້. ຄວນສ້າງ PO ກ່ອນກະທົບການບໍລິການ."
+
+#: inventory/templates/inventory/index.html:29
+msgid "Stock levels are healthy based on current thresholds."
+msgstr "ສະຕັອກຢູ່ໃນລະດັບປົກກະຕິຕາມ threshold ປັດຈຸບັນ."
+
+#: inventory/templates/inventory/index.html:32
+#: inventory/templates/inventory/index.html:242
+msgid "Record Movement"
+msgstr "ບັນທຶກການເຄື່ອນໄຫວ"
+
+#: inventory/templates/inventory/index.html:40
+msgid "Material List"
+msgstr "ລາຍການວັດສະດຸ"
+
+#: inventory/templates/inventory/index.html:41
+msgid "ITEMS"
+msgstr "ລາຍການ"
+
+#: inventory/templates/inventory/index.html:48
+msgid "Name"
+msgstr "ຊື່"
+
+#: inventory/templates/inventory/index.html:49
+msgid "Stock"
+msgstr "ສະຕັອກ"
+
+#: inventory/templates/inventory/index.html:50
+msgid "Status"
+msgstr "ສະຖານະ"
+
+#: inventory/templates/inventory/index.html:62
+msgid "Low Stock"
+msgstr "ສະຕັອກຕ່ຳ"
+
+#: inventory/templates/inventory/index.html:64
+msgid "In Stock"
+msgstr "ມີສະຕັອກ"
+
+#: inventory/templates/inventory/index.html:70
+msgid "No inventory materials yet."
+msgstr "ຍັງບໍ່ມີວັດສະດຸໃນສາງ."
+
+#: inventory/templates/inventory/index.html:79
+msgid "Movement History"
+msgstr "ປະຫວັດການເຄື່ອນໄຫວ"
+
+#: inventory/templates/inventory/index.html:80
+msgid "Audit Trail"
+msgstr "ປະຫວັດ Audit"
+
+#: inventory/templates/inventory/index.html:94
+msgid "No stock movement yet."
+msgstr "ຍັງບໍ່ມີການເຄື່ອນໄຫວສະຕັອກ."
+
+#: inventory/templates/inventory/index.html:105
+#, fuzzy
+#| msgid "Add Material"
+msgid "Add New Material/Equipment"
+msgstr "ເພີ່ມວັດສະດຸ"
+
+#: inventory/templates/inventory/index.html:113
+#: inventory/templates/inventory/index.html:160
+msgid "Material/Equipment Name"
+msgstr "ຊື່ອຸປະກອນ/ວັດສະດຸ"
+
+#: inventory/templates/inventory/index.html:114
+msgid "e.g. Shoe Brush"
+msgstr "e.g. ແປງຖູເກີບ"
+
+#: inventory/templates/inventory/index.html:117
+#: inventory/templates/inventory/index.html:164
+msgid "SKU Code"
+msgstr "ລະຫັດ SKU"
+
+#: inventory/templates/inventory/index.html:118
+msgid "e.g. BRUSH-01"
+msgstr "e.g. BRUSH-01"
+
+#: inventory/templates/inventory/index.html:122
+#: inventory/templates/inventory/index.html:169
+msgid "Unit"
+msgstr "ຫົວໜ່ວຍ"
+
+#: inventory/templates/inventory/index.html:123
+msgid "pcs"
+msgstr "ອັນ"
+
+#: inventory/templates/inventory/index.html:126
+msgid "Initial Quantity"
+msgstr "ຈຳນວນເລີ່ມຕົ້ນ"
+
+#: inventory/templates/inventory/index.html:132
+#: inventory/templates/inventory/index.html:179
+msgid "Reorder Level (Min)"
+msgstr "ຈຸດສັ່ງຊື້ຄືນ (Min)"
+
+#: inventory/templates/inventory/index.html:136
+#: inventory/templates/inventory/index.html:183
+msgid "Cost per Unit"
+msgstr "ຕົ້ນທຶນຕໍ່ໜ່ວຍ"
+
+#: inventory/templates/inventory/index.html:142
+#: inventory/templates/inventory/index.html:193
+msgid "Save"
+msgstr "ບັນທຶກ"
+
+#: inventory/templates/inventory/index.html:152
+msgid "Edit Material/Equipment"
+msgstr "ແກ້ໄຂວັດສະດຸ/ອຸປະກອນ"
+
+#: inventory/templates/inventory/index.html:173
+msgid "Remaining Stock"
+msgstr "ຈຳນວນຄົງເຫຼືອ"
+
+#: inventory/templates/inventory/index.html:208
+msgid "Record Stock Movement"
+msgstr "ບັນທຶກການເຄື່ອນໄຫວສະຕັອກ"
+
+#: inventory/templates/inventory/index.html:216
+msgid "Select Material/Equipment"
+msgstr "ເລືອກອຸປະກອນ/ວັດສະດຸ"
+
+#: inventory/templates/inventory/index.html:219
+msgid "remaining"
+msgstr "ຄົງເຫຼືອ"
+
+#: inventory/templates/inventory/index.html:224
+#, fuzzy
+#| msgid "Movement History"
+msgid "Movement Type"
+msgstr "ປະຫວັດການເຄື່ອນໄຫວ"
+
+#: inventory/templates/inventory/index.html:226
+msgid "Stock In (+)"
+msgstr "ຮັບເຂົ້າ (+)"
+
+#: inventory/templates/inventory/index.html:227
+msgid "Stock Out (-)"
+msgstr "ເບີກອອກ (-)"
+
+#: inventory/templates/inventory/index.html:228
+msgid "Adjustment (+/-)"
+msgstr "ປັບຍອດ (+/-)"
+
+#: inventory/templates/inventory/index.html:232
+msgid "Quantity"
+msgstr "ຈຳນວນ"
+
+#: inventory/templates/inventory/index.html:234
+msgid ""
+"Note: Stock In/Out should always be positive. The system calculates signs "
+"automatically."
+msgstr ""
+
+#: inventory/templates/inventory/index.html:237
+msgid "Note/Reason"
+msgstr "ໝາຍເຫດ/ເຫດຜົນ"
+
+#: inventory/templates/inventory/index.html:238
+msgid "e.g. Received from Supplier / Used for customer shoe care"
+msgstr "e.g. ຮັບສິນຄ້າຈາກ Supplier / ເບີກໃຊ້ຊັກເກີບລູກຄ້າ"
+
+#: inventory/templates/inventory/index.html:267
+msgid "Are you sure you want to delete this material item?"
+msgstr "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບວັດສະດຸຊິ້ນນີ້?"
+
+#: pos/templates/pos/create_order.html:5
+#, fuzzy
+#| msgid "Inventory — Hug Kerb AI"
+msgid "Point of Sale — Hug Kerb AI"
+msgstr "ສາງສິນຄ້າ — Hug Kerb AI"
+
+#: pos/templates/pos/create_order.html:33
+msgid "Point of Sale"
+msgstr "ຂາຍໜ້າຮ້ານ"
+
+#: pos/templates/pos/create_order.html:34
+#, fuzzy
+#| msgid "Process new service orders and launch AI condition assessment."
+msgid "Process new service orders and manage intake."
+msgstr "ຈັດການອໍເດີບໍລິການໃໝ່ ແລະ ເປີດການປະເມີນສະພາບດ້ວຍ AI."
+
+#: pos/templates/pos/create_order.html:39
+#, fuzzy
+#| msgid "Search name, phone, or member ID..."
+msgid "Search customer (Phone, Name)..."
+msgstr "ຄົ້ນຫາຊື່, ເບີໂທ ຫຼື ເລກສະມາຊິກ..."
+
+#: pos/templates/pos/create_order.html:41
+msgid "Scan Barcode"
+msgstr "ສະແກນບາໂຄດ"
+
+#: pos/templates/pos/create_order.html:58
+msgid "Customer Details"
+msgstr "ຂໍ້ມູນລູກຄ້າ"
+
+#: pos/templates/pos/create_order.html:60
+msgid "New CRM Entry"
+msgstr "ເພີ່ມລູກຄ້າໃໝ່ (CRM)"
+
+#: pos/templates/pos/create_order.html:65
+msgid "e.g. John Doe"
+msgstr "e.g. ສົມຊາຍ ສີຫາລາດ"
+
+#: pos/templates/pos/create_order.html:79
+msgid "Item Intake"
+msgstr "ຮັບລາຍການ"
+
+#: pos/templates/pos/create_order.html:82
+msgid "Add Another Item"
+msgstr "ເພີ່ມລາຍການອື່ນ"
+
+#: pos/templates/pos/create_order.html:92
+msgid "Item #1 Details"
+msgstr "ລາຍລະອຽດເກີບທີ 1"
+
+#: pos/templates/pos/create_order.html:105
+#: pos/templates/pos/create_order.html:251
+msgid "Model / Colorway"
+msgstr "ລຸ້ນ / ສີ"
+
+#: pos/templates/pos/create_order.html:109
+#: pos/templates/pos/create_order.html:255
+msgid "Size (US)"
+msgstr "ຂະໜາດ (US)"
+
+#: pos/templates/pos/create_order.html:114
+#: pos/templates/pos/create_order.html:260
+msgid "Service Type"
+msgstr "ປະເພດບໍລິການ"
+
+#: pos/templates/pos/create_order.html:134
+msgid "AI Condition Assessment Recommended"
+msgstr "ແນະນຳໃຫ້ປະເມີນສະພາບດ້ວຍ AI"
+
+#: pos/templates/pos/create_order.html:136
+msgid ""
+"Capture a photo to automatically grade wear and log pre-existing damage."
+msgstr ""
+
+#: pos/templates/pos/create_order.html:141
+msgid "Launch AI Scanner"
+msgstr "ເປີດ AI Scanner"
+
+#: pos/templates/pos/create_order.html:146
+msgid "Launch AI Scanner (No item yet)"
+msgstr "ເປີດ AI Scanner (ຍັງບໍ່ມີເກີບຝາກ)"
+
+#: pos/templates/pos/create_order.html:161
+msgid "Order Summary"
+msgstr "ສະຫຼຸບອໍເດີ"
+
+#: pos/templates/pos/create_order.html:173
+msgid "Subtotal"
+msgstr "ລວມຍ່ອຍ"
+
+#: pos/templates/pos/create_order.html:177
+#, python-format
+msgid "Tax (10%%)"
+msgstr "ພາສີ (10%%)"
+
+#: pos/templates/pos/create_order.html:181
+msgid "Total"
+msgstr "ລວມທັງໝົດ"
+
+#: pos/templates/pos/create_order.html:191
+msgid "Confirm & Pay"
+msgstr "ຢືນຢັນ ແລະ ຊຳລະເງິນ"
+
+#: pos/templates/pos/create_order.html:197
+#: pos/templates/pos/create_order.html:206
+msgid "Receipt"
+msgstr "ໃບບິນ"
+
+#: pos/templates/pos/create_order.html:201
+#: pos/templates/pos/create_order.html:210
+msgid "Slip"
+msgstr "ໃບນັດຮັບ (Slip)"
+
+#: pos/templates/pos/create_order.html:238
+msgid "Item"
+msgstr "ເກີບ / ລາຍການ"
+
+#: pos/templates/pos/create_order.html:238
+msgid "Details"
+msgstr "ລາຍລະອຽດ"
+
+#: pos/templates/pos/create_order.html:293
+msgid "You must keep at least one item."
+msgstr "ທ່ານຕ້ອງຮັກສາລາຍການໄວ້ຢ່າງໜ້ອຍໜຶ່ງລາຍການ."
+
+#: pos/templates/pos/quotation.html:5
+msgid "Interactive Quotation — Hug Kerb AI"
+msgstr "ການສະເໜີລາຄາອັດສະລິຍະ — Hug Kerb AI"
+
+#: reports/templates/reports/income_expense.html:5
+msgid "Financial Overview — Hug Kerb AI"
+msgstr "ພາບລວມການເງິນ — Hug Kerb AI"
+
+#: reports/views.py:16
+msgid "Today"
+msgstr "ມື້ນີ້"
+
+#: reports/views.py:17
+msgid "7 days"
+msgstr "7 ວັນ"
+
+#: reports/views.py:18
+msgid "30 days"
+msgstr "30 ວັນ"
+
+#: reports/views.py:19
+msgid "1 year"
+msgstr "1 ປີ"
+
+#: templates/base.html:161
+msgid "SME Command Center"
+msgstr "ສູນຄວບຄຸມ SME"
+
+#: templates/base.html:166
+msgid "Dashboard"
+msgstr "ແດຊບອດ"
+
+#: templates/base.html:170
+msgid "POS"
+msgstr "ຂາຍໜ້າຮ້ານ"
+
+#: templates/base.html:178
+msgid "CRM"
+msgstr "ລູກຄ້າ"
+
+#: templates/base.html:186
+msgid "Reports"
+msgstr "ລາຍງານ"
+
+#: templates/base.html:200
+msgid "Logout"
+msgstr "ອອກຈາກລະບົບ"
+
+#: templates/base.html:212
+msgid "Search orders, clients, inventory..."
+msgstr "ຄົ້ນຫາອໍເດີ, ລູກຄ້າ, ສາງ..."
+
+#: templates/base.html:229
+msgid "Toggle color theme"
+msgstr "ສະຫຼັບສີໜ້າຈໍ"
+
+#~ msgid "Create Order — Hug Kerb AI"
+#~ msgstr "ສ້າງອໍເດີ — Hug Kerb AI"
+
+#~ msgid "Intake Asset"
+#~ msgstr "ຮັບສິນຄ້າ"
+
+#~ msgid "NEW CRM ENTRY"
+#~ msgstr "ລາຍການ CRM ໃໝ່"
+
+#~ msgid ""
+#~ "No active services yet. Add ServiceType records in admin or run the demo "
+#~ "seed command."
+#~ msgstr "ຍັງບໍ່ມີບໍລິການທີ່ເປີດໃຊ້. ເພີ່ມ ServiceType ໃນ admin ຫຼື run demo seed command."
+
+#~ msgid ""
+#~ "Capture photos to grade wear, log damage, and auto-suggest service "
+#~ "modules."
+#~ msgstr "ຖ່າຍຮູບເພື່ອປະເມີນຮ່ອງຮອຍ, ບັນທຶກຄວາມເສຍຫາຍ ແລະ ແນະນຳບໍລິການອັດຕະໂນມັດ."
+
+#~ msgid "Latest Order"
+#~ msgstr "ອໍເດີຫຼ້າສຸດ"
+
+#~ msgid "Invoice"
+#~ msgstr "ໃບແຈ້ງໜີ້"
+
+#~ msgid "Latest order has no items."
+#~ msgstr "ອໍເດີຫຼ້າສຸດຍັງບໍ່ມີລາຍການ."
+
+#~ msgid ""
+#~ "No orders yet. Create one from asset intake/admin, or run the demo seed "
+#~ "command."
+#~ msgstr "ຍັງບໍ່ມີອໍເດີ. ສ້າງຈາກ asset intake/admin ຫຼື run demo seed command."
+
+#~ msgid "Discount"
+#~ msgstr "ສ່ວນຫຼຸດ"
+
+#~ msgid "Start New Intake"
+#~ msgstr "ເລີ່ມຮັບສິນຄ້າໃໝ່"
+
+#~ msgid "Inventory Snapshot"
+#~ msgstr "ພາບລວມສາງສິນຄ້າ"
+
+#~ msgid "Live material stock pulled from Supply records."
+#~ msgstr "ສະຕັອກວັດສະດຸສົດດຶງຈາກຂໍ້ມູນ Supply."
+
+#~ msgid "Open Inventory"
+#~ msgstr "ເປີດສາງສິນຄ້າ"
+
+#~ msgid "Material"
+#~ msgstr "ວັດສະດຸ"
+
+#~ msgid "Qty"
+#~ msgstr "ຈຳນວນ"
+
+#~ msgid "Out of stock"
+#~ msgstr "ໝົດສະຕັອກ"
+
+#~ msgid "In stock"
+#~ msgstr "ມີສະຕັອກ"
+
+#~ msgid ""
+#~ "No inventory records yet. Add Supply records in admin or run the demo "
+#~ "seed command."
+#~ msgstr "ຍັງບໍ່ມີຂໍ້ມູນສາງ. ເພີ່ມ Supply ໃນ admin ຫຼື run demo seed command."
+
+#~ msgid ""
+#~ "CRM Dashboard · %(customer_count)s customers · %(member_count)s active "
+#~ "members"
+#~ msgstr ""
+#~ "ແດຊບອດ CRM · %(customer_count)s ລູກຄ້າ · %(member_count)s ສະມາຊິກທີ່ໃຊ້ງານ"
+
+#~ msgid "Phone"
+#~ msgstr "ເບີໂທ"
+
+#~ msgid "Tier"
+#~ msgstr "ລະດັບ"
+
+#~ msgid "No customers yet."
+#~ msgstr "ຍັງບໍ່ມີລູກຄ້າ."
+
+#~ msgid "Points balance"
+#~ msgstr "ຄະແນນສະສົມ"
+
+#~ msgid "Reports — Hug Kerb AI"
+#~ msgstr "ລາຍງານ — Hug Kerb AI"
+
+#~ msgid "Income, expense, and AI analysis · %(period_label)s since %(start)s"
+#~ msgstr "ລາຍຮັບ, ລາຍຈ່າຍ ແລະ ການວິເຄາະ AI · %(period_label)s ຕັ້ງແຕ່ %(start)s"
+
+#~ msgid "Total income"
+#~ msgstr "ລາຍຮັບລວມ"
+
+#~ msgid "Total expense"
+#~ msgstr "ລາຍຈ່າຍລວມ"
+
+#~ msgid "Net"
+#~ msgstr "ສຸດທິ"
+
+#~ msgid "Cashflow Overview"
+#~ msgstr "ພາບລວມກະແສເງິນ"
+
+#~ msgid "Income vs Expenses"
+#~ msgstr "ລາຍຮັບ ທຽບກັບ ລາຍຈ່າຍ"
+
+#~ msgid "No cashflow data for this period."
+#~ msgstr "ບໍ່ມີຂໍ້ມູນກະແສເງິນໃນໄລຍະນີ້."
+
+#~ msgid "Income"
+#~ msgstr "ລາຍຮັບ"
+
+#~ msgid "Expenses"
+#~ msgstr "ລາຍຈ່າຍ"
+
+#~ msgid "Expense"
+#~ msgstr "ລາຍຈ່າຍ"
+
+#~ msgid "Customer Segments"
+#~ msgstr "ກຸ່ມລູກຄ້າ"
+
+#~ msgid "DB RFM Analysis · %(total_customers)s customers"
+#~ msgstr "ວິເຄາະ RFM ຈາກ DB · %(total_customers)s ລູກຄ້າ"
+
+#~ msgid "Daily Cashflow Detail"
+#~ msgstr "ລາຍລະອຽດກະແສເງິນລາຍວັນ"
+
+#~ msgid "Actionable income and expense rows."
+#~ msgstr "ລາຍການລາຍຮັບ ແລະ ລາຍຈ່າຍທີ່ນຳໄປໃຊ້ຕໍ່ໄດ້."
+
+#~ msgid "Add Expense"
+#~ msgstr "ເພີ່ມລາຍຈ່າຍ"
+
+#~ msgid "Date"
+#~ msgstr "ວັນທີ"
+
+#~ msgid "No data for this period yet."
+#~ msgstr "ຍັງບໍ່ມີຂໍ້ມູນໃນໄລຍະນີ້."

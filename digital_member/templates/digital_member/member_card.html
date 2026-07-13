@@ -1,0 +1,53 @@
+{% extends "digital_member/portal_base.html" %}
+
+{% block title %}ບັດສະມາຊິກ {{ card.card_number }} — Hug Kerb{% endblock %}
+
+{% block extra_style %}
+<style>
+    .member-card {
+        background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+        border-radius: 18px; padding: 24px; margin-bottom: 16px;
+        box-shadow: 0 10px 30px rgba(14,165,233,.25);
+    }
+    .member-card .tier {
+        display: inline-block; background: rgba(255,255,255,.2);
+        border-radius: 999px; padding: 3px 14px; font-size: 12px; font-weight: 700;
+        letter-spacing: .08em; text-transform: uppercase;
+    }
+    .points { font-size: 40px; font-weight: 700; }
+    .tx { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 14px; }
+    .tx:last-child { border-bottom: none; }
+    .plus { color: #4ade80; font-weight: 700; }
+    .minus { color: #f87171; font-weight: 700; }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="member-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="tier">{{ card.get_tier_display }}</span>
+            <span style="font-size:13px;opacity:.85;">ອອກບັດ {{ card.issued_at|date:"m/Y" }}</span>
+        </div>
+        <p style="margin-top:18px;font-size:15px;">{{ card.customer.name }}</p>
+        <p class="mono" style="letter-spacing:.15em;opacity:.9;">{{ card.card_number }}</p>
+        <div style="margin-top:16px;">
+            <span class="points">{{ card.points_balance }}</span>
+            <span style="opacity:.85;">ຄະແນນສະສົມ</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <p style="font-weight:700;margin-bottom:6px;">ປະຫວັດຄະແນນຫຼ້າສຸດ</p>
+        {% for tx in transactions %}
+        <div class="tx">
+            <div>
+                <div>{{ tx.reason }}</div>
+                <div class="muted">{{ tx.created_at|date:"d/m/Y H:i" }}</div>
+            </div>
+            <span class="{% if tx.points >= 0 %}plus{% else %}minus{% endif %}">{{ tx.points }}</span>
+        </div>
+        {% empty %}
+        <p class="muted">ຍັງບໍ່ມີລາຍການເຄື່ອນໄຫວຄະແນນ</p>
+        {% endfor %}
+    </div>
+{% endblock %}

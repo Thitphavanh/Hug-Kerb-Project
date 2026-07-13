@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Inventory — Hug Kerb AI" %}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">{% trans "Inventory" %}</h2>
+        <p class="font-body-md text-on-surface-variant mt-1">{% trans "Manage materials, stock velocity, and audit history." %}</p>
+    </div>
+    <div class="flex gap-3">
+        <a href="{% url 'inventory:export_csv' %}" class="border border-ai-cyan/40 text-ai-cyan rounded-lg px-4 py-2 hover:bg-ai-cyan/10 transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-sm">download</span>{% trans "Export" %}</a>
+        <button onclick="openAddSupplyModal()" class="btn-gradient text-on-primary rounded-lg px-4 py-2 font-bold flex items-center gap-2"><span class="material-symbols-outlined text-sm">add</span>{% trans "Add Material" %}</button>
+    </div>
+</div>
+
+<section class="glass-card ai-glow-border rounded-xl p-6">
+    <div class="flex items-start gap-4">
+        <div class="bg-ai-cyan/10 p-3 rounded-xl border border-ai-cyan/20">
+            <span class="material-symbols-outlined text-ai-cyan fill">auto_awesome</span>
+        </div>
+        <div>
+            <h3 class="font-headline-md text-headline-md text-on-surface mb-2">{% trans "AI Inventory Insights" %}</h3>
+            <p class="font-body-md text-on-surface-variant mb-4">
+                {% if low_stock_count %}
+                {% blocktrans count count=low_stock_count %}{{ count }} material item is at or below reorder level. Draft a PO before service capacity is affected.{% plural %}{{ count }} material items are at or below reorder level. Draft a PO before service capacity is affected.{% endblocktrans %}
+                {% else %}
+                {% trans "Stock levels are healthy based on current thresholds." %}
+                {% endif %}
+            </p>
+            <button onclick="openRecordMovementModal()" class="btn-gradient text-on-primary font-label-caps text-label-caps py-2 px-4 rounded-lg inline-block">{% trans "Record Movement" %}</button>
+        </div>
+    </div>
+</section>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+    <section class="lg:col-span-8 glass-card rounded-xl p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Material List" %}</h3>
+            <span class="font-data-mono text-data-mono text-on-surface-variant">{{ supply_count }} {% trans "ITEMS" %}</span>
+        </div>
+        <div class="overflow-x-auto rounded-lg border border-white/10">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
+                        <th class="py-3 px-4">SKU</th>
+                        <th class="py-3 px-4">{% trans "Name" %}</th>
+                        <th class="py-3 px-4 text-right">{% trans "Stock" %}</th>
+                        <th class="py-3 px-4 text-center">{% trans "Status" %}</th>
+                        <th class="py-3 px-4"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    {% for supply in supplies %}
+                    <tr class="data-row hover:bg-white/5 transition-colors">
+                        <td class="py-4 px-4 font-data-mono text-xs text-on-surface-variant">{{ supply.sku }}</td>
+                        <td class="py-4 px-4 font-medium text-on-surface">{{ supply.name }}</td>
+                        <td class="py-4 px-4 text-right">{{ supply.quantity_on_hand }} {{ supply.unit }}</td>
+                        <td class="py-4 px-4 text-center">
+                            {% if supply.is_low_stock %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-status-alert/10 text-status-alert border border-status-alert/20">{% trans "Low Stock" %}</span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/20">{% trans "In Stock" %}</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-4 px-4 text-right"><button onclick="openEditSupplyModal('{{ supply.pk }}', '{{ supply.sku }}', '{{ supply.name }}', '{{ supply.quantity_on_hand }}', '{{ supply.unit }}', '{{ supply.reorder_level }}', '{{ supply.cost_price }}')" class="text-on-surface-variant hover:text-ai-cyan"><span class="material-symbols-outlined text-sm">edit</span></button></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="py-8 px-4 text-center text-on-surface-variant">{% trans "No inventory materials yet." %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <aside class="lg:col-span-4 glass-card rounded-xl p-6 flex flex-col max-h-[560px]">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Movement History" %}</h3>
+            <span class="text-xs text-on-surface-variant">{% trans "Audit Trail" %}</span>
+        </div>
+        <div class="flex-1 overflow-y-auto pr-2 space-y-6">
+            {% for movement in movements %}
+            <div class="relative pl-6">
+                <div class="absolute left-0 top-1 w-2 h-2 rounded-full {% if movement.movement_type == 'out' %}bg-status-alert{% elif movement.movement_type == 'in' %}bg-ai-cyan{% else %}bg-ai-purple{% endif %}"></div>
+                <div class="flex justify-between items-start mb-1 gap-3">
+                    <span class="font-body-md font-semibold text-on-surface">{{ movement.get_movement_type_display }}</span>
+                    <span class="font-data-mono text-[11px] text-on-surface-variant whitespace-nowrap">{{ movement.created_at|date:"d M H:i" }}</span>
+                </div>
+                <p class="font-body-sm text-on-surface-variant">{{ movement.supply.name }} <span class="font-medium {% if movement.movement_type == 'out' %}text-status-alert{% else %}text-ai-cyan{% endif %}">{{ movement.quantity }}</span></p>
+                {% if movement.order %}<p class="font-data-mono text-[11px] text-outline mt-1">Ref: {{ movement.order.order_number }}</p>{% endif %}
+            </div>
+            {% empty %}
+            <p class="text-on-surface-variant text-sm">{% trans "No stock movement yet." %}</p>
+            {% endfor %}
+        </div>
+    </aside>
+</div>
+</div>
+
+<!-- Add Supply Modal -->
+<div id="addSupplyModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl max-w-md w-full overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-outline-variant/20 bg-surface-bright flex justify-between items-center">
+            <h3 class="font-headline-sm text-on-surface font-bold">{% trans "Add New Material/Equipment" %}</h3>
+            <button onclick="closeAddSupplyModal()" class="text-on-surface-variant hover:text-on-surface">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="post" action="{% url 'inventory:add_supply' %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Material/Equipment Name" %}</label>
+                <input type="text" name="name" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="{% trans 'e.g. Shoe Brush' %}"/>
+            </div>
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "SKU Code" %}</label>
+                <input type="text" name="sku" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="{% trans 'e.g. BRUSH-01' %}"/>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Unit" %}</label>
+                    <input type="text" name="unit" value="{% trans 'pcs' %}" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Initial Quantity" %}</label>
+                    <input type="number" name="quantity_on_hand" value="0" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Reorder Level (Min)" %}</label>
+                    <input type="number" name="reorder_level" value="5" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Cost per Unit" %}</label>
+                    <input type="number" step="0.01" name="cost_price" value="0" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+            </div>
+            <div class="pt-4 flex gap-3 justify-end">
+                <button type="button" onclick="closeAddSupplyModal()" class="px-4 py-2 border border-outline-variant text-on-surface rounded-lg hover:bg-surface-variant transition-colors text-sm font-semibold">{% trans "Cancel" %}</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-primary/90 shadow-sm transition-colors text-sm font-semibold">{% trans "Save" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Supply Modal -->
+<div id="editSupplyModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl max-w-md w-full overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-outline-variant/20 bg-surface-bright flex justify-between items-center">
+            <h3 class="font-headline-sm text-on-surface font-bold">{% trans "Edit Material/Equipment" %}</h3>
+            <button onclick="closeEditSupplyModal()" class="text-on-surface-variant hover:text-on-surface">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="post" id="edit-supply-form" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Material/Equipment Name" %}</label>
+                <input type="text" name="name" id="edit-name" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+            </div>
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "SKU Code" %}</label>
+                <input type="text" name="sku" id="edit-sku" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Unit" %}</label>
+                    <input type="text" name="unit" id="edit-unit" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Remaining Stock" %}</label>
+                    <input type="number" name="quantity_on_hand" id="edit-qty" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Reorder Level (Min)" %}</label>
+                    <input type="number" name="reorder_level" id="edit-reorder" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Cost per Unit" %}</label>
+                    <input type="number" step="0.01" name="cost_price" id="edit-cost" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+            </div>
+            <div class="pt-4 flex gap-3 justify-between items-center">
+                <button type="button" id="delete-supply-btn" class="px-4 py-2 bg-error/10 text-error border border-error/20 rounded-lg hover:bg-error/20 transition-colors text-sm font-semibold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[18px]">delete</span> {% trans "Delete" %}
+                </button>
+                <div class="flex gap-2">
+                    <button type="button" onclick="closeEditSupplyModal()" class="px-4 py-2 border border-outline-variant text-on-surface rounded-lg hover:bg-surface-variant transition-colors text-sm font-semibold">{% trans "Cancel" %}</button>
+                    <button type="submit" class="px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-primary/90 shadow-sm transition-colors text-sm font-semibold">{% trans "Save" %}</button>
+                </div>
+            </div>
+        </form>
+        <!-- hidden delete form -->
+        <form method="post" id="delete-supply-form" class="hidden">
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+
+<!-- Record Stock Movement Modal -->
+<div id="movementModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl max-w-md w-full overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-outline-variant/20 bg-surface-bright flex justify-between items-center">
+            <h3 class="font-headline-sm text-on-surface font-bold">{% trans "Record Stock Movement" %}</h3>
+            <button onclick="closeRecordMovementModal()" class="text-on-surface-variant hover:text-on-surface">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="post" action="{% url 'inventory:add_movement' %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Select Material/Equipment" %}</label>
+                <select name="supply" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                    {% for supply in supplies %}
+                    <option value="{{ supply.pk }}">{{ supply.name }} ({% trans "remaining" %}: {{ supply.quantity_on_hand }} {{ supply.unit }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Movement Type" %}</label>
+                <select name="movement_type" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                    <option value="in">{% trans "Stock In (+)" %}</option>
+                    <option value="out">{% trans "Stock Out (-)" %}</option>
+                    <option value="adjust">{% trans "Adjustment (+/-)" %}</option>
+                </select>
+            </div>
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Quantity" %}</label>
+                <input type="number" name="quantity" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. 10"/>
+                <p class="text-[10px] text-on-surface-variant mt-1">{% trans "Note: Stock In/Out should always be positive. The system calculates signs automatically." %}</p>
+            </div>
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Note/Reason" %}</label>
+                <input type="text" name="note" class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="{% trans 'e.g. Received from Supplier / Used for customer shoe care' %}"/>
+            </div>
+            <div class="pt-4 flex gap-3 justify-end">
+                <button type="button" onclick="closeRecordMovementModal()" class="px-4 py-2 border border-outline-variant text-on-surface rounded-lg hover:bg-surface-variant transition-colors text-sm font-semibold">{% trans "Cancel" %}</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-primary/90 shadow-sm transition-colors text-sm font-semibold">{% trans "Record Movement" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openAddSupplyModal() {
+        document.getElementById('addSupplyModal').classList.remove('hidden');
+    }
+    function closeAddSupplyModal() {
+        document.getElementById('addSupplyModal').classList.add('hidden');
+    }
+    function openEditSupplyModal(pk, sku, name, qty, unit, reorder, cost) {
+        document.getElementById('edit-supply-form').action = `/inventory/supplies/${pk}/edit/`;
+        document.getElementById('edit-name').value = name;
+        document.getElementById('edit-sku').value = sku;
+        document.getElementById('edit-unit').value = unit;
+        document.getElementById('edit-qty').value = qty;
+        document.getElementById('edit-reorder').value = reorder;
+        document.getElementById('edit-cost').value = parseFloat(cost).toFixed(2);
+        
+        // Delete button setup
+        const deleteBtn = document.getElementById('delete-supply-btn');
+        deleteBtn.onclick = function() {
+            if (confirm('{% trans "Are you sure you want to delete this material item?" %}')) {
+                const form = document.getElementById('delete-supply-form');
+                form.action = `/inventory/supplies/${pk}/delete/`;
+                form.submit();
+            }
+        };
+        
+        document.getElementById('editSupplyModal').classList.remove('hidden');
+    }
+    function closeEditSupplyModal() {
+        document.getElementById('editSupplyModal').classList.add('hidden');
+    }
+    function openRecordMovementModal() {
+        document.getElementById('movementModal').classList.remove('hidden');
+    }
+    function closeModal() {
+        document.getElementById('movementModal').classList.add('hidden');
+    }
+    function closeRecordMovementModal() {
+        document.getElementById('movementModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

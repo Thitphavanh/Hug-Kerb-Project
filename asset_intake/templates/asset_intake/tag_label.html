@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<title>ປ້າຍແທັກ {{ asset.ticket_number }}</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: "Noto Sans Lao", sans-serif; background: #f1f5f9; display: flex; flex-direction: column; align-items: center; padding: 24px; gap: 16px; }
+    .tag {
+        width: 50mm; height: 80mm; background: #fff; border: 1px dashed #94a3b8;
+        border-radius: 8px; padding: 5mm; text-align: center;
+        display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    }
+    .brand { font-weight: 700; font-size: 12px; letter-spacing: .08em; color: #0b1c30; }
+    .qr { width: 34mm; height: 34mm; }
+    .ticket { font-family: monospace; font-weight: 700; font-size: 14px; color: #0b1c30; }
+    .meta { font-size: 10px; color: #475569; line-height: 1.5; }
+    .hole { width: 6mm; height: 6mm; border: 1px solid #94a3b8; border-radius: 50%; }
+    .noprint button { padding: 8px 20px; font-size: 14px; cursor: pointer; }
+    @media print {
+        body { background: #fff; padding: 0; }
+        .noprint { display: none; }
+        .tag { border: none; }
+        @page { size: 50mm 80mm; margin: 0; }
+    }
+</style>
+</head>
+<body>
+    <div class="tag">
+        <div class="hole"></div>
+        <div class="brand">HUG KERB 👟</div>
+        <img class="qr" src="{{ tag_qr }}" alt="QR">
+        <div class="ticket">{{ asset.ticket_number }}</div>
+        <div class="meta">
+            {{ asset.brand }} {{ asset.model_name }}<br>
+            {{ asset.color|default:"—" }} / ເບີ {{ asset.size|default:"—" }}<br>
+            {{ asset.customer.name }}
+        </div>
+    </div>
+    <div class="noprint">
+        <button onclick="window.print()">🖨️ ພິມປ້າຍແທັກ</button>
+    </div>
+</body>
+</html>

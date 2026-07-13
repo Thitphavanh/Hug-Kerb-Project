@@ -1,0 +1,72 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<title>ໃບນັດຮັບເຄື່ອງ {{ asset.ticket_number }}</title>
+<style>
+    body { font-family: "Noto Sans Lao", sans-serif; font-size: 13px; color: #1e293b; margin: 24px; }
+    h1 { font-size: 18px; margin-bottom: 0; }
+    .muted { color: #64748b; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    td { padding: 6px 4px; vertical-align: top; }
+    .label { color: #64748b; width: 140px; }
+    .box { border: 1px dashed #94a3b8; border-radius: 8px; padding: 12px; margin-top: 20px; }
+    .noprint { margin-top: 24px; }
+    @media print { .noprint { display: none; } }
+</style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>AINSTEINX SOLE CO., LTD</h1>
+            <p class="muted">ບ້ານ ທ່າແຮ່, ນະຄອນໄກສອນ ພົມວິຫານ, ແຂວງສະຫວັນນະເຂດ, ສປປ ລາວ</p>
+        </div>
+        <div style="text-align:right;">
+            <h1>ໃບນັດຮັບເຄື່ອງ</h1>
+            <p class="muted">ເລກທີ: {{ asset.ticket_number }}</p>
+            <p class="muted">ວັນທີຮັບເຂົ້າ: {{ asset.intake_date|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+
+    <table>
+        <tr><td class="label">ລູກຄ້າ</td><td>{{ asset.customer.name }}</td></tr>
+        <tr><td class="label">ເບີໂທ</td><td>{{ asset.customer.phone }}</td></tr>
+        <tr><td class="label">ຍີ່ຫໍ້ / ລຸ້ນ</td><td>{{ asset.brand }} {{ asset.model_name }}</td></tr>
+        <tr><td class="label">ສີ / ເບີ</td><td>{{ asset.color|default:"—" }} / {{ asset.size|default:"—" }}</td></tr>
+        <tr><td class="label">ສະພາບຕອນຮັບເຂົ້າ</td><td>{{ asset.condition_note|default:"—" }}</td></tr>
+        <tr><td class="label">ວັນນັດຮັບເຄື່ອງ</td><td><strong>{{ asset.pickup_date|default:"ຈະແຈ້ງພາຍຫຼັງ" }}</strong></td></tr>
+    </table>
+
+    <div class="box">
+        ກະລຸນານຳໃບນີ້ (ຫຼືເລກໃບຮັບ) ມາຮັບເຄື່ອງຄືນ. ຮ້ານຈະບໍ່ຮັບຜິດຊອບຫາກເຄື່ອງເສຍຫາຍ
+        ຈາກສະພາບເດີມທີ່ບັນທຶກໄວ້ຕອນຮັບເຂົ້າ.
+    </div>
+
+    <table style="margin-top:20px;">
+        <tr>
+            <td style="width:130px;">
+                <img src="{{ portal_qr }}" alt="QR" style="width:120px;height:120px;">
+            </td>
+            <td style="vertical-align:middle;">
+                <strong>ຕິດຕາມສະຖານະເກີບຂອງທ່ານອອນລາຍ 📱</strong><br>
+                <span class="muted">ສະແກນ QR ນີ້ ແລ້ວຢືນຢັນດ້ວຍເບີໂທທີ່ລົງທະບຽນ ເພື່ອເບິ່ງສະຖານະ,
+                ຮູບກ່ອນ-ຫຼັງຊັກ ແລະ ຄະແນນສະສົມ — ບໍ່ຕ້ອງໂຫຼດແອັບ</span><br>
+                <span class="muted" style="font-size:11px;">ຫຼືເຂົ້າ {{ lookup_url }} ແລ້ວຕື່ມເລກ
+                <strong>{{ asset.ticket_number }}</strong> + ເບີໂທຂອງທ່ານ</span>
+            </td>
+        </tr>
+    </table>
+
+    <p class="muted" style="margin-top:30px;">ຂອບໃຈທີ່ໃຊ້ບໍລິການ Hug Kerb 👟</p>
+
+    {% if not for_pdf %}
+    <div class="noprint">
+        <button onclick="window.print()">🖨️ ພິມ</button>
+        <a href="{% url 'asset_intake:ticket_pdf' asset.pk %}" target="_blank">⬇️ ດາວໂຫຼດ PDF</a>
+        <a href="{% url 'asset_intake:tag_label' asset.pk %}" target="_blank">🏷️ ພິມປ້າຍແທັກ QR</a>
+    </div>
+    {% endif %}
+</body>
+</html>

@@ -1,3 +1,38 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 
-# Register your models here.
+from media_backup.models import MediaFile
+
+from .models import Asset
+
+
+class MediaFileInline(admin.TabularInline):
+    model = MediaFile
+    extra = 0
+    readonly_fields = ["uploaded_at"]
+
+
+@admin.register(Asset)
+class AssetAdmin(admin.ModelAdmin):
+    list_display = [
+        "ticket_number",
+        "customer",
+        "brand",
+        "model_name",
+        "size",
+        "status",
+        "intake_date",
+        "pickup_date",
+        "ticket_link",
+    ]
+    list_filter = ["status", "brand", "intake_date"]
+    search_fields = ["ticket_number", "brand", "model_name", "customer__name", "customer__phone"]
+    readonly_fields = ["ticket_number", "intake_date", "updated_at"]
+    autocomplete_fields = ["customer"]
+    inlines = [MediaFileInline]
+
+    @admin.display(description="ໃບນັດຮັບ")
+    def ticket_link(self, obj):
+        url = reverse("asset_intake:ticket_view", args=[obj.pk])
+        return format_html('<a href="{}" target="_blank">🖨️ ພິມ</a>', url)

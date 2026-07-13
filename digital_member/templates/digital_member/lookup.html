@@ -1,0 +1,49 @@
+{% extends "digital_member/portal_base.html" %}
+
+{% block title %}ຕິດຕາມສະຖານະເກີບ — Hug Kerb{% endblock %}
+
+{% block extra_style %}
+<style>
+    .field {
+        width: 100%; background: rgba(30, 41, 59, .6); border: 1px solid rgba(255,255,255,.15);
+        border-radius: 12px; padding: 14px 16px; color: #f8fafc; font-size: 16px;
+        font-family: "Noto Sans Lao", sans-serif;
+    }
+    .field:focus { outline: none; border-color: #38bdf8; }
+    .field.mono-input { font-family: "JetBrains Mono", monospace; text-transform: uppercase; }
+    .btn {
+        width: 100%; margin-top: 14px; border: none; cursor: pointer;
+        background: linear-gradient(90deg, #0ea5e9, #8b5cf6); color: #fff;
+        border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700;
+        font-family: "Noto Sans Lao", sans-serif;
+    }
+    .error {
+        background: rgba(248,113,113,.12); border: 1px solid rgba(248,113,113,.4);
+        color: #fca5a5; border-radius: 10px; padding: 10px 14px; font-size: 14px;
+        margin-bottom: 14px;
+    }
+    label { display: block; margin: 14px 0 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <p style="font-weight:700;font-size:18px;text-align:center;">ຕິດຕາມສະຖານະເກີບຂອງທ່ານ 👟</p>
+        <p class="muted" style="text-align:center;margin-top:6px;">
+            ຕື່ມເລກໃບຮັບເຄື່ອງ (ຢູ່ໃນໃບນັດຮັບເຄື່ອງ) ແລະ ເບີໂທທີ່ລົງທະບຽນກັບຮ້ານ
+        </p>
+
+        <form method="post" style="margin-top:10px;">
+            {% csrf_token %}
+            {% if error %}<div class="error">⚠️ {{ error }}</div>{% endif %}
+            <label class="muted">ເລກໃບຮັບເຄື່ອງ</label>
+            <input class="field mono-input" type="text" name="ticket_number" placeholder="ຕົວຢ່າງ: TK-DEMO-004" required autofocus>
+            <label class="muted">ເບີໂທລະສັບ</label>
+            <input class="field" type="tel" name="phone" placeholder="ຕົວຢ່າງ: 020 9999 0002" required inputmode="tel">
+            <button class="btn" type="submit">ຄົ້ນຫາ 🔍</button>
+        </form>
+    </div>
+    <p class="muted" style="text-align:center;">
+        ຫຼືສະແກນ QR Code ຫຼັງໃບນັດຮັບເຄື່ອງ ເພື່ອເຂົ້າເບິ່ງໄວກວ່າ
+    </p>
+{% endblock %}

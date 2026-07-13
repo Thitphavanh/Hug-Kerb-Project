@@ -1,0 +1,12 @@
+[
+  {"model": "ai_mart_grading.checklistitem", "pk": 1, "fields": {"name": "ຮອຍເປື້ອນ/ຄວາມສະອາດຂອງໜ້າເກີບ", "category": "upper", "max_score": 10, "display_order": 1, "is_active": true}},
+  {"model": "ai_mart_grading.checklistitem", "pk": 2, "fields": {"name": "ຮອຍຈີກ/ຮອຍແຕກຂອງວັດສະດຸໜ້າເກີບ", "category": "upper", "max_score": 10, "display_order": 2, "is_active": true}},
+  {"model": "ai_mart_grading.checklistitem", "pk": 3, "fields": {"name": "ສີຊີດຈາງ/ປ່ຽນສີ", "category": "upper", "max_score": 10, "display_order": 3, "is_active": true}},
+  {"model": "ai_mart_grading.checklistitem", "pk": 4, "fields": {"name": "ການສຶກຫຼໍ່ຂອງພື້ນນອກ (Outsole)", "category": "sole", "max_score": 10, "display_order": 4, "is_active": true}},
+  {"model": "ai_mart_grading.checklistitem", "pk": 5, "fields": {"name": "Midsole ແຕກ/ຍຸບ/ເສື່ອມ", "category": "sole", "max_score": 10, "display_order": 5, "is_active": true}},
+  {"model": "ai_mart_grading.checklistitem", "pk": 6, "fields": {"name": "ພື້ນເຫຼືອງ (Oxidation)", "category": "sole", "max_score": 10, "display_order": 6, "is_active": true}},
+  {"model": "ai_mart_grading.checklistitem", "pk": 7, "fields": {"name": "ສະພາບພື້ນໃນ ແລະ ກິ່ນ", "category": "insole", "max_score": 10, "display_order": 7, "is_active": true}},
+  {"model": "ai_mart_grading.checklistitem", "pk": 8, "fields": {"name": "ສາຍເກີບຄົບ ແລະ ສະພາບດີ", "category": "laces", "max_score": 10, "display_order": 8, "is_active": true}},
+  {"model": "ai_mart_grading.checklistitem", "pk": 9, "fields": {"name": "ກ່ອງ/ອຸປະກອນເສີມຄົບຖ້ວນ", "category": "box", "max_score": 10, "display_order": 9, "is_active": true}},
+  {"model": "ai_mart_grading.checklistitem", "pk": 10, "fields": {"name": "ການກວດຄວາມແທ້ເບື້ອງຕົ້ນ (Authenticity)", "category": "other", "max_score": 10, "display_order": 10, "is_active": true}}
+]

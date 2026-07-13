@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}Kanban - Job Tracking{% endblock %}
+
+{% block content %}
+<div class="h-full flex flex-col space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold font-heading text-on-surface">Kanban Job Tracking</h1>
+    </div>
+
+    <!-- Kanban Board Container -->
+    <div class="flex-1 flex space-x-4 overflow-x-auto pb-4 items-start" id="kanban-board">
+        
+        {% for stage in stages %}
+        <div class="flex-none w-80 bg-surface-container-low rounded-2xl p-4 flex flex-col h-full max-h-full kanban-column border border-outline-variant/30" data-status="{{ stage.id }}" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
+            
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-on-surface">{{ stage.name }}</h3>
+                <span class="bg-surface-container-high text-on-surface-variant text-xs font-semibold px-2 py-1 rounded-full count-badge">
+                    0
+                </span>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto space-y-3 min-h-[100px] kanban-items rounded-xl transition-colors duration-200" id="stage-{{ stage.id }}">
+                {% for asset in assets %}
+                    {% if asset.status == stage.id %}
+                    <div class="bg-surface rounded-xl p-4 shadow-sm border border-outline-variant cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary transition-all duration-200 kanban-card group" draggable="true" ondragstart="drag(event)" id="asset-{{ asset.pk }}" data-id="{{ asset.pk }}">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-mono bg-primary-container text-on-primary-container px-2 py-0.5 rounded">{{ asset.ticket_number }}</span>
+                            <!-- QR Tag Print Button -->
+                            <a href="{% url 'asset_intake:ticket_view' asset.pk %}" target="_blank" class="text-on-surface-variant hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="Print Tag">
+                                <span class="material-symbols-outlined text-sm">qr_code_2</span>
+                            </a>
+                        </div>
+                        <h4 class="font-semibold text-on-surface text-sm mb-1">{{ asset.brand }} {{ asset.model_name }}</h4>
+                        <p class="text-xs text-on-surface-variant line-clamp-2 mb-2">{{ asset.condition_note|default:"No notes provided." }}</p>
+                        {% if asset.assigned_to %}
+                        <p class="text-xs text-ai-cyan flex items-center gap-1 mb-3">
+                            <span class="material-symbols-outlined text-[14px]">engineering</span>
+                            {{ asset.assigned_to.get_full_name|default:asset.assigned_to.username }}
+                        </p>
+                        {% endif %}
+                        
+                        <div class="flex items-center justify-between mt-auto">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container text-xs font-bold shadow-sm">
+                                    {{ asset.customer.name|make_list|first|upper }}
+                                </div>
+                                <span class="text-xs font-medium text-on-surface-variant truncate max-w-[100px]">{{ asset.customer.name }}</span>
+                            </div>
+                            <a href="{% url 'asset_intake:detail' asset.pk %}" class="text-primary text-xs font-medium hover:underline flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                View <span class="material-symbols-outlined text-[14px] ml-1">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+        
+    </div>
+</div>
+
+<script>
+    // Initialize counts
+    function updateCounts() {
+        document.querySelectorAll('.kanban-column').forEach(col => {
+            const count = col.querySelectorAll('.kanban-card').length;
+            col.querySelector('.count-badge').innerText = count;
+        });
+    }
+
+    // Drag and Drop Logic
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+        ev.target.classList.add("opacity-40");
+        ev.target.classList.add("scale-95");
+    }
+
+    function allowDrop(ev) {
+        ev.preventDefault();
+        const column = ev.target.closest('.kanban-column');
+        if (column) {
+            column.querySelector('.kanban-items').classList.add("bg-surface-container-high");
+        }
+    }
+
+    function dragLeave(ev) {
+        const column = ev.target.closest('.kanban-column');
+        if (column) {
+            column.querySelector('.kanban-items').classList.remove("bg-surface-container-high");
+        }
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        
+        // Remove highlight from all columns
+        document.querySelectorAll('.kanban-items').forEach(items => {
+            items.classList.remove("bg-surface-container-high");
+        });
+
+        const data = ev.dataTransfer.getData("text");
+        const draggedElement = document.getElementById(data);
+        if (!draggedElement) return;
+        
+        draggedElement.classList.remove("opacity-40");
+        draggedElement.classList.remove("scale-95");
+
+        const targetColumn = ev.target.closest('.kanban-column');
+        if (targetColumn) {
+            const targetContainer = targetColumn.querySelector('.kanban-items');
+            targetContainer.appendChild(draggedElement);
+            
+            const assetId = draggedElement.getAttribute("data-id");
+            const newStatus = targetColumn.getAttribute("data-status");
+            
+            updateCounts();
+            saveStatus(assetId, newStatus);
+        }
+    }
+    
+    // Add event listeners to remove opacity when drag ends without drop
+    document.addEventListener("dragend", function(ev) {
+        if(ev.target.classList) {
+            ev.target.classList.remove("opacity-40");
+            ev.target.classList.remove("scale-95");
+        }
+        document.querySelectorAll('.kanban-items').forEach(items => {
+            items.classList.remove("bg-surface-container-high");
+        });
+    });
+
+    // AJAX Call to save status
+    function saveStatus(assetId, status) {
+        fetch("{% url 'asset_intake:kanban_update' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                asset_id: assetId,
+                status: status
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(!data.success) {
+                alert("Failed to update status.");
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert("Error updating status.");
+        });
+    }
+
+    updateCounts();
+</script>
+{% endblock %}

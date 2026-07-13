@@ -11,6 +11,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     # Local apps
     "ai_mart_grading",
     "asset_intake",
@@ -41,14 +43,17 @@ INSTALLED_APPS = [
     "home",
     "inventory",
     "media_backup",
+    "notifications",
     "pos",
     "reports",
     "resell_pricing_engine",
+    "staff",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -69,6 +74,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "staff.context_processors.staff_role",
             ],
         },
     },
@@ -99,7 +105,14 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "lo"
+
+LANGUAGES = [
+    ("lo", "ລາວ"),
+    ("en", "English"),
+]
+
+LOCALE_PATHS = [BASE_DIR / "locale"]
 
 TIME_ZONE = "Asia/Vientiane"
 
@@ -121,3 +134,15 @@ MEDIA_ROOT = BASE_DIR / "media"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ໜ້າ login ສຳລັບ @login_required (ໃຊ້ໜ້າ login ຂອງ admin ໄປກ່ອນ)
+LOGIN_URL = "/admin/login/"
+
+# ------------------------------------------------------------
+# ການແຈ້ງເຕືອນລູກຄ້າ (Telegram) ແລະ ລິ້ງ Customer Portal
+# ------------------------------------------------------------
+# Base URL ຂອງເວັບ — ໃຊ້ສ້າງລິ້ງ portal/QR ໃນຂໍ້ຄວາມແຈ້ງເຕືອນ ແລະ ໃບຮັບເຄື່ອງ
+SITE_BASE_URL = os.getenv("SITE_BASE_URL", "http://127.0.0.1:8000")
+
+# Token ຂອງ Telegram Bot (ສ້າງຜ່ານ @BotFather)
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")

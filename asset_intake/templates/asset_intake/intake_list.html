@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}AI Grading Queue — Hug Kerb AI{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">ລະບົບກວດສອບ ແລະ ປະເມີນລາຄາ AI</h2>
+        <p class="text-on-surface-variant font-body-md mt-2">Asset intake queue for sneaker condition assessment and valuation.</p>
+    </div>
+    <div class="flex items-center gap-3">
+        <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-ai-cyan opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-ai-cyan"></span>
+        </span>
+        <span class="font-data-mono text-data-mono text-ai-cyan">AI Engine Active</span>
+        <a href="{% url 'asset_intake:create' %}" class="btn-gradient text-on-primary font-label-caps text-label-caps py-2.5 px-4 rounded-lg font-bold flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">add_a_photo</span>
+            New Intake
+        </a>
+    </div>
+</div>
+
+<section class="glass-card rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center">
+    <div class="relative flex-1 w-full">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+        <input class="w-full bg-surface-container border border-white/10 rounded-lg py-2.5 pl-10 pr-4 text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-ai-cyan focus:ring-1 focus:ring-ai-cyan transition-all" placeholder="Search ticket, customer, brand, model...">
+    </div>
+    <select class="bg-surface-container border border-white/10 rounded-lg py-2.5 px-4 text-on-surface focus:outline-none focus:border-ai-cyan">
+        <option>All statuses</option><option>Waiting</option><option>Grading</option><option>Ready</option>
+    </select>
+</section>
+
+<section class="glass-card rounded-xl overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="border-b border-white/10 bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
+                    <th class="px-5 py-3">ເລກໃບຮັບ</th>
+                    <th class="px-5 py-3">ລູກຄ້າ</th>
+                    <th class="px-5 py-3">ເກີບ</th>
+                    <th class="px-5 py-3">ສະຖານະ</th>
+                    <th class="px-5 py-3">ວັນທີຮັບເຂົ້າ</th>
+                    <th class="px-5 py-3 text-right">Action</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5">
+                {% for asset in assets %}
+                <tr class="data-row hover:bg-white/5 transition-colors">
+                    <td class="px-5 py-4 font-data-mono text-xs text-ai-cyan">{{ asset.ticket_number }}</td>
+                    <td class="px-5 py-4 text-on-surface">{{ asset.customer.name }}</td>
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-md bg-surface-variant border border-white/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-ai-purple">steps</span>
+                            </div>
+                            <div>
+                                <p class="text-on-surface font-medium">{{ asset.brand }} {{ asset.model_name }}</p>
+                                <p class="text-xs text-on-surface-variant">{{ asset.color|default:"—" }} · {{ asset.size|default:"—" }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-5 py-4"><span class="px-2 py-1 rounded-full text-xs bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/20">{{ asset.get_status_display }}</span></td>
+                    <td class="px-5 py-4 text-on-surface-variant">{{ asset.intake_date|date:"d/m/Y H:i" }}</td>
+                    <td class="px-5 py-4 text-right"><a href="{% url 'asset_intake:detail' asset.pk %}" class="text-ai-cyan hover:underline">Open →</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="px-5 py-8 text-center text-on-surface-variant">ຍັງບໍ່ມີເຄື່ອງຮັບຝາກ</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

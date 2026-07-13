@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load i18n humanize %}
+
+{% block title %}{% trans "Interactive Quotation — Hug Kerb AI" %}{% endblock %}
+
+{% block content %}
+<style>
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .ai-gradient-text {
+        background: linear-gradient(135deg, #0058be 0%, #00687a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .ai-border-glow {
+        box-shadow: 0 0 15px rgba(0, 88, 190, 0.15);
+        border: 1px solid #d8e2ff;
+    }
+    .dark .glass-panel {
+        background: rgba(15, 23, 42, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .dark .ai-gradient-text {
+        background: linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .dark .ai-border-glow {
+        box-shadow: 0 0 15px rgba(34, 211, 238, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>
+
+<!-- Main Workspace -->
+<div class="flex flex-col xl:flex-row gap-lg items-start w-full">
+    <!-- Left Column: Configuration (8 cols-like) -->
+    <div class="flex-grow flex flex-col gap-lg max-w-4xl w-full">
+        <!-- Page Header -->
+        <div class="mb-2">
+            <h1 class="font-display-lg text-headline-lg text-on-surface mb-1 font-bold">ການສະເໜີລາຄາອັດສະລິຍະ</h1>
+            <p class="font-body-lg text-on-surface-variant">ກຳນົດຄ່າການບໍລິການ AI ສຳລັບລູກຄ້າຂອງທ່ານ.</p>
+        </div>
+
+        <!-- Client Info Card -->
+        <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm">
+            <h2 class="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2 font-bold">
+                <span class="material-symbols-outlined text-primary">person</span>
+                ຂໍ້ມູນລູກຄ້າ
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1 uppercase">ຊື່ລູກຄ້າ</label>
+                    <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2 text-on-surface font-body-md focus:outline-none" readonly type="text" value="{{ order.customer.name|default:"Walk-in Customer" }}"/>
+                </div>
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1 uppercase">ເລກທີເອກະສານ</label>
+                    <input class="w-full bg-surface-container-low border border-outline-variant rounded-lg px-4 py-2 text-on-surface font-body-md focus:outline-none" readonly type="text" value="{{ order.order_number }}"/>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" id="quotation-form" class="contents">
+            {% csrf_token %}
+            <input type="hidden" name="signature_data" id="signature-data-input">
+            <input type="hidden" name="promo_code" id="promo-code-input">
+
+            <!-- Bento Grid: Modules Selection -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for service in all_services %}
+                <div class="cursor-pointer group hover:shadow-md transition-shadow relative border rounded-xl p-5 flex flex-col justify-between min-h-[200px] {% if service in order_services %}border-secondary bg-surface-container-low ai-border-glow{% else %}border-outline-variant bg-surface-container-lowest{% endif %}" id="card-{{ service.pk }}" onclick="toggleService('{{ service.pk }}')">
+                    <!-- Checkbox Box (hidden) -->
+                    <input type="checkbox" name="services" value="{{ service.pk }}" data-price="{{ service.price }}" data-name="{{ service.name }}" class="hidden service-checkbox" id="checkbox-{{ service.pk }}" {% if service in order_services %}checked{% endif %}>
+                    
+                    <!-- Selected Icon -->
+                    <div class="absolute top-4 right-4 {% if service in order_services %}{% else %}hidden{% endif %}" id="check-icon-{{ service.pk }}">
+                        <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                    </div>
+
+                    <!-- Category Icon -->
+                    <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-transform group-hover:scale-105 {% if service in order_services %}bg-secondary-container text-on-secondary-container{% else %}bg-surface-variant text-primary{% endif %}" id="icon-box-{{ service.pk }}">
+                        <span class="material-symbols-outlined text-[24px]">
+                            {% if "grading" in service.name|lower or "grade" in service.name|lower or "g" in service.name|lower %}
+                                psychology
+                            {% elif "inventory" in service.name|lower or "sago" in service.name|lower %}
+                                inventory_2
+                            {% elif "analytics" in service.name|lower or "report" in service.name|lower %}
+                                monitoring
+                            {% elif "crm" in service.name|lower or "member" in service.name|lower %}
+                                hub
+                            {% else %}
+                                package
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <div>
+                        <h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 font-bold">{{ service.name }}</h3>
+                        <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed text-sm mb-4">
+                            {% if "grading" in service.name|lower or "grade" in service.name|lower %}
+                                ການປະເມີນສະພາບສິນຄ້າດ້ວຍ AI ແບບອັດຕະໂນມັດ ຄວາມແມ່ນຍຳສູງ.
+                            {% elif "inventory" in service.name|lower %}
+                                ລະບົບຈັດການສາງສິນຄ້າພື້ນຖານ ສຳລັບທຸລະກິດຂະໜາດນ້ອຍເຖິງກາງ.
+                            {% elif "analytics" in service.name|lower %}
+                                ລາຍງານ ແລະ ວິເຄາະຂໍ້ມູນເຊີງເລິກດ້ວຍ Machine Learning.
+                            {% elif "crm" in service.name|lower %}
+                                ເມື່ອເຊື່ອມຕໍ່ລະບົບລູກຄ້າສຳພັນ ເພື່ອການບໍລິການທີ່ໄຮ້ຮອຍຕໍ່.
+                            {% else %}
+                                ບໍລິການເສີມພິເສດເພື່ອຄວາມຕ້ອງການສະເພາະ.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="flex justify-between items-center mt-auto">
+                        <span class="font-label-md text-label-md {% if service in order_services %}text-secondary bg-surface-bright border-secondary-fixed{% else %}text-on-surface-variant border-outline-variant{% endif %} px-2.5 py-0.5 rounded-full border text-[11px]" id="badge-{{ service.pk }}">
+                            {% if service.price >= 1500000 %}
+                                ແນະນຳ
+                            {% elif service.price < 1000000 %}
+                                ພື້ນຖານ
+                            {% else %}
+                                ເສີມ
+                            {% endif %}
+                        </span>
+                        <span class="font-headline-md text-headline-md text-on-surface text-base font-bold">₭ {{ service.price|money }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Promo & Coupons -->
+            <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm mt-4">
+                <h2 class="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center gap-2 font-bold">
+                    <span class="material-symbols-outlined text-primary">local_offer</span>
+                    ໂປຣໂມຊັ່ນ ແລະ ສ່ວນຫຼຸດ
+                </h2>
+                <div class="flex gap-3 mb-4">
+                    <input class="flex-1 bg-surface border border-outline-variant rounded-lg px-4 py-2 text-on-surface font-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary uppercase placeholder:normal-case" placeholder="ປ້ອນລະຫັດສ່ວນຫຼຸດ..." type="text" id="promo-input" value="KVAIPRO20"/>
+                    <button type="button" class="bg-surface-variant text-primary font-semibold text-sm px-6 py-2 rounded-lg hover:bg-primary/10 transition-colors border border-primary/20" onclick="applyPromo()">
+                        ນຳໃຊ້
+                    </button>
+                </div>
+                <!-- Success State Banner -->
+                <div class="bg-surface-container-low border border-secondary/30 rounded-lg p-3 flex items-center justify-between hidden" id="promo-banner">
+                    <div class="flex items-center gap-2 text-secondary" id="promo-msg">
+                        <!-- Populated by JS -->
+                    </div>
+                    <button type="button" class="text-on-surface-variant hover:text-status-error transition-colors" onclick="clearPromo()">
+                        <span class="material-symbols-outlined text-sm">close</span>
+                    </button>
+                </div>
+            </div>
+    </div>
+
+    <!-- Right Column: Price Breakdown Drawer (4 cols-like) -->
+    <aside class="w-full xl:w-96 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-md p-6 flex flex-col glass-panel sticky top-20">
+        <h2 class="font-headline-sm text-headline-sm text-on-surface mb-4 flex items-center justify-between font-bold">
+            <span>ສະຫຼຸບລາຍການ</span>
+            <span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary">more_horiz</span>
+        </h2>
+        
+        <!-- Summary items selected -->
+        <div class="flex flex-col gap-3 mb-4 min-h-[80px]" id="summary-items">
+            <!-- Populated by JS -->
+        </div>
+
+        <div class="border-t border-outline-variant/50 pt-3 mb-4 flex flex-col gap-3">
+            <div class="flex justify-between items-center text-sm">
+                <span class="font-body-md text-on-surface-variant">ລວມຍອດ (Subtotal)</span>
+                <span class="font-bold text-on-surface" id="subtotal-val">₭ 0</span>
+            </div>
+            <!-- Dynamic discount inserted here by JS -->
+            <div class="flex justify-between items-center text-sm" id="vat-row">
+                <span class="font-body-md text-on-surface-variant">ອາກອນ (VAT 10%)</span>
+                <span class="font-bold text-on-surface" id="vat-val">₭ 0</span>
+            </div>
+        </div>
+
+        <div class="bg-surface-container-high rounded-lg p-4 mb-6 border border-primary/10">
+            <div class="flex justify-between items-end">
+                <span class="font-headline-sm text-headline-sm text-on-surface font-bold">ຍອດລວມທັງໝົດ</span>
+                <span class="font-headline-lg text-headline-lg ai-gradient-text font-bold" id="total-val">₭ 0</span>
+            </div>
+        </div>
+
+        <!-- Final Approval / Signature -->
+        <div class="mt-auto border-t border-outline-variant/50 pt-4">
+            <h3 class="font-semibold text-xs text-on-surface-variant uppercase mb-2">ເຊັນອະນຸມັດ</h3>
+            
+            <div class="bg-surface border-2 border-dashed border-outline-variant hover:border-primary/50 rounded-lg h-28 mb-4 flex items-center justify-center relative cursor-crosshair group overflow-hidden" id="signature-container">
+                <canvas class="absolute inset-0 w-full h-full z-10" id="signature-canvas"></canvas>
+                <div class="z-0 flex items-center gap-1.5 text-outline-variant group-hover:text-primary transition-colors pointer-events-none" id="canvas-placeholder">
+                    <span class="material-symbols-outlined text-sm">draw</span>
+                    <span class="font-semibold text-xs">ແຕະເພື່ອເຊັນຊື່</span>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-primary hover:opacity-95 text-on-primary font-bold py-3 rounded-lg transition-all shadow-sm flex justify-center items-center gap-2 hover:scale-[1.02] active:scale-95">
+                <span class="material-symbols-outlined text-[20px]">send</span>
+                ສົ່ງໃບສະເໜີລາຄາ
+            </button>
+            <button type="button" class="w-full mt-2 bg-transparent text-primary hover:bg-white/5 font-semibold py-3 rounded-lg transition-colors flex justify-center items-center border border-primary/20" onclick="saveDraft()">
+                ບັນທຶກເປັນຮ່າງ
+            </button>
+        </div>
+    </aside>
+    </form>
+</div>
+
+<!-- Interactive Logic -->
+<script>
+    const checkboxes = document.querySelectorAll('.service-checkbox');
+    const summaryItemsContainer = document.getElementById('summary-items');
+    const subtotalEl = document.getElementById('subtotal-val');
+    const vatEl = document.getElementById('vat-val');
+    const totalEl = document.getElementById('total-val');
+    const promoInput = document.getElementById('promo-input');
+    const promoMsg = document.getElementById('promo-msg');
+    const promoBanner = document.getElementById('promo-banner');
+    const promoCodeInput = document.getElementById('promo-code-input');
+    const form = document.getElementById('quotation-form');
+
+    let subtotal = 0;
+    let discount = 0;
+    let discountPercent = 0;
+
+    function toggleService(pk) {
+        const cb = document.getElementById('checkbox-' + pk);
+        cb.checked = !cb.checked;
+
+        const card = document.getElementById('card-' + pk);
+        const checkIcon = document.getElementById('check-icon-' + pk);
+        const iconBox = document.getElementById('icon-box-' + pk);
+        const badge = document.getElementById('badge-' + pk);
+
+        if (cb.checked) {
+            card.classList.add('border-secondary', 'bg-surface-container-low', 'ai-border-glow');
+            card.classList.remove('border-outline-variant', 'bg-surface-container-lowest');
+            checkIcon.classList.remove('hidden');
+            iconBox.className = "w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-transform group-hover:scale-105 bg-secondary-container text-on-secondary-container";
+            badge.className = "font-label-md text-label-md text-secondary bg-surface-bright px-2.5 py-0.5 rounded-full border border-secondary-fixed text-[11px]";
+        } else {
+            card.classList.remove('border-secondary', 'bg-surface-container-low', 'ai-border-glow');
+            card.classList.add('border-outline-variant', 'bg-surface-container-lowest');
+            checkIcon.classList.add('hidden');
+            iconBox.className = "w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-transform group-hover:scale-105 bg-surface-variant text-primary";
+            badge.className = "font-label-md text-label-md text-on-surface-variant px-2.5 py-0.5 rounded-full border border-outline-variant text-[11px]";
+        }
+        updateSummary();
+    }
+
+    function formatCurrency(val) {
+        return '₭ ' + Math.round(val).toLocaleString();
+    }
+
+    function updateSummary() {
+        summaryItemsContainer.innerHTML = '';
+        subtotal = 0;
+
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                const price = parseFloat(cb.getAttribute('data-price'));
+                const name = cb.getAttribute('data-name');
+                subtotal += price;
+
+                const itemHtml = `
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="font-body-md text-on-surface-variant">${name}</span>
+                        <span class="font-bold text-on-surface">${formatCurrency(price)}</span>
+                    </div>
+                `;
+                summaryItemsContainer.insertAdjacentHTML('beforeend', itemHtml);
+            }
+        });
+
+        if (subtotal === 0) {
+            summaryItemsContainer.innerHTML = '<div class="text-on-surface-variant/60 text-center py-4 italic text-xs">Select modules to view summary</div>';
+        }
+
+        calculateTotal();
+    }
+
+    function applyPromo() {
+        const code = promoInput.value.trim().toUpperCase();
+        
+        if (code === 'KVAIPRO20') {
+            discountPercent = 20;
+            discount = 0;
+            promoBanner.classList.remove('hidden');
+            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> <span>ນຳໃຊ້ລະຫັດ <strong class="font-bold">KVAIPRO20</strong> ສຳເລັດ! (ຫຼຸດ 20%)</span>`;
+            promoCodeInput.value = 'KVAIPRO20';
+        } else if (code === 'RAINY15') {
+            discountPercent = 0;
+            discount = 15000;
+            promoBanner.classList.remove('hidden');
+            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> <span>ນຳໃຊ້ລະຫັດ <strong class="font-bold">RAINY15</strong> ສຳເລັດ! (ຫຼຸດ ₭15,000)</span>`;
+            promoCodeInput.value = 'RAINY15';
+        } else if (code === 'MISSYOU25') {
+            discountPercent = 0;
+            discount = 25000;
+            promoBanner.classList.remove('hidden');
+            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span> <span>ນຳໃຊ້ລະຫັດ <strong class="font-bold">MISSYOU25</strong> ສຳເລັດ! (ຫຼຸດ ₭25,000)</span>`;
+            promoCodeInput.value = 'MISSYOU25';
+        } else if (code === '') {
+            clearPromo();
+        } else {
+            discountPercent = 0;
+            discount = 0;
+            promoBanner.classList.remove('hidden');
+            promoMsg.innerHTML = `<span class="material-symbols-outlined text-sm text-status-error">error</span> <span class="text-status-error font-semibold">ລະຫັດບໍ່ຖືກຕ້ອງ</span>`;
+            promoCodeInput.value = '';
+        }
+        calculateTotal();
+    }
+
+    function clearPromo() {
+        discountPercent = 0;
+        discount = 0;
+        promoInput.value = '';
+        promoBanner.classList.add('hidden');
+        promoCodeInput.value = '';
+        calculateTotal();
+    }
+
+    function calculateTotal() {
+        let actualDiscount = discount;
+        if (discountPercent > 0) {
+            actualDiscount = Math.round(subtotal * (discountPercent / 100));
+        }
+
+        const vat = Math.round((subtotal - actualDiscount) * 0.10);
+        let total = subtotal - actualDiscount + vat;
+        if (total < 0) total = 0;
+
+        subtotalEl.textContent = formatCurrency(subtotal);
+        vatEl.textContent = formatCurrency(vat);
+        totalEl.textContent = formatCurrency(total);
+
+        const existingDiscount = document.getElementById('discount-row');
+        if (existingDiscount) existingDiscount.remove();
+
+        if (actualDiscount > 0) {
+            const discountHtml = `
+                <div id="discount-row" class="flex justify-between items-center text-secondary text-sm">
+                    <span class="font-body-md text-secondary">ສ່ວນຫຼຸດ (${discountPercent > 0 ? discountPercent + '%' : 'ກີບ'})</span>
+                    <span class="font-bold">-${formatCurrency(actualDiscount)}</span>
+                </div>
+            `;
+            const vatRow = document.getElementById('vat-row');
+            vatRow.insertAdjacentHTML('beforebegin', discountHtml);
+        }
+    }
+
+    // Canvas Signature Pad Logic
+    const canvas = document.getElementById('signature-canvas');
+    const ctx = canvas.getContext('2d');
+    const placeholder = document.getElementById('canvas-placeholder');
+    const signatureInput = document.getElementById('signature-data-input');
+    let isDrawing = false;
+
+    function resizeCanvas() {
+        const container = document.getElementById('signature-container');
+        canvas.width = container.offsetWidth;
+        canvas.height = container.offsetHeight;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#22d3ee' : '#0058be';
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function getCoordinates(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (e.touches && e.touches.length > 0) {
+            return {
+                x: e.touches[0].clientX - rect.left,
+                y: e.touches[0].clientY - rect.top
+            };
+        }
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+    }
+
+    function startDrawing(e) {
+        isDrawing = true;
+        placeholder.classList.add('hidden');
+        const coords = getCoordinates(e);
+        ctx.beginPath();
+        ctx.moveTo(coords.x, coords.y);
+        e.preventDefault();
+    }
+
+    function draw(e) {
+        if (!isDrawing) return;
+        const coords = getCoordinates(e);
+        ctx.lineTo(coords.x, coords.y);
+        ctx.stroke();
+        e.preventDefault();
+    }
+
+    function stopDrawing() {
+        if (!isDrawing) return;
+        isDrawing = false;
+        signatureInput.value = canvas.toDataURL();
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
+
+    function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        placeholder.classList.remove('hidden');
+        signatureInput.value = '';
+    }
+
+    function saveDraft() {
+        form.submit();
+    }
+
+    // Initialize layout and totals
+    updateSummary();
+    if (promoInput.value) {
+        applyPromo();
+    }
+
+    // On theme toggle, update canvas drawing color
+    const observer = new MutationObserver(() => {
+        ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#22d3ee' : '#0058be';
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+</script>
+{% endblock %}

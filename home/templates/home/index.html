@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Hug Kerb AI — SME Command Center" %}{% endblock %}
+
+{% block content %}
+<section class="glass-card ai-glow-border rounded-2xl p-8 md:p-10 overflow-hidden relative">
+    <div class="absolute right-0 top-0 w-72 h-72 bg-ai-purple/10 rounded-full blur-3xl"></div>
+    <div class="absolute left-10 bottom-0 w-56 h-56 bg-ai-cyan/10 rounded-full blur-3xl"></div>
+    <div class="relative max-w-3xl">
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ai-cyan/10 border border-ai-cyan/20 text-ai-cyan font-label-caps text-label-caps mb-5">
+            <span class="material-symbols-outlined text-sm">auto_awesome</span>
+            SME Backend AI
+        </span>
+        <h1 class="font-display-lg text-display-lg text-on-surface mb-4">{% trans "Hug Kerb AI Command Center" %}</h1>
+        <p class="font-body-lg text-on-surface-variant">{% trans "Back-office system for shoe care shops: POS, Inventory, CRM, AI Grading, Resell Pricing, and Reports." %}</p>
+        <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div class="rounded-lg bg-surface-container/80 border border-white/10 p-3">
+                <p class="font-data-mono text-ai-cyan text-xl">{{ open_order_count }}</p>
+                <p class="text-xs text-on-surface-variant">{% trans "Orders" %}</p>
+            </div>
+            <div class="rounded-lg bg-surface-container/80 border border-white/10 p-3">
+                <p class="font-data-mono text-ai-cyan text-xl">{{ active_asset_count }}</p>
+                <p class="text-xs text-on-surface-variant">{% trans "Active assets" %}</p>
+            </div>
+            <div class="rounded-lg bg-surface-container/80 border border-white/10 p-3">
+                <p class="font-data-mono text-ai-cyan text-xl">{{ customer_count }}</p>
+                <p class="text-xs text-on-surface-variant">{% trans "Customers" %}</p>
+            </div>
+            <div class="rounded-lg bg-surface-container/80 border border-white/10 p-3">
+                <p class="font-data-mono {% if low_stock_count %}text-status-alert{% else %}text-ai-cyan{% endif %} text-xl">{{ low_stock_count }}</p>
+                <p class="text-xs text-on-surface-variant">{% trans "Low stock" %}</p>
+            </div>
+        </div>
+        <div class="mt-8 flex flex-wrap gap-3">
+            <a href="{% url 'dashboard:index' %}" class="btn-gradient text-on-primary px-5 py-3 rounded-lg font-bold">{% trans "Open Dashboard" %}</a>
+            <a href="{% url 'pos:create' %}" class="border border-ai-cyan text-ai-cyan px-5 py-3 rounded-lg hover:bg-ai-cyan/10">{% trans "Create Order" %}</a>
+        </div>
+    </div>
+</section>
+
+<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-gutter">
+    <a href="{% url 'pos:create' %}" class="glass-card rounded-xl p-6 hover:-translate-y-1 transition-transform">
+        <span class="material-symbols-outlined text-ai-cyan text-3xl">point_of_sale</span>
+        <div class="mt-3 font-headline-md text-headline-md text-on-surface">{% trans "POS & Order Intake" %}</div>
+        <p class="text-on-surface-variant mt-2">{% trans "Process services, issue receipts, and start AI scans." %}</p>
+    </a>
+    <a href="{% url 'inventory:index' %}" class="glass-card rounded-xl p-6 hover:-translate-y-1 transition-transform">
+        <span class="material-symbols-outlined text-ai-purple text-3xl">inventory_2</span>
+        <div class="mt-3 font-headline-md text-headline-md text-on-surface">{% trans "Inventory" %}</div>
+        <p class="text-on-surface-variant mt-2">{% trans "Track supplies, low stock, and movement history." %}</p>
+    </a>
+    <a href="{% url 'crm:index' %}" class="glass-card rounded-xl p-6 hover:-translate-y-1 transition-transform">
+        <span class="material-symbols-outlined text-ai-cyan text-3xl">groups</span>
+        <div class="mt-3 font-headline-md text-headline-md text-on-surface">{% trans "CRM Membership" %}</div>
+        <p class="text-on-surface-variant mt-2">{% trans "Manage customers, digital cards, and service history." %}</p>
+    </a>
+    <a href="{% url 'asset_intake:list' %}" class="glass-card rounded-xl p-6 hover:-translate-y-1 transition-transform">
+        <span class="material-symbols-outlined text-ai-purple text-3xl">psychology</span>
+        <div class="mt-3 font-headline-md text-headline-md text-on-surface">{% trans "AI Grading" %}</div>
+        <p class="text-on-surface-variant mt-2">{% trans "Assess condition and generate pricing insights." %}</p>
+    </a>
+    <a href="{% url 'reports:income_expense' %}" class="glass-card rounded-xl p-6 hover:-translate-y-1 transition-transform">
+        <span class="material-symbols-outlined text-ai-cyan text-3xl">assessment</span>
+        <div class="mt-3 font-headline-md text-headline-md text-on-surface">{% trans "Finance Reports" %}</div>
+        <p class="text-on-surface-variant mt-2">{% trans "Review income, expenses, cashflow, and RFM insights." %}</p>
+    </a>
+    <a href="/admin/" class="glass-card rounded-xl p-6 hover:-translate-y-1 transition-transform">
+        <span class="material-symbols-outlined text-ai-purple text-3xl">admin_panel_settings</span>
+        <div class="mt-3 font-headline-md text-headline-md text-on-surface">{% trans "Admin" %}</div>
+        <p class="text-on-surface-variant mt-2">{% trans "Manage source data, users, and advanced records." %}</p>
+    </a>
+</section>
+{% endblock %}

@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load i18n humanize %}
+
+{% block title %}{{ asset.ticket_number }} — AI Grading{% endblock %}
+
+{% block content %}
+<style>
+    .glow-accent {
+        box-shadow: 0 0 15px 0 rgba(34, 211, 238, 0.15);
+    }
+</style>
+
+<!-- Page Header -->
+<div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4">
+    <div class="min-w-0">
+        <h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">ລະບົບກວດສອບ ແລະ ປະເມີນລາຄາ AI (AI Smart Grading)</h2>
+        <p class="text-on-surface-variant font-body-md mt-2 max-w-2xl">
+            {{ asset.brand }} {{ asset.model_name }} · {{ asset.ticket_number }} · {{ asset.customer.name }} · {{ asset.customer.phone }}
+        </p>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto xl:justify-end shrink-0">
+        <span class="hidden lg:flex items-center gap-2 mr-1">
+            <span class="relative flex h-3 w-3">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-ai-cyan opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-ai-cyan"></span>
+            </span>
+            <span class="font-data-mono text-data-mono text-ai-cyan whitespace-nowrap">AI Engine Active</span>
+        </span>
+        <a href="{% url 'asset_intake:ticket_pdf' asset.pk %}" target="_blank" class="border border-white/10 text-on-surface rounded-lg px-3 py-2 text-sm hover:bg-white/5 inline-flex items-center gap-1.5 whitespace-nowrap transition-colors">
+            <span class="material-symbols-outlined text-sm">print</span>
+            Ticket
+        </a>
+        <a href="{% url 'asset_intake:tag_label' asset.pk %}" target="_blank" class="border border-white/10 text-on-surface rounded-lg px-3 py-2 text-sm hover:bg-white/5 inline-flex items-center gap-1.5 whitespace-nowrap transition-colors" title="ພິມປ້າຍ QR ຫ້ອຍຕິດເກີບ">
+            <span class="material-symbols-outlined text-sm">qr_code_2</span>
+            ປ້າຍແທັກ
+        </a>
+        <a href="{{ portal_url }}" target="_blank" class="border border-white/10 text-on-surface rounded-lg px-3 py-2 text-sm hover:bg-white/5 inline-flex items-center gap-1.5 whitespace-nowrap transition-colors" title="ໜ້າຕິດຕາມສະຖານະຂອງລູກຄ້າ (public)">
+            <span class="material-symbols-outlined text-sm">travel_explore</span>
+            Portal
+        </a>
+        {% if wa_link %}
+        <a href="{{ wa_link }}" target="_blank" class="bg-[#25D366]/15 border border-[#25D366]/40 text-on-surface rounded-lg px-3 py-2 text-sm hover:bg-[#25D366]/25 inline-flex items-center gap-1.5 whitespace-nowrap transition-colors" title="ສົ່ງແຈ້ງເຕືອນຫາລູກຄ້າຜ່ານ WhatsApp">
+            <span class="material-symbols-outlined text-sm">chat</span>
+            WhatsApp
+        </a>
+        {% endif %}
+        <a href="{% url 'asset_intake:social_image' asset.pk %}" class="btn-gradient text-on-primary rounded-lg px-3 py-2 text-sm inline-flex items-center gap-1.5 whitespace-nowrap font-bold transition-transform hover:scale-105" title="ດາວໂຫຼດຮູບ Before/After ສຳລັບໂພສ Facebook/IG">
+            <span class="material-symbols-outlined text-sm">photo_library</span>
+            ຮູບໂພສ
+        </a>
+    </div>
+</div>
+
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+    <!-- Left Column: Image Intake -->
+    <div class="lg:col-span-5 space-y-6">
+        <div class="glass-card rounded-xl p-6 h-full flex flex-col border border-white/5 justify-between">
+            <div>
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <h3 class="font-headline-md text-headline-md font-semibold text-on-surface">Asset Intake</h3>
+                        <button onclick="openEditAssetModal()" class="text-on-surface-variant hover:text-ai-cyan transition-colors" title="Edit Intake Details">
+                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                        </button>
+                        <form method="post" action="{% url 'asset_intake:delete' asset.pk %}" onsubmit="return confirm('{% trans "Are you sure you want to delete this intake asset?" %}');" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="text-on-surface-variant hover:text-status-error transition-colors" title="Delete Intake">
+                                <span class="material-symbols-outlined text-[18px]">delete</span>
+                            </button>
+                        </form>
+                    </div>
+                    <span class="px-2.5 py-0.5 rounded-full bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/20 text-xs font-semibold uppercase tracking-wider">
+                        {{ asset.get_status_display }}
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-5 text-sm">
+                    <div class="bg-surface-container-low rounded-lg p-3">
+                        <p class="text-on-surface-variant text-xs">Color</p>
+                        <p class="font-medium mt-0.5">{{ asset.color|default:"—" }}</p>
+                    </div>
+                    <div class="bg-surface-container-low rounded-lg p-3">
+                        <p class="text-on-surface-variant text-xs">Size</p>
+                        <p class="font-medium mt-0.5">{{ asset.size|default:"—" }}</p>
+                    </div>
+                    <div class="bg-surface-container-low rounded-lg p-3">
+                        <p class="text-on-surface-variant text-xs">Pickup Date</p>
+                        <p class="font-medium mt-0.5">{{ asset.pickup_date|default:"—" }}</p>
+                    </div>
+                    <div class="bg-surface-container-low rounded-lg p-3">
+                        <p class="text-on-surface-variant text-xs">Created At</p>
+                        <p class="font-medium mt-0.5">{{ asset.intake_date|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+
+                <!-- ມອບວຽກໃຫ້ຊ່າງ (Staff & Commission) -->
+                <form method="post" class="flex items-center gap-2 mb-5">
+                    {% csrf_token %}
+                    <span class="material-symbols-outlined text-on-surface-variant text-[20px] shrink-0">engineering</span>
+                    <select name="assigned_to" class="flex-1 min-w-0 bg-surface-container border border-white/10 rounded-lg px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-ai-cyan">
+                        <option value="">— ຍັງບໍ່ໄດ້ມອບວຽກໃຫ້ຊ່າງ —</option>
+                        {% for tech in technicians %}
+                        <option value="{{ tech.pk }}" {% if asset.assigned_to_id == tech.pk %}selected{% endif %}>
+                            {{ tech.get_full_name|default:tech.username }} ({{ tech.staff_profile.get_role_display }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button class="bg-ai-cyan text-surface-deep rounded-lg px-4 py-2 text-sm font-bold whitespace-nowrap shrink-0 transition-transform hover:scale-105 active:scale-95">ບັນທຶກ</button>
+                </form>
+
+                <!-- Upload Form & Drag Drop Area -->
+                <form method="post" enctype="multipart/form-data" class="block relative overflow-hidden group border-2 border-dashed border-outline-variant hover:border-ai-cyan/50 rounded-lg bg-surface-container-lowest/50 transition-colors cursor-pointer min-h-[220px]">
+                    {% csrf_token %}
+                    <input type="hidden" name="upload_stage" value="before">
+                    <input type="file" name="photos" multiple accept="image/*,video/*" class="hidden" id="photo-upload-input" onchange="this.form.submit()">
+                    <label for="photo-upload-input" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center p-6 text-center cursor-pointer">
+                        <div class="absolute inset-0 w-full h-full p-2 opacity-30 group-hover:opacity-10 transition-opacity">
+                            {% if before_media %}
+                                <img class="w-full h-full object-contain rounded-md filter grayscale" src="{{ before_media.0.file.url }}">
+                            {% else %}
+                                <span class="material-symbols-outlined text-8xl text-outline-variant/10 absolute inset-0 m-auto flex items-center justify-center">image</span>
+                            {% endif %}
+                        </div>
+                        <div class="relative z-10 flex flex-col items-center">
+                            <div class="h-14 w-14 rounded-full bg-surface-variant flex items-center justify-center mb-3 group-hover:bg-ai-cyan/20 transition-colors">
+                                <span class="material-symbols-outlined text-2xl text-on-surface-variant group-hover:text-ai-cyan">add_a_photo</span>
+                            </div>
+                            <p class="font-headline-sm text-sm font-semibold text-on-surface mb-1">Upload Sneaker Photos</p>
+                            <p class="font-body-sm text-xs text-on-surface-variant max-w-[240px]">Drag and drop or click to browse.</p>
+                            <p class="font-label-caps text-[10px] text-outline mt-2">JPG, PNG (Max 5MB)</p>
+                        </div>
+                    </label>
+                </form>
+            </div>
+
+            <!-- Uploaded Thumbnails -->
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Before Media -->
+                <div>
+                    <p class="font-label-caps text-label-caps text-on-surface-variant mb-2">Before Media (ກ່ອນ)</p>
+                    <div class="flex gap-2 overflow-x-auto pb-2 items-center">
+                        {% for m in before_media %}
+                            <a href="{{ m.file.url }}" target="_blank" class="w-14 h-14 rounded bg-surface-variant border border-white/10 flex-shrink-0 overflow-hidden relative group">
+                                {% if m.media_type == "image" %}
+                                    <img src="{{ m.file.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full bg-surface-variant flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-outline text-sm">movie</span>
+                                    </div>
+                                {% endif %}
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <span class="material-symbols-outlined text-xs text-white">open_in_new</span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                        <form method="post" enctype="multipart/form-data" class="shrink-0 relative group">
+                            {% csrf_token %}
+                            <input type="hidden" name="upload_stage" value="before">
+                            <input type="file" name="photos" accept="image/*,video/*" class="hidden" id="photo-upload-before-btn" onchange="this.form.submit()">
+                            <label for="photo-upload-before-btn" class="w-14 h-14 rounded border border-dashed border-outline-variant flex items-center justify-center cursor-pointer hover:border-ai-cyan transition-colors bg-surface-container-low/30">
+                                <span class="material-symbols-outlined text-outline-variant text-sm group-hover:text-ai-cyan">add</span>
+                            </label>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- After Media -->
+                <div>
+                    <p class="font-label-caps text-label-caps text-ai-purple mb-2">After Media (ຫຼັງ)</p>
+                    <div class="flex gap-2 overflow-x-auto pb-2 items-center">
+                        {% for m in after_media %}
+                            <a href="{{ m.file.url }}" target="_blank" class="w-14 h-14 rounded bg-surface-variant border border-white/10 flex-shrink-0 overflow-hidden relative group">
+                                {% if m.media_type == "image" %}
+                                    <img src="{{ m.file.url }}" class="w-full h-full object-cover">
+                                {% else %}
+                                    <div class="w-full h-full bg-surface-variant flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-outline text-sm">movie</span>
+                                    </div>
+                                {% endif %}
+                                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                    <span class="material-symbols-outlined text-xs text-white">open_in_new</span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                        <form method="post" enctype="multipart/form-data" class="shrink-0 relative group">
+                            {% csrf_token %}
+                            <input type="hidden" name="upload_stage" value="after">
+                            <input type="file" name="photos" accept="image/*,video/*" class="hidden" id="photo-upload-after-btn" onchange="this.form.submit()">
+                            <label for="photo-upload-after-btn" class="w-14 h-14 rounded border border-dashed border-ai-purple/50 flex items-center justify-center cursor-pointer hover:border-ai-purple transition-colors bg-ai-purple/5">
+                                <span class="material-symbols-outlined text-ai-purple/70 text-sm group-hover:text-ai-purple">add</span>
+                            </label>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Middle Column: AI Checklist -->
+    <div class="lg:col-span-4 space-y-6">
+        <div class="glass-card rounded-xl p-6 h-full flex flex-col justify-between">
+            <div>
+                <div class="flex items-center gap-2 mb-6 border-b border-white/10 pb-4">
+                    <span class="material-symbols-outlined text-ai-purple">troubleshoot</span>
+                    <h3 class="font-headline-md text-headline-md font-semibold text-on-surface">AI Assessment</h3>
+                </div>
+                
+                <div class="space-y-5">
+                    {% if latest_assessment %}
+                        <div class="rounded-lg bg-ai-purple/10 border border-ai-purple/20 p-4 mb-4">
+                            <div class="flex justify-between">
+                                <span class="font-label-caps text-label-caps text-ai-purple font-bold">Latest Grade</span>
+                                <span class="font-data-mono text-ai-purple">{{ latest_assessment.created_at|date:"d/m H:i" }}</span>
+                            </div>
+                            <p class="font-headline-lg text-headline-lg text-on-surface mt-2">{{ latest_assessment.overall_grade|default:"—" }}</p>
+                            <p class="font-body-sm text-on-surface-variant mt-2 text-sm leading-relaxed">{{ latest_assessment.summary }}</p>
+                        </div>
+                    {% endif %}
+
+                    {% for item in checklist_status %}
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    {% if item.is_pending %}
+                                        <span class="material-symbols-outlined text-sm text-outline shrink-0">pending</span>
+                                        <span class="font-body-md text-on-surface-variant text-sm truncate">{{ item.name }}</span>
+                                    {% else %}
+                                        <span class="material-symbols-outlined text-sm text-ai-cyan shrink-0">check_circle</span>
+                                        <span class="font-body-md text-on-surface text-sm truncate">{{ item.name }}</span>
+                                        <span class="px-2 py-0.5 rounded {{ item.badge_class }} text-[9px] font-data-mono uppercase shrink-0 font-semibold">{{ item.badge_text }}</span>
+                                    {% endif %}
+                                </div>
+                                <span class="font-data-mono text-data-mono text-xs {% if item.is_pending %}text-outline{% else %}text-on-surface-variant{% endif %} shrink-0">
+                                    {% if item.is_pending %}--%{% else %}{{ item.percentage }}%{% endif %}
+                                </span>
+                            </div>
+                            <div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+                                {% if item.is_pending %}
+                                    <div class="h-full bg-outline-variant rounded-full" style="width: 0%"></div>
+                                {% else %}
+                                    <div class="h-full progress-fill rounded-full" style="width: {{ item.percentage }}%"></div>
+                                {% endif %}
+                            </div>
+                            {% if item.note %}
+                                <p class="text-xs text-on-surface-variant mt-1 ml-6 leading-relaxed">{{ item.note }}</p>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <p class="text-on-surface-variant text-sm">No checklist items defined. Please add checklist items in Admin.</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'ai_mart_grading:run_assessment' asset.pk %}" class="mt-6">
+                {% csrf_token %}
+                <button class="w-full py-2 px-4 rounded border border-white/20 text-on-surface hover:bg-white/5 transition-colors font-label-caps text-label-caps flex justify-center items-center gap-2">
+                    <span class="material-symbols-outlined text-sm">refresh</span>
+                    Re-Scan Asset
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Column: Results & Insights -->
+    <div class="lg:col-span-3 flex flex-col gap-6">
+        <!-- Result Card -->
+        <div class="glass-card ai-glow-border p-6 rounded-xl relative overflow-hidden flex flex-col justify-between">
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+                <span class="material-symbols-outlined text-6xl text-ai-cyan">payments</span>
+            </div>
+            
+            <div>
+                <h3 class="font-headline-md text-headline-md font-semibold text-on-surface mb-6 relative z-10">
+                    ຜົນການປະເມີນລາຄາ <br>
+                    <span class="text-body-sm font-body-sm text-on-surface-variant font-normal">(Resell Price Valuation)</span>
+                </h3>
+
+                {% with latest_price=valuations.0 %}
+                {% if latest_price %}
+                    <div class="space-y-6 relative z-10">
+                        <div>
+                            <p class="font-label-caps text-label-caps text-on-surface-variant mb-1 uppercase tracking-wider">Estimated Market Price</p>
+                            <div class="flex items-baseline gap-1">
+                                <span class="font-display-lg text-display-lg font-bold text-on-surface">
+                                    {{ latest_price.raw_response.base_price|default:latest_price.suggested_price|money }}
+                                </span>
+                                <span class="font-body-md text-on-surface-variant">{{ latest_price.currency }}</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2 py-3 border-y border-white/5 text-sm">
+                            <div class="flex justify-between text-body-sm">
+                                <span class="text-on-surface-variant">Base Market Price</span>
+                                <span class="text-on-surface">{{ latest_price.raw_response.base_price|default:latest_price.suggested_price|money }} {{ latest_price.currency }}</span>
+                            </div>
+                            <div class="flex justify-between text-body-sm">
+                                <span class="text-on-surface-variant">Condition Adjustment</span>
+                                {% if latest_price.raw_response.condition_adjustment %}
+                                    <span class="text-status-error">{{ latest_price.raw_response.condition_adjustment|money }} {{ latest_price.currency }}</span>
+                                {% else %}
+                                    <span class="text-status-error">0 {{ latest_price.currency }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="flex justify-between text-body-sm">
+                                <span class="text-on-surface-variant">Rarity Premium</span>
+                                {% if latest_price.raw_response.rarity_premium %}
+                                    <span class="text-ai-cyan">+{{ latest_price.raw_response.rarity_premium|money }} {{ latest_price.currency }}</span>
+                                {% else %}
+                                    <span class="text-ai-cyan">+0 {{ latest_price.currency }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="bg-surface-container-lowest/50 p-4 rounded-lg border border-white/5">
+                            <p class="font-label-caps text-label-caps text-ai-cyan mb-1 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">trending_up</span>
+                                Recommended Resell Price
+                            </p>
+                            <div class="flex items-baseline gap-1">
+                                <span class="font-headline-lg text-headline-lg font-bold text-ai-cyan glow-accent">
+                                    {{ latest_price.suggested_price|money }}
+                                </span>
+                                <span class="font-body-sm text-ai-cyan/70">{{ latest_price.currency }}</span>
+                            </div>
+                            <span class="inline-block mt-2 px-2 py-1 rounded bg-secondary-fixed/20 text-secondary-fixed font-data-mono text-[10px] uppercase font-bold">
+                                {{ latest_price.raw_response.demand_level|default:"High Demand" }}
+                            </span>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 border-t border-white/10 text-xs">
+                            <span class="text-on-surface-variant">AI Confidence Score</span>
+                            <div class="flex items-center gap-2 bg-surface-container px-3 py-1 rounded-full border border-ai-purple/30">
+                                <span class="material-symbols-outlined text-ai-purple text-sm">memory</span>
+                                <span class="font-data-mono text-data-mono text-ai-purple font-bold">
+                                    {{ latest_price.raw_response.confidence_score|default:"95" }}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-on-surface-variant text-sm py-8 text-center bg-surface-container-low/30 rounded-lg border border-white/5">
+                        <p class="mb-4">No valuation generated yet.</p>
+                        <form method="post" action="{% url 'resell_pricing_engine:run_valuation' asset.pk %}">
+                            {% csrf_token %}
+                            <button class="w-full btn-gradient text-on-primary px-4 py-2.5 rounded-lg text-sm font-bold transition-transform hover:scale-105 active:scale-95">
+                                Run Valuation
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+                {% endwith %}
+            </div>
+
+            {% if valuations %}
+                <form method="post" action="{% url 'resell_pricing_engine:run_valuation' asset.pk %}" class="mt-6">
+                    {% csrf_token %}
+                    <button class="w-full py-2 px-4 rounded border border-white/20 text-on-surface hover:bg-white/5 transition-colors font-label-caps text-label-caps flex justify-center items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">refresh</span>
+                        Re-Valuate Asset
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+
+        <!-- Marketing Insight / Promo Content -->
+        <div class="glass-card rounded-xl p-5 border-l-2 border-l-ai-cyan">
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-ai-cyan/10 rounded-lg shrink-0">
+                    <span class="material-symbols-outlined text-ai-cyan">lightbulb</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-label-caps text-label-caps text-ai-cyan mb-1">AI Promotional Content</p>
+                    <form method="post" action="{% url 'resell_pricing_engine:run_promo' asset.pk %}" class="flex gap-2 mt-3">
+                        {% csrf_token %}
+                        <select name="platform" class="rounded-lg border border-white/10 bg-surface-container px-2 py-1.5 text-xs flex-1 text-on-surface focus:outline-none focus:border-ai-cyan">
+                            <option value="facebook">Facebook</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="instagram">Instagram</option>
+                        </select>
+                        <button class="border border-ai-cyan text-ai-cyan px-3 py-1.5 rounded-lg text-xs hover:bg-ai-cyan/10 transition-colors">
+                            Generate
+                        </button>
+                    </form>
+
+                    <div class="mt-4 space-y-3">
+                        {% if promo_contents %}
+                            {% for p in promo_contents %}
+                                <div class="border-t border-white/10 pt-3 text-xs">
+                                    <div class="font-bold text-on-surface flex items-center gap-1.5 mb-1 text-ai-cyan">
+                                        <span class="material-symbols-outlined text-sm">
+                                            {% if p.platform == 'facebook' %}facebook{% elif p.platform == 'tiktok' %}video_library{% else %}photo_camera{% endif %}
+                                        </span>
+                                        {{ p.get_platform_display }}
+                                    </div>
+                                    <p class="text-on-surface-variant leading-relaxed whitespace-pre-line">{{ p.content }}</p>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-on-surface-variant text-xs mt-3 leading-relaxed">
+                                ຈັດໂປຣໂມຊັ່ນສຳລັບແບຣນນີ້ໃນເດືອນໜ້າ ເນື່ອງຈາກຄວາມຕ້ອງການເພີ່ມຂຶ້ນ.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Administrative Status Overwrite Form (Optional/Administrative) -->
+        <form method="post" class="glass-card rounded-xl p-5 border border-white/5">
+            {% csrf_token %}
+            <label class="font-label-caps text-label-caps text-on-surface-variant mb-2 block text-xs">Update Status (Manual)</label>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <select name="status" class="rounded-lg border border-white/10 bg-surface-container px-3 py-2 text-sm text-on-surface flex-1 min-w-0 focus:outline-none focus:border-ai-cyan">
+                    {% for val, label in status_choices %}
+                        <option value="{{ val }}" {% if val == asset.status %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button class="bg-ai-cyan text-surface-deep px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap shrink-0 transition-transform hover:scale-105 active:scale-95">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Action Bar (Bottom) -->
+<form method="post" class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-8 pt-4 border-t border-white/10">
+    {% csrf_token %}
+    <!-- Save Draft: ຮັບເຂົ້າແລ້ວ → ເລີ່ມທຳຄວາມສະອາດ, ນອກນັ້ນຄົງສະຖານະເດີມ -->
+    <button type="submit" name="status" value="{% if asset.status == 'received' %}cleaning{% else %}{{ asset.status }}{% endif %}" class="w-full sm:w-auto justify-center px-6 py-2.5 rounded-lg border border-ai-cyan text-ai-cyan font-label-caps text-label-caps hover:bg-ai-cyan/10 transition-colors font-bold inline-flex items-center">
+        Save Draft
+    </button>
+    <!-- Publish to Inventory (transits status to ready) -->
+    <button type="submit" name="status" value="ready" class="w-full sm:w-auto justify-center px-6 py-2.5 rounded-lg bg-gradient-to-r from-ai-cyan to-ai-purple text-surface-lowest font-label-caps text-label-caps font-bold glow-accent hover:opacity-90 transition-opacity inline-flex items-center gap-2">
+        <span>Publish to Inventory</span>
+        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+    </button>
+</form>
+
+<!-- Edit Asset Modal -->
+<div id="editAssetModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl max-w-md w-full overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-outline-variant/20 bg-surface-bright flex justify-between items-center">
+            <h3 class="font-headline-sm text-on-surface font-bold">{% trans "Edit Intake Shoe Details" %}</h3>
+            <button onclick="closeEditAssetModal()" class="text-on-surface-variant hover:text-on-surface">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="post" action="{% url 'asset_intake:edit' asset.pk %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Brand" %}</label>
+                <input type="text" name="brand" value="{{ asset.brand }}" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+            </div>
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Model Name" %}</label>
+                <input type="text" name="model_name" value="{{ asset.model_name }}" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Color" %}</label>
+                    <input type="text" name="color" value="{{ asset.color|default:'' }}" class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+                <div>
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Size" %}</label>
+                    <input type="text" name="size" value="{{ asset.size|default:'' }}" class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"/>
+                </div>
+            </div>
+            <div>
+                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Condition / Notes" %}</label>
+                <textarea name="condition_note" class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" rows="2">{{ asset.condition_note|default:'' }}</textarea>
+            </div>
+            <div class="pt-4 flex gap-3 justify-end">
+                <button type="button" onclick="closeEditAssetModal()" class="px-4 py-2 border border-outline-variant text-on-surface rounded-lg hover:bg-surface-variant transition-colors text-sm font-semibold">{% trans "Cancel" %}</button>
+                <button type="submit" class="px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-primary/90 shadow-sm transition-colors text-sm font-semibold">{% trans "Save Changes" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditAssetModal() {
+        document.getElementById('editAssetModal').classList.remove('hidden');
+    }
+    function closeEditAssetModal() {
+        document.getElementById('editAssetModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}
