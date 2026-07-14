@@ -10,7 +10,6 @@ from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _
-from xhtml2pdf import pisa
 
 from ai_mart_grading.models import ChecklistItem
 from crm.models import Customer
@@ -20,6 +19,28 @@ from notifications.services import build_wa_link
 from .forms import IntakeForm
 from .models import Asset
 from .utils import absolute_url, qr_data_uri
+
+
+CHECKLIST_LABELS = {
+    "ຮອຍເປື້ອນ/ຄວາມສະອາດຂອງໜ້າເກີບ": "Upper cleanliness and stains",
+    "Laces condition": "Laces condition",
+    "ຮອຍຈີກ/ຮອຍແຕກຂອງວັດສະດຸໜ້າເກີບ": "Upper material tears or cracks",
+    "Upper / body condition": "Upper / body condition",
+    "ສີຊີດຈາງ/ປ່ຽນສີ": "Fading or discoloration",
+    "Sole condition": "Sole condition",
+    "ການສຶກຫຼໍ່ຂອງພື້ນນອກ (Outsole)": "Outsole wear",
+    "Insole condition": "Insole condition",
+    "Midsole ແຕກ/ຍຸບ/ເສື່ອມ": "Midsole cracks, compression, or deterioration",
+    "Color condition": "Color condition",
+    "ພື້ນເຫຼືອງ (Oxidation)": "Sole yellowing (oxidation)",
+    "ສະພາບພື້ນໃນ ແລະ ກິ່ນ": "Insole condition and odor",
+    "ສາຍເກີບຄົບ ແລະ ສະພາບດີ": "Laces completeness and condition",
+    "ກ່ອງ/ອຸປະກອນເສີມຄົບຖ້ວນ": "Box and accessories completeness",
+    "ການກວດຄວາມແທ້ເບື້ອງຕົ້ນ (Authenticity)": "Preliminary authenticity check",
+}
+
+# ບໍລິການທີ່ໃຊ້ AI Grading checklist + ລາຄາຂາຍຕໍ່ — ບໍລິການອື່ນ (ຊັກ/ສ້ອມ/ສະປາ) ບໍ່ຕ້ອງການ 2 ອັນນີ້
+AI_GRADING_SERVICE_NAME = "AI Condition Report"
 
 
 @login_required
@@ -108,7 +129,7 @@ def intake_detail(request, pk):
                     MediaFile.MediaType.VIDEO if is_video else MediaFile.MediaType.IMAGE
                 ),
             )
-        messages.success(request, "ອັບໂຫຼດໄຟລ໌ສຳເລັດ")
+        messages.success(request, _("Files uploaded successfully."))
         return redirect("asset_intake:detail", pk=asset.pk)
 
     if request.method == "POST" and "status" in request.POST:
@@ -116,16 +137,16 @@ def intake_detail(request, pk):
         if new_status in Asset.Status.values:
             asset.status = new_status
             asset.save(update_fields=["status", "updated_at"])
-            messages.success(request, "ອັບເດດສະຖານະແລ້ວ")
+            messages.success(request, _("Status updated successfully."))
         else:
-            messages.error(request, "ສະຖານະບໍ່ຖືກຕ້ອງ")
+            messages.error(request, _("Invalid status."))
         return redirect("asset_intake:detail", pk=asset.pk)
 
     if request.method == "POST" and "assigned_to" in request.POST:
         assigned_id = request.POST.get("assigned_to") or None
         asset.assigned_to_id = assigned_id
         asset.save(update_fields=["assigned_to", "updated_at"])
-        messages.success(request, "ມອບວຽກໃຫ້ຊ່າງແລ້ວ")
+        messages.success(request, _("Work assigned to the technician successfully."))
         return redirect("asset_intake:detail", pk=asset.pk)
 
     checklist_items = ChecklistItem.objects.filter(is_active=True)
@@ -145,17 +166,17 @@ def intake_detail(request, pk):
         if a_item:
             percentage = int((a_item.score / item.max_score) * 100) if item.max_score else 0
             if percentage >= 90:
-                badge_text = "Like New"
+                badge_text = _("Like new")
                 badge_class = "bg-ai-cyan/10 text-ai-cyan"
             elif percentage >= 75:
-                badge_text = "Minor Scuffs"
+                badge_text = _("Minor scuffs")
                 badge_class = "bg-secondary-fixed/20 text-secondary-fixed"
             else:
-                badge_text = "Worn"
+                badge_text = _("Worn")
                 badge_class = "bg-status-error/10 text-status-error"
 
             checklist_status.append({
-                "name": item.name,
+                "name": _(CHECKLIST_LABELS.get(item.name, item.name)),
                 "score": f"{a_item.score:.0f}",
                 "max_score": item.max_score,
                 "percentage": percentage,
@@ -166,15 +187,78 @@ def intake_detail(request, pk):
             })
         else:
             checklist_status.append({
-                "name": item.name,
+                "name": _(CHECKLIST_LABELS.get(item.name, item.name)),
                 "score": "--",
                 "max_score": item.max_score,
                 "percentage": 0,
-                "badge_text": "Pending",
+                "badge_text": _("Pending"),
                 "badge_class": "bg-white/5 text-outline",
                 "note": "",
                 "is_pending": True,
             })
+
+    status_labels = {
+        Asset.Status.RECEIVED: _("Received"),
+        Asset.Status.CLEANING: _("Cleaning"),
+        Asset.Status.REPAIRING: _("Repairing"),
+        Asset.Status.READY: _("Ready for pickup"),
+        Asset.Status.RETURNED: _("Completed"),
+    }
+    asset.localized_status = status_labels.get(asset.status, asset.status)
+
+    # ບໍລິການທີ່ຕິດກັບ order ນີ້ — ຖ້າບໍ່ມີ order (ຮັບເຄື່ອງຜ່ານໜ້າ AI Grading ໂດຍກົງ)
+    # ຫຼືມີບໍລິການ AI Condition Report ຢູ່ນຳ ຫຼືເຄີຍ run assessment/valuation ໄປແລ້ວ
+    # (ບໍ່ຢາກເຊື່ອງຜົນທີ່ AI ສ້າງໄວ້ແລ້ວ) ໃຫ້ສະແດງ block AI checklist + ລາຄາຂາຍຕໍ່ຄືເກົ່າ.
+    # ຖ້າມີແຕ່ບໍລິການອື່ນ (ຊັກ/ສ້ອມ/ສະປາ) ແລະ ບໍ່ເຄີຍປະເມີນ ໃຫ້ສະແດງ block ຄວາມຄືບໜ້າວຽກແທນ.
+    order_items_with_service = list(
+        asset.order_items.select_related("service_type").exclude(service_type__isnull=True)
+    )
+    service_names = {item.service_type.name for item in order_items_with_service}
+    show_ai_grading = (
+        not order_items_with_service
+        or AI_GRADING_SERVICE_NAME in service_names
+        or latest_assessment is not None
+        or asset.valuations.exists()
+    )
+    work_services = [
+        item for item in order_items_with_service
+        if item.service_type.name != AI_GRADING_SERVICE_NAME
+    ]
+
+    stage_order = [
+        Asset.Status.RECEIVED,
+        Asset.Status.CLEANING,
+        Asset.Status.REPAIRING,
+        Asset.Status.READY,
+        Asset.Status.RETURNED,
+    ]
+    current_stage_index = (
+        stage_order.index(asset.status) if asset.status in stage_order else 0
+    )
+    work_progress_stages = [
+        {
+            "value": stage,
+            "label": status_labels.get(stage, stage),
+            "state": (
+                "done" if i < current_stage_index
+                else "current" if i == current_stage_index
+                else "upcoming"
+            ),
+        }
+        for i, stage in enumerate(stage_order)
+    ]
+
+    demand_labels = {
+        "High Demand": _("High demand"),
+        "Normal Demand": _("Normal demand"),
+        "Low Demand": _("Low demand"),
+    }
+    valuations = list(asset.valuations.all()[:5])
+    for valuation in valuations:
+        demand_level = (valuation.raw_response or {}).get(
+            "demand_level", "High Demand"
+        )
+        valuation.localized_demand = demand_labels.get(demand_level, demand_level)
 
     context = {
         "active_nav": "intake",
@@ -184,9 +268,15 @@ def intake_detail(request, pk):
         "assessments": asset.assessments.all()[:5],
         "latest_assessment": latest_assessment,
         "checklist_status": checklist_status,
-        "valuations": asset.valuations.all()[:5],
+        "show_ai_grading": show_ai_grading,
+        "work_services": work_services,
+        "work_progress_stages": work_progress_stages,
+        "valuations": valuations,
         "promo_contents": asset.promo_contents.all()[:5],
-        "status_choices": Asset.Status.choices,
+        "status_choices": [
+            (value, status_labels.get(value, label))
+            for value, label in Asset.Status.choices
+        ],
         "wa_link": build_wa_link(asset),
         "portal_url": absolute_url(asset.get_portal_url(), request),
         "technicians": get_user_model()

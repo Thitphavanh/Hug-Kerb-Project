@@ -173,13 +173,13 @@
 <body class="bg-background text-on-surface font-body-md min-h-screen flex">
 
 <aside id="sidebar" class="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-surface-container border-r border-white/10 shrink-0 py-6 z-50 overflow-hidden">
-    <div class="sidebar-brand px-6 mb-8 flex flex-col items-center text-center">
+    <a href="{% url 'home:index' %}" class="sidebar-brand px-6 mb-8 flex flex-col items-center text-center hover:opacity-85 transition-opacity block">
         <div class="w-14 h-14 rounded-full bg-surface-variant border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_24px_rgba(34,211,238,.16)]">
             <span class="material-symbols-outlined text-ai-cyan text-3xl fill">steps</span>
         </div>
         <h1 class="font-display-lg text-ai-cyan font-bold tracking-tight" style="font-size:24px;line-height:1.1;">Hug ເກີບ AI</h1>
         <p class="font-body-sm text-on-surface-variant mt-1">{% trans "SME Command Center" %}</p>
-    </div>
+    </a>
     <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
         <a href="{% url 'dashboard:index' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'dashboard' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
             <span class="material-symbols-outlined {% if active_nav == 'dashboard' %}fill{% endif %}">dashboard</span>
@@ -243,12 +243,15 @@
         <button id="sidebar-toggle" type="button" class="hidden md:inline-flex text-on-surface-variant hover:text-ai-cyan transition-colors shrink-0" aria-label="{% trans 'Toggle sidebar' %}" title="{% trans 'Toggle sidebar' %}">
             <span id="sidebar-toggle-icon" class="material-symbols-outlined">left_panel_close</span>
         </button>
-        <div class="hidden md:flex items-center w-full max-w-md">
+        <form action="{% url 'dashboard:search' %}" method="get" class="hidden md:flex items-center w-full max-w-md gap-2">
             <div class="relative w-full">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-                <input class="w-full bg-surface-container border border-white/10 rounded-full py-2 pl-10 pr-4 text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-ai-cyan focus:ring-1 focus:ring-ai-cyan transition-colors" placeholder="{% trans 'Search orders, clients, inventory...' %}" type="text">
+                <input name="q" id="global-search-input" class="w-full bg-surface-container border border-white/10 rounded-full py-2 pl-10 pr-4 text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-ai-cyan focus:ring-1 focus:ring-ai-cyan transition-colors" placeholder="{% trans 'Search orders, clients, inventory...' %}" type="text">
             </div>
-        </div>
+            <button type="button" onclick="openGlobalScanModal()" class="bg-surface-container border border-white/10 text-on-surface p-2 rounded-full hover:bg-surface-variant hover:text-ai-cyan transition-colors flex-shrink-0 flex items-center justify-center" title="{% trans 'Scan Barcode' %}">
+                <span class="material-symbols-outlined text-[20px]">barcode_scanner</span>
+            </button>
+        </form>
         <div class="flex items-center gap-5">
             {% if pending_assessment_count %}
             <a href="{% url 'asset_intake:list' %}" class="relative text-on-surface-variant hover:text-ai-cyan transition-colors" title="ລໍຖ້າກວດສອບ AI">
@@ -367,6 +370,196 @@
         if (root.lang) {
             localStorage.setItem(langKey, root.lang);
         }
+    })();
+</script>
+
+<!-- Global Scan Modal (ເຄື່ອງສະແກນ USB + ກ້ອງມືຖື/iPad) -->
+<div id="global-scan-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4" onclick="if(event.target===this)closeGlobalScanModal()">
+    <div class="bg-surface-container border border-white/10 rounded-xl shadow-xl w-full max-w-md overflow-hidden max-h-full flex flex-col glass-panel" style="backdrop-filter: blur(12px);">
+        <div class="border-b border-white/10 px-6 py-4 bg-surface-container/50 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-ai-cyan">barcode_scanner</span>
+                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Scan Barcode" %}</h2>
+            </div>
+            <button type="button" onclick="closeGlobalScanModal()" class="text-on-surface-variant hover:text-status-error transition-colors flex items-center justify-center">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4 overflow-y-auto">
+            <p class="text-xs text-on-surface-variant">
+                {% if CURRENT_LANGUAGE == 'lo' %}
+                ຍິງເຄື່ອງສະແກນ USB ໃສ່ປ້າຍ QR ຫຼື ພິມເລກປີ້ / ເລກອໍເດີ (ເຊັ່ນ TK-DEMO-004).
+                {% else %}
+                Point the USB scanner at the QR tag, or type the ticket / order number (e.g. TK-DEMO-004).
+                {% endif %}
+            </p>
+            <input id="global-scan-input" type="text" autocomplete="off"
+                   class="w-full px-4 py-3 bg-surface-deep border border-white/15 rounded-lg text-sm font-mono focus:outline-none focus:border-ai-cyan focus:ring-1 focus:ring-ai-cyan text-on-surface"
+                   placeholder="TK-XXXXXX / ORDXXXXXX"/>
+            <div id="global-scan-status" class="text-xs font-semibold min-h-[1rem] text-on-surface-variant"></div>
+            <div class="flex items-center gap-3">
+                <div class="flex-1 border-t border-white/10"></div>
+                <span class="text-[10px] uppercase tracking-wider text-on-surface-variant">{% trans "or" %}</span>
+                <div class="flex-1 border-t border-white/10"></div>
+            </div>
+            <button type="button" id="global-scan-camera-btn" onclick="toggleGlobalCameraScan()"
+                    class="w-full bg-ai-cyan/15 hover:bg-ai-cyan/25 text-ai-cyan font-bold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 transition-all">
+                <span class="material-symbols-outlined text-[20px]">photo_camera</span>
+                <span id="global-scan-camera-label">{% if CURRENT_LANGUAGE == 'lo' %}ສະແກນດ້ວຍກ້ອງ{% else %}Scan with Camera{% endif %}</span>
+            </button>
+            <div id="global-camera-reader" class="hidden rounded-lg overflow-hidden border border-white/10 mt-2"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let globalCameraScanner = null;
+    let globalCameraActive = false;
+
+    const globalI18n = {
+        scanBarcode: "{% trans 'Scan Barcode' %}",
+        scanWithCamera: "{% if CURRENT_LANGUAGE == 'lo' %}ສະແກນດ້ວຍກ້ອງ{% else %}Scan with Camera{% endif %}",
+        startingCamera: "{% if CURRENT_LANGUAGE == 'lo' %}ກຳລັງເປີດກ້ອງ...{% else %}Starting camera...{% endif %}",
+        stopCamera: "{% if CURRENT_LANGUAGE == 'lo' %}ປິດກ້ອງ{% else %}Stop Camera{% endif %}",
+        cameraUnavailable: "{% if CURRENT_LANGUAGE == 'lo' %}ບໍ່ສາມາດໃຊ້ກ້ອງໄດ້. ກະລຸນາກວດສອບສິດການເຂົ້າເຖິງ ຫຼື ໃຊ້ HTTPS.{% else %}Camera unavailable. Check permission / use HTTPS.{% endif %}",
+        searching: "{% if CURRENT_LANGUAGE == 'lo' %}ກຳລັງຄົ້ນຫາ...{% else %}Searching...{% endif %}",
+        notFound: "{% if CURRENT_LANGUAGE == 'lo' %}ບໍ່ພົບຂໍ້ມູນ:{% else %}Not found:{% endif %}"
+    };
+
+    function openGlobalScanModal() {
+        const modal = document.getElementById('global-scan-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setGlobalScanStatus('', '');
+            const input = document.getElementById('global-scan-input');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+        }
+    }
+
+    function closeGlobalScanModal() {
+        stopGlobalCameraScan();
+        const modal = document.getElementById('global-scan-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    function setGlobalScanStatus(msg, type) {
+        const el = document.getElementById('global-scan-status');
+        if (el) {
+            el.textContent = msg;
+            el.className = 'text-xs font-semibold min-h-[1rem] ' +
+                (type === 'ok' ? 'text-ai-cyan' : type === 'error' ? 'text-status-error' : 'text-on-surface-variant');
+        }
+    }
+
+    function lookupGlobalScanCode(code) {
+        code = (code || '').trim();
+        if (!code) return;
+        setGlobalScanStatus(globalI18n.searching + ' ' + code, '');
+        // Redirect directly to search URL
+        window.location.href = "{% url 'dashboard:search' %}?q=" + encodeURIComponent(code);
+    }
+
+    const globalScanInput = document.getElementById('global-scan-input');
+    if (globalScanInput) {
+        globalScanInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                lookupGlobalScanCode(this.value);
+                this.value = '';
+            }
+        });
+    }
+
+    function loadGlobalCameraLib() {
+        return new Promise((resolve, reject) => {
+            if (window.Html5Qrcode) return resolve();
+            const s = document.createElement('script');
+            s.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    async function toggleGlobalCameraScan() {
+        if (globalCameraActive) { stopGlobalCameraScan(); return; }
+        const label = document.getElementById('global-scan-camera-label');
+        if (label) label.textContent = globalI18n.startingCamera;
+        try {
+            await loadGlobalCameraLib();
+            const reader = document.getElementById('global-camera-reader');
+            if (reader) reader.classList.remove('hidden');
+            globalCameraScanner = new Html5Qrcode('global-camera-reader');
+            await globalCameraScanner.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: { width: 220, height: 220 } },
+                (decodedText) => {
+                    stopGlobalCameraScan();
+                    lookupGlobalScanCode(decodedText);
+                }
+            );
+            globalCameraActive = true;
+            if (label) label.textContent = globalI18n.stopCamera;
+        } catch (err) {
+            if (label) label.textContent = globalI18n.scanWithCamera;
+            const reader = document.getElementById('global-camera-reader');
+            if (reader) reader.classList.add('hidden');
+            setGlobalScanStatus(globalI18n.cameraUnavailable, 'error');
+        }
+    }
+
+    function stopGlobalCameraScan() {
+        const label = document.getElementById('global-scan-camera-label');
+        if (globalCameraScanner && globalCameraActive) {
+            globalCameraScanner.stop().catch(() => {});
+        }
+        globalCameraScanner = null;
+        globalCameraActive = false;
+        if (label) label.textContent = globalI18n.scanWithCamera;
+        const reader = document.getElementById('global-camera-reader');
+        if (reader) reader.classList.add('hidden');
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeGlobalScanModal();
+    });
+
+    // Keyboard-wedge: scan barcode anywhere to trigger search modal
+    (function () {
+        let buf = '';
+        let lastTs = 0;
+        document.addEventListener('keydown', function (e) {
+            const modal = document.getElementById('global-scan-modal');
+            if (modal && modal.classList.contains('flex')) return;
+            // Ignore if active element is input in pos/create to prevent conflict
+            if (window.location.pathname.includes('/pos/create/')) return;
+            
+            const now = Date.now();
+            if (now - lastTs > 80) buf = '';
+            lastTs = now;
+            if (e.key === 'Enter') {
+                if (buf.length >= 5) {
+                    e.preventDefault();
+                    const code = buf;
+                    const el = document.activeElement;
+                    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && el.value.endsWith(code)) {
+                        el.value = el.value.slice(0, -code.length);
+                    }
+                    openGlobalScanModal();
+                    lookupGlobalScanCode(code);
+                }
+                buf = '';
+            } else if (e.key.length === 1) {
+                buf += e.key;
+            }
+        }, true);
     })();
 </script>
 </body>

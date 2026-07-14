@@ -41,7 +41,8 @@ def run_valuation(request, pk):
             [
                 {"role": "system", "content": VALUATION_SYSTEM_PROMPT},
                 {"role": "user", "content": user_text},
-            ]
+            ],
+            max_tokens=1200,
         )
         PriceValuation.objects.create(
             asset=asset,
@@ -80,7 +81,8 @@ def run_promo(request, pk):
             [
                 {"role": "system", "content": PROMO_SYSTEM_PROMPT},
                 {"role": "user", "content": user_text},
-            ]
+            ],
+            max_tokens=800,
         )
         PromoContent.objects.create(
             asset=asset,

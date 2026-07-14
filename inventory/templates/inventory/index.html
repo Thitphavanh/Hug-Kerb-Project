@@ -59,9 +59,9 @@
                         <td class="py-4 px-4 text-right">{{ supply.quantity_on_hand }} {{ supply.unit }}</td>
                         <td class="py-4 px-4 text-center">
                             {% if supply.is_low_stock %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-status-alert/10 text-status-alert border border-status-alert/20">{% trans "Low Stock" %}</span>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-status-alert/10 text-status-alert border border-status-alert/20">{% trans "Low stock" %}</span>
                             {% else %}
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/20">{% trans "In Stock" %}</span>
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/20">{% trans "In stock" %}</span>
                             {% endif %}
                         </td>
                         <td class="py-4 px-4 text-right"><button onclick="openEditSupplyModal('{{ supply.pk }}', '{{ supply.sku }}', '{{ supply.name }}', '{{ supply.quantity_on_hand }}', '{{ supply.unit }}', '{{ supply.reorder_level }}', '{{ supply.cost_price }}')" class="text-on-surface-variant hover:text-ai-cyan"><span class="material-symbols-outlined text-sm">edit</span></button></td>
@@ -84,11 +84,11 @@
             <div class="relative pl-6">
                 <div class="absolute left-0 top-1 w-2 h-2 rounded-full {% if movement.movement_type == 'out' %}bg-status-alert{% elif movement.movement_type == 'in' %}bg-ai-cyan{% else %}bg-ai-purple{% endif %}"></div>
                 <div class="flex justify-between items-start mb-1 gap-3">
-                    <span class="font-body-md font-semibold text-on-surface">{{ movement.get_movement_type_display }}</span>
+                    <span class="font-body-md font-semibold text-on-surface">{{ movement.localized_type }}</span>
                     <span class="font-data-mono text-[11px] text-on-surface-variant whitespace-nowrap">{{ movement.created_at|date:"d M H:i" }}</span>
                 </div>
                 <p class="font-body-sm text-on-surface-variant">{{ movement.supply.name }} <span class="font-medium {% if movement.movement_type == 'out' %}text-status-alert{% else %}text-ai-cyan{% endif %}">{{ movement.quantity }}</span></p>
-                {% if movement.order %}<p class="font-data-mono text-[11px] text-outline mt-1">Ref: {{ movement.order.order_number }}</p>{% endif %}
+                {% if movement.order %}<p class="font-data-mono text-[11px] text-outline mt-1">{% trans "Reference" %}: {{ movement.order.order_number }}</p>{% endif %}
             </div>
             {% empty %}
             <p class="text-on-surface-variant text-sm">{% trans "No stock movement yet." %}</p>
@@ -230,7 +230,7 @@
             </div>
             <div>
                 <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Quantity" %}</label>
-                <input type="number" name="quantity" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="e.g. 10"/>
+                <input type="number" name="quantity" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary" placeholder="{% trans 'e.g. 10' %}"/>
                 <p class="text-[10px] text-on-surface-variant mt-1">{% trans "Note: Stock In/Out should always be positive. The system calculates signs automatically." %}</p>
             </div>
             <div>

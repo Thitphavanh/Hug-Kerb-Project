@@ -1,5 +1,9 @@
+import csv
+
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.translation import gettext as _
 
 from .models import StockMovement, Supply
 
@@ -8,29 +12,57 @@ from .models import StockMovement, Supply
 def index(request):
     supplies = Supply.objects.filter(is_active=True).order_by("name")
     low_stock = [s for s in supplies if s.is_low_stock]
+    movement_labels = {
+        StockMovement.MovementType.IN: _("Stock in"),
+        StockMovement.MovementType.OUT: _("Stock out"),
+        StockMovement.MovementType.ADJUST: _("Adjustment"),
+    }
+    movements = list(
+        StockMovement.objects.select_related("supply", "order")[:10]
+    )
+    for movement in movements:
+        movement.localized_type = movement_labels.get(
+            movement.movement_type, movement.movement_type
+        )
 
     context = {
         "active_nav": "inventory",
         "supplies": supplies,
         "low_stock_count": len(low_stock),
         "supply_count": supplies.count(),
-        "movements": StockMovement.objects.select_related("supply", "order")[:10],
+        "movements": movements,
     }
     return render(request, "inventory/index.html", context)
-
-
-import csv
-from django.http import HttpResponse
 
 @login_required
 def export_csv(request):
     response = HttpResponse(content_type="text/csv; charset=utf-8-sig")
     response["Content-Disposition"] = 'attachment; filename="materials_inventory.csv"'
     writer = csv.writer(response)
-    writer.writerow(["SKU", "Name", "Stock On Hand", "Unit", "Reorder Level", "Cost Price", "Status"])
+    writer.writerow(
+        [
+            "SKU",
+            _("Name"),
+            _("Stock on hand"),
+            _("Unit"),
+            _("Reorder level"),
+            _("Cost price"),
+            _("Status"),
+        ]
+    )
     for s in Supply.objects.filter(is_active=True):
-        status = "Low Stock" if s.is_low_stock else "In Stock"
-        writer.writerow([s.sku, s.name, s.quantity_on_hand, s.unit, s.reorder_level, s.cost_price, status])
+        status = _("Low stock") if s.is_low_stock else _("In stock")
+        writer.writerow(
+            [
+                s.sku,
+                s.name,
+                s.quantity_on_hand,
+                s.unit,
+                s.reorder_level,
+                s.cost_price,
+                status,
+            ]
+        )
     return response
 
 

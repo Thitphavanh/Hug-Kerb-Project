@@ -51,4 +51,10 @@
         <p class="muted">ຍັງບໍ່ມີລາຍການເຄື່ອນໄຫວຄະແນນ</p>
         {% endfor %}
     </div>
+
+    <div style="margin-top: 24px; text-align: center;">
+        <button onclick="window.history.back()" style="display: inline-flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--surface-border); padding: 10px 24px; border-radius: 999px; color: var(--text-soft); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.05);" onmouseover="this.style.borderColor='var(--accent)'; this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--surface-border)'; this.style.color='var(--text-soft)'">
+            ← ຍ້ອນກັບ
+        </button>
+    </div>
 {% endblock %}

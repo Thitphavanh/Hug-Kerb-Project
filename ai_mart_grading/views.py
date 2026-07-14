@@ -1,4 +1,5 @@
 import base64
+import mimetypes
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -30,8 +31,13 @@ def _encode_images(media_qs, limit=6):
                 b64 = base64.b64encode(fh.read()).decode("ascii")
         except (FileNotFoundError, ValueError):
             continue
+        # mime ຕ້ອງກົງກັບໄຟລ໌ຈິງ (jpg/png/webp) — ຖ້າໃສ່ຜິດ (ເຊັ່ນ webp ແຕ່ບອກວ່າ jpeg)
+        # provider ຈະປະຕິເສດດ້ວຍ 400 "Provider returned error"
+        mime, _ = mimetypes.guess_type(media.file.name)
+        if not mime or not mime.startswith("image/"):
+            mime = "image/jpeg"
         content.append(
-            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}}
+            {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}}
         )
     return content
 
@@ -66,7 +72,8 @@ def run_assessment(request, pk):
                     "role": "user",
                     "content": [{"type": "text", "text": user_text}, *images],
                 },
-            ]
+            ],
+            max_tokens=3000,
         )
         item_map = {c.id: c for c in checklist_items}
         for entry in result.get("items", []):

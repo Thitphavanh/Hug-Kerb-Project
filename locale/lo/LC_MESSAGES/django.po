@@ -482,10 +482,8 @@ msgid "No stock movement yet."
 msgstr "ຍັງບໍ່ມີການເຄື່ອນໄຫວສະຕັອກ."
 
 #: inventory/templates/inventory/index.html:105
-#, fuzzy
-#| msgid "Add Material"
 msgid "Add New Material/Equipment"
-msgstr "ເພີ່ມວັດສະດຸ"
+msgstr "ເພີ່ມວັດສະດຸ/ອຸປະກອນໃໝ່"
 
 #: inventory/templates/inventory/index.html:113
 #: inventory/templates/inventory/index.html:160
@@ -554,10 +552,8 @@ msgid "remaining"
 msgstr "ຄົງເຫຼືອ"
 
 #: inventory/templates/inventory/index.html:224
-#, fuzzy
-#| msgid "Movement History"
 msgid "Movement Type"
-msgstr "ປະຫວັດການເຄື່ອນໄຫວ"
+msgstr "ປະເພດການເຄື່ອນໄຫວ"
 
 #: inventory/templates/inventory/index.html:226
 msgid "Stock In (+)"
@@ -580,6 +576,8 @@ msgid ""
 "Note: Stock In/Out should always be positive. The system calculates signs "
 "automatically."
 msgstr ""
+"ໝາຍເຫດ: ຈຳນວນຮັບເຂົ້າ/ເບີກອອກຕ້ອງເປັນຄ່າບວກສະເໝີ. "
+"ລະບົບຈະຄຳນວນເຄື່ອງໝາຍໃຫ້ອັດຕະໂນມັດ."
 
 #: inventory/templates/inventory/index.html:237
 msgid "Note/Reason"
@@ -592,6 +590,33 @@ msgstr "e.g. ຮັບສິນຄ້າຈາກ Supplier / ເບີກໃຊ�
 #: inventory/templates/inventory/index.html:267
 msgid "Are you sure you want to delete this material item?"
 msgstr "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບວັດສະດຸຊິ້ນນີ້?"
+
+msgid "In stock"
+msgstr "ມີສະຕັອກ"
+
+msgid "Stock in"
+msgstr "ຮັບເຂົ້າ"
+
+msgid "Stock out"
+msgstr "ເບີກອອກ"
+
+msgid "Adjustment"
+msgstr "ປັບຍອດ"
+
+msgid "Reference"
+msgstr "ອ້າງອີງ"
+
+msgid "e.g. 10"
+msgstr "ຕົວຢ່າງ: 10"
+
+msgid "Stock on hand"
+msgstr "ຈຳນວນຄົງເຫຼືອ"
+
+msgid "Reorder level"
+msgstr "ຈຸດສັ່ງຊື້ຄືນ"
+
+msgid "Cost price"
+msgstr "ລາຄາຕົ້ນທຶນ"
 
 #: pos/templates/pos/create_order.html:5
 #, fuzzy
@@ -1723,9 +1748,6 @@ msgstr "7 ວັນຫຼ້າສຸດ"
 #~ msgid "Out of stock"
 #~ msgstr "ໝົດສະຕັອກ"
 
-#~ msgid "In stock"
-#~ msgstr "ມີສະຕັອກ"
-
 #~ msgid ""
 #~ "No inventory records yet. Add Supply records in admin or run the demo "
 #~ "seed command."
@@ -1787,3 +1809,214 @@ msgstr "7 ວັນຫຼ້າສຸດ"
 
 #~ msgid "No data for this period yet."
 #~ msgstr "ຍັງບໍ່ມີຂໍ້ມູນໃນໄລຍະນີ້."
+
+# Asset intake detail / AI Smart Grading
+msgid "%(ticket)s — AI grading"
+msgstr "%(ticket)s — ການປະເມີນ AI"
+
+msgid "AI inspection and price estimation (AI Smart Grading)"
+msgstr "ລະບົບກວດສອບ ແລະ ປະເມີນລາຄາ AI (AI Smart Grading)"
+
+msgid "Ticket"
+msgstr "ໃບຮັບ"
+
+msgid "Print the QR shoe tag"
+msgstr "ພິມປ້າຍ QR ຫ້ອຍຕິດເກີບ"
+
+msgid "QR tag"
+msgstr "ປ້າຍ QR"
+
+msgid "Open the public customer tracking page"
+msgstr "ເປີດໜ້າຕິດຕາມສະຖານະສຳລັບລູກຄ້າ"
+
+msgid "Notify the customer via WhatsApp"
+msgstr "ແຈ້ງລູກຄ້າຜ່ານ WhatsApp"
+
+msgid "Download a Before/After image for Facebook or Instagram"
+msgstr "ດາວໂຫຼດຮູບກ່ອນ/ຫຼັງ ສຳລັບ Facebook ຫຼື Instagram"
+
+msgid "Social image"
+msgstr "ຮູບສຳລັບໂພສ"
+
+msgid "Asset intake"
+msgstr "ຂໍ້ມູນຮັບເຄື່ອງ"
+
+msgid "Edit intake details"
+msgstr "ແກ້ໄຂຂໍ້ມູນຮັບເຄື່ອງ"
+
+msgid "Delete intake"
+msgstr "ລຶບລາຍການຮັບເຄື່ອງ"
+
+msgid "Pickup date"
+msgstr "ວັນທີນັດຮັບ"
+
+msgid "Created at"
+msgstr "ສ້າງເມື່ອ"
+
+msgid "Not assigned to a technician"
+msgstr "ຍັງບໍ່ໄດ້ມອບວຽກໃຫ້ຊ່າງ"
+
+msgid "Upload sneaker photos"
+msgstr "ອັບໂຫຼດຮູບເກີບ"
+
+msgid "Drag and drop or click to browse."
+msgstr "ລາກໄຟລ໌ມາວາງ ຫຼື ຄລິກເພື່ອເລືອກໄຟລ໌."
+
+msgid "JPG, PNG (max. 5 MB)"
+msgstr "JPG, PNG (ສູງສຸດ 5 MB)"
+
+msgid "Before media"
+msgstr "ຮູບ/ວິດີໂອກ່ອນເຮັດ"
+
+msgid "Work progress"
+msgstr "ຄວາມຄືບໜ້າວຽກ"
+
+msgid "In progress"
+msgstr "ກຳລັງເຮັດ"
+
+msgid "Ordered services"
+msgstr "ບໍລິການທີ່ສັ່ງ"
+
+msgid "No services linked to an order yet."
+msgstr "ຍັງບໍ່ມີບໍລິການທີ່ຕິດກັບອໍເດີ"
+
+msgid "After media"
+msgstr "ຮູບ/ວິດີໂອຫຼັງເຮັດ"
+
+msgid "AI assessment"
+msgstr "ຜົນການປະເມີນ AI"
+
+msgid "Latest grade"
+msgstr "ເກຣດລ່າສຸດ"
+
+msgid "No checklist items are defined. Add checklist items in Admin."
+msgstr "ຍັງບໍ່ມີລາຍການກວດສອບ. ກະລຸນາເພີ່ມລາຍການໃນ Admin."
+
+msgid "Re-scan asset"
+msgstr "ກວດສອບເຄື່ອງໃໝ່"
+
+msgid "Resell price valuation"
+msgstr "ຜົນການປະເມີນລາຄາຂາຍຕໍ່"
+
+msgid "Estimated market price"
+msgstr "ລາຄາຕະຫຼາດໂດຍປະມານ"
+
+msgid "Base market price"
+msgstr "ລາຄາຕະຫຼາດພື້ນຖານ"
+
+msgid "Condition adjustment"
+msgstr "ການປັບລາຄາຕາມສະພາບ"
+
+msgid "Rarity premium"
+msgstr "ມູນຄ່າເພີ່ມຈາກຄວາມຫາຍາກ"
+
+msgid "Recommended resell price"
+msgstr "ລາຄາຂາຍຕໍ່ທີ່ແນະນຳ"
+
+msgid "AI confidence score"
+msgstr "ຄະແນນຄວາມໝັ້ນໃຈຂອງ AI"
+
+msgid "No valuation has been generated yet."
+msgstr "ຍັງບໍ່ມີຜົນການປະເມີນລາຄາ."
+
+msgid "Run valuation"
+msgstr "ເລີ່ມປະເມີນລາຄາ"
+
+msgid "Revalue asset"
+msgstr "ປະເມີນລາຄາໃໝ່"
+
+msgid "AI promotional content"
+msgstr "ເນື້ອຫາໂປຣໂມຊັນຈາກ AI"
+
+msgid "Generate"
+msgstr "ສ້າງ"
+
+msgid "Create a promotion for this brand next month because demand is increasing."
+msgstr "ຈັດໂປຣໂມຊັນສຳລັບແບຣນນີ້ໃນເດືອນໜ້າ ເນື່ອງຈາກຄວາມຕ້ອງການເພີ່ມຂຶ້ນ."
+
+msgid "Update status manually"
+msgstr "ອັບເດດສະຖານະດ້ວຍຕົນເອງ"
+
+msgid "Save draft"
+msgstr "ບັນທຶກຮ່າງ"
+
+msgid "Publish to inventory"
+msgstr "ນຳເຂົ້າສາງສິນຄ້າ"
+
+msgid "Files uploaded successfully."
+msgstr "ອັບໂຫຼດໄຟລ໌ສຳເລັດ."
+
+msgid "Status updated successfully."
+msgstr "ອັບເດດສະຖານະສຳເລັດ."
+
+msgid "Invalid status."
+msgstr "ສະຖານະບໍ່ຖືກຕ້ອງ."
+
+msgid "Work assigned to the technician successfully."
+msgstr "ມອບວຽກໃຫ້ຊ່າງສຳເລັດ."
+
+msgid "Like new"
+msgstr "ຄືໃໝ່"
+
+msgid "Minor scuffs"
+msgstr "ມີຮອຍເລັກນ້ອຍ"
+
+msgid "Worn"
+msgstr "ມີການສຶກຫຼໍ່"
+
+msgid "Pending"
+msgstr "ລໍຖ້າກວດ"
+
+msgid "High demand"
+msgstr "ຄວາມຕ້ອງການສູງ"
+
+msgid "Normal demand"
+msgstr "ຄວາມຕ້ອງການປົກກະຕິ"
+
+msgid "Low demand"
+msgstr "ຄວາມຕ້ອງການຕ່ຳ"
+
+msgid "Upper cleanliness and stains"
+msgstr "ຄວາມສະອາດ ແລະ ຮອຍເປື້ອນຂອງໜ້າເກີບ"
+
+msgid "Laces condition"
+msgstr "ສະພາບສາຍເກີບ"
+
+msgid "Upper material tears or cracks"
+msgstr "ຮອຍຈີກ ຫຼື ຮອຍແຕກຂອງວັດສະດຸໜ້າເກີບ"
+
+msgid "Upper / body condition"
+msgstr "ສະພາບໜ້າເກີບ / ຕົວເກີບ"
+
+msgid "Fading or discoloration"
+msgstr "ສີຊີດຈາງ ຫຼື ປ່ຽນສີ"
+
+msgid "Sole condition"
+msgstr "ສະພາບພື້ນເກີບ"
+
+msgid "Outsole wear"
+msgstr "ການສຶກຫຼໍ່ຂອງພື້ນນອກ"
+
+msgid "Insole condition"
+msgstr "ສະພາບພື້ນໃນ"
+
+msgid "Midsole cracks, compression, or deterioration"
+msgstr "Midsole ແຕກ, ຍຸບ ຫຼື ເສື່ອມສະພາບ"
+
+msgid "Color condition"
+msgstr "ສະພາບສີ"
+
+msgid "Sole yellowing (oxidation)"
+msgstr "ພື້ນເຫຼືອງ (Oxidation)"
+
+msgid "Insole condition and odor"
+msgstr "ສະພາບພື້ນໃນ ແລະ ກິ່ນ"
+
+msgid "Laces completeness and condition"
+msgstr "ຄວາມຄົບຖ້ວນ ແລະ ສະພາບສາຍເກີບ"
+
+msgid "Box and accessories completeness"
+msgstr "ຄວາມຄົບຖ້ວນຂອງກ່ອງ ແລະ ອຸປະກອນເສີມ"
+
+msgid "Preliminary authenticity check"
+msgstr "ການກວດສອບຄວາມແທ້ເບື້ອງຕົ້ນ"

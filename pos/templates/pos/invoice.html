@@ -5,15 +5,20 @@
 <head>
 <meta charset="UTF-8">
 <title>ໃບບິນ {{ order.order_number }}</title>
+{% if not for_pdf %}
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+{% endif %}
 <style>
     {% if for_pdf %}
     /* ຝັງ font ລາວເຂົ້າ PDF — ບໍ່ມີແລ້ວໂຕໜັງສືລາວຈະເປັນສີ່ຫຼ່ຽມດຳ */
     @font-face { font-family: "NotoSansLao"; src: url("{{ pdf_font_regular }}"); }
-    @font-face { font-family: "NotoSansLaoBold"; src: url("{{ pdf_font_bold }}"); }
-    body, p, td, span, div { font-family: "NotoSansLao"; }
-    h1, h2, th, strong, b { font-family: "NotoSansLaoBold"; }
-    {% endif %}
-    body { font-family: "Noto Sans Lao", sans-serif; font-size: 13px; color: #1e293b; margin: 24px; }
+    @font-face { font-family: "NotoSansLao"; font-weight: bold; src: url("{{ pdf_font_bold }}"); }
+    * { font-family: "NotoSansLao"; }
+    body { font-size: 13px; color: #1e293b; margin: 24px; }
     h1 { font-size: 20px; margin-bottom: 0; }
     h2 { font-size: 16px; margin: 0; }
     .muted { color: #64748b; }
@@ -24,11 +29,122 @@
     .totals td { border: none; padding: 4px 8px; }
     .totals .label { color: #64748b; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; }
-    .noprint { margin-top: 20px; }
-    @media print { .noprint { display: none; } }
+    {% else %}
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ---- Theme tokens: dark ເປັນຄ່າເລີ່ມຕົ້ນ, light override ດ້ວຍ data-theme ---- */
+    :root {
+        --bg-1: #0b0f19; --bg-2: #131b2e; --bg-3: #1e293b;
+        --surface: rgba(15, 23, 42, 0.75);
+        --surface-border: rgba(255, 255, 255, 0.08);
+        --text: #f8fafc; --text-soft: #cbd5e1; --text-muted: #94a3b8;
+        --accent: #38bdf8; --accent-2: #818cf8;
+        --row-border: rgba(255, 255, 255, 0.08);
+        --thead-bg: rgba(255, 255, 255, 0.04);
+        --toggle-bg: rgba(255, 255, 255, 0.06);
+        --toggle-border: rgba(255, 255, 255, 0.12);
+    }
+    :root[data-theme="light"] {
+        --bg-1: #f0f6ff; --bg-2: #e8f0fb; --bg-3: #dbe7f5;
+        --surface: rgba(255, 255, 255, 0.85);
+        --surface-border: rgba(15, 23, 42, 0.08);
+        --text: #0f172a; --text-soft: #334155; --text-muted: #64748b;
+        --accent: #0284c7; --accent-2: #6366f1;
+        --row-border: rgba(15, 23, 42, 0.08);
+        --thead-bg: rgba(15, 23, 42, 0.04);
+        --toggle-bg: rgba(15, 23, 42, 0.05);
+        --toggle-border: rgba(15, 23, 42, 0.12);
+    }
+
+    body {
+        font-family: "Noto Sans Lao", sans-serif;
+        background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 60%, var(--bg-3) 100%);
+        color: var(--text); min-height: 100dvh;
+        padding: 32px 20px 48px;
+        transition: background .3s ease, color .3s ease;
+    }
+    .sheet {
+        max-width: 780px; margin: 0 auto;
+        background: var(--surface); border: 1px solid var(--surface-border);
+        border-radius: 20px; padding: 32px 36px; backdrop-filter: blur(12px);
+    }
+    .theme-toggle {
+        position: fixed; top: 16px; right: 16px; z-index: 10;
+        width: 44px; height: 44px; border-radius: 50%;
+        background: var(--toggle-bg); border: 1px solid var(--toggle-border);
+        color: var(--text-muted); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(8px);
+        transition: color .2s ease, transform .2s ease;
+    }
+    .theme-toggle:hover { color: var(--accent); transform: rotate(15deg); }
+    .theme-toggle svg { width: 20px; height: 20px; }
+    :root[data-theme="light"] .icon-sun { display: none; }
+    :root:not([data-theme="light"]) .icon-moon { display: none; }
+
+    h1 {
+        font-size: 24px; letter-spacing: .01em;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+    }
+    h2 { font-size: 17px; margin: 0; color: var(--text); }
+    .muted { color: var(--text-muted); }
+    .mono { font-family: "JetBrains Mono", monospace; }
+    table { width: 100%; border-collapse: collapse; margin-top: 18px; }
+    th, td { border-bottom: 1px solid var(--row-border); padding: 10px 8px; text-align: left; }
+    th { background: var(--thead-bg); font-weight: 600; font-size: 13px; color: var(--text-soft); }
+    .text-right { text-align: right; }
+    .totals td { border: none; padding: 5px 8px; }
+    .totals .label { color: var(--text-muted); }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--surface-border); padding-bottom: 16px; }
+    .customer-line { margin-top: 18px; color: var(--text-soft); }
+
+    .noprint { margin-top: 24px; display: flex; gap: 10px; }
+    .noprint button, .noprint a {
+        font-family: inherit; font-weight: 700; font-size: 14px;
+        border-radius: 12px; padding: 11px 22px; cursor: pointer; text-decoration: none;
+        display: inline-flex; align-items: center; gap: 8px;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .noprint button {
+        color: #fff; border: none;
+        background: linear-gradient(90deg, #38bdf8, #818cf8);
+        box-shadow: 0 4px 18px rgba(56, 189, 248, 0.35);
+    }
+    .noprint button:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(56, 189, 248, 0.5); }
+    .noprint a {
+        color: var(--accent); border: 1px solid var(--surface-border);
+        background: transparent;
+    }
+    .noprint a:hover { border-color: var(--accent); }
+    .noprint svg { width: 16px; height: 16px; }
+
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+    @media print {
+        body { background: #fff; padding: 0; color: #0f172a; }
+        .sheet { border: none; border-radius: 0; padding: 0; backdrop-filter: none; background: none; }
+        .noprint, .theme-toggle { display: none; }
+        h1, h2 { -webkit-text-fill-color: initial; color: #0f172a; background: none; }
+        th { background: #f1f5f9; }
+    }
+    {% endif %}
 </style>
 </head>
 <body>
+    {% if not for_pdf %}
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="ສະຫຼັບໂໝດມືດ/ແຈ້ງ">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+    </button>
+    <div class="sheet">
+    {% endif %}
+
     <div class="header">
         <div>
             <h1>Hug ເກີບ</h1>
@@ -36,12 +152,12 @@
         </div>
         <div class="text-right">
             <h2>ໃບບິນ / Invoice</h2>
-            <p class="muted">ເລກທີ: {{ order.order_number }}</p>
-            <p class="muted">ວັນທີ: {{ order.created_at|date:"d/m/Y H:i" }}</p>
+            <p class="muted mono">ເລກທີ: {{ order.order_number }}</p>
+            <p class="muted mono">ວັນທີ: {{ order.created_at|date:"d/m/Y H:i" }}</p>
         </div>
     </div>
 
-    <p><strong>ລູກຄ້າ:</strong> {{ order.customer.name|default:"ລູກຄ້າທົ່ວໄປ" }}
+    <p class="customer-line"><strong>ລູກຄ້າ:</strong> {{ order.customer.name|default:"ລູກຄ້າທົ່ວໄປ" }}
        {% if order.customer.phone %}({{ order.customer.phone }}){% endif %}</p>
 
     <table>
@@ -90,9 +206,41 @@
 
     {% if not for_pdf %}
     <div class="noprint">
-        <button onclick="window.print()">🖨️ ພິມ</button>
-        <a href="{% url 'pos:invoice_pdf' order.pk %}" target="_blank">⬇️ ດາວໂຫຼດ PDF</a>
+        <button onclick="window.print()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            ພິມ
+        </button>
+        <a href="{% url 'pos:invoice_pdf' order.pk %}" target="_blank">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            ດາວໂຫຼດ PDF
+        </a>
+        <a href="{% url 'home:index' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            ກັບຄືນໜ້າຫຼັກ
+        </a>
     </div>
+    </div>
+
+    <script>
+        (function () {
+            const saved = localStorage.getItem("hug-kerb-theme");
+            if (saved === "light" || (!saved && matchMedia("(prefers-color-scheme: light)").matches)) {
+                document.documentElement.dataset.theme = "light";
+            }
+        })();
+        function toggleTheme() {
+            const next = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+            if (next === "light") document.documentElement.dataset.theme = "light";
+            else delete document.documentElement.dataset.theme;
+            localStorage.setItem("hug-kerb-theme", next);
+        }
+    </script>
     {% endif %}
 </body>
 </html>

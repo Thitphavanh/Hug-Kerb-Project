@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from ai_mart_grading.models import ChecklistItem
 from crm.models import Customer
 
 from .models import Asset
@@ -78,3 +79,33 @@ class TagAndTicketViewTest(TestCase):
         self.assertContains(lao, "ຮັບເຄື່ອງໃໝ່")
         self.assertContains(lao, "ເລກໃບຮັບ")
         self.assertContains(lao, "ຮັບເຂົ້າ")
+
+    def test_intake_detail_switches_between_english_and_lao(self):
+        ChecklistItem.objects.create(
+            name="ຮອຍເປື້ອນ/ຄວາມສະອາດຂອງໜ້າເກີບ",
+            category=ChecklistItem.Category.UPPER,
+        )
+        self.client.force_login(self.user)
+        url = reverse("asset_intake:detail", args=[self.asset.pk])
+
+        self.client.post(reverse("set_language"), {"language": "en", "next": url})
+        english = self.client.get(url)
+        self.assertContains(
+            english, "AI inspection and price estimation (AI Smart Grading)"
+        )
+        self.assertContains(english, "Asset intake")
+        self.assertContains(english, "Upper cleanliness and stains")
+        self.assertContains(english, "Received")
+        self.assertContains(english, "Run valuation")
+        self.assertContains(english, "Save draft")
+
+        self.client.post(reverse("set_language"), {"language": "lo", "next": url})
+        lao = self.client.get(url)
+        self.assertContains(
+            lao, "ລະບົບກວດສອບ ແລະ ປະເມີນລາຄາ AI (AI Smart Grading)"
+        )
+        self.assertContains(lao, "ຂໍ້ມູນຮັບເຄື່ອງ")
+        self.assertContains(lao, "ຄວາມສະອາດ ແລະ ຮອຍເປື້ອນຂອງໜ້າເກີບ")
+        self.assertContains(lao, "ຮັບເຂົ້າ")
+        self.assertContains(lao, "ເລີ່ມປະເມີນລາຄາ")
+        self.assertContains(lao, "ບັນທຶກຮ່າງ")
