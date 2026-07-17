@@ -449,6 +449,43 @@
             </div>
         </div>
 
+        <!-- Storage Location (ບ່ອນເກັບເກີບ) -->
+        <div class="glass-card rounded-xl p-5 border {% if asset.storage_slot %}border-emerald-500/40{% else %}border-white/5{% endif %}">
+            <label class="font-label-caps text-label-caps text-on-surface-variant mb-2 block text-xs">{% trans "Storage location" %}</label>
+            {% if asset.storage_slot %}
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-emerald-500 text-3xl">pin_drop</span>
+                    <div>
+                        <p class="font-data-mono text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ asset.storage_slot.code }}</p>
+                        <p class="text-xs text-on-surface-variant">{% trans "Zone" %} {{ asset.storage_slot.zone }} · {% trans "Cabinet" %} {{ asset.storage_slot.cabinet }} · {% trans "Slot" %} {{ asset.storage_slot.position }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <a href="{% url 'asset_intake:storage' %}?assign={{ asset.pk }}" class="px-3 py-2 rounded-lg border border-white/10 text-xs font-bold text-on-surface-variant hover:text-ai-cyan hover:border-ai-cyan/40 transition-colors">{% trans "Move" %}</a>
+                    <form method="post" action="{% url 'asset_intake:storage_release' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="asset_id" value="{{ asset.pk }}">
+                        <button class="px-3 py-2 rounded-lg border border-status-error/40 text-xs font-bold text-status-error hover:bg-status-error/10 transition-colors">{% trans "Release" %}</button>
+                    </form>
+                </div>
+            </div>
+            {% elif asset.status != 'returned' %}
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <p class="text-sm text-on-surface-variant flex items-center gap-2">
+                    <span class="material-symbols-outlined text-status-alert">location_off</span>
+                    {% trans "No slot assigned yet — pick one so it's easy to find at pickup." %}
+                </p>
+                <a href="{% url 'asset_intake:storage' %}?assign={{ asset.pk }}" class="px-4 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/50 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 transition-colors inline-flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[16px]">add_location_alt</span>
+                    {% trans "Choose slot" %}
+                </a>
+            </div>
+            {% else %}
+            <p class="text-sm text-on-surface-variant">{% trans "Delivered — slot already released." %}</p>
+            {% endif %}
+        </div>
+
         <!-- Administrative Status Overwrite Form (Optional/Administrative) -->
         <form method="post" class="glass-card rounded-xl p-5 border border-white/5">
             {% csrf_token %}

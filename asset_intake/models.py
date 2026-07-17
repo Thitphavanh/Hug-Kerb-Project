@@ -16,6 +16,33 @@ def generate_public_token():
     return secrets.token_urlsafe(12)
 
 
+class StorageSlot(models.Model):
+    """ບ່ອນເກັບເກີບ — ແບ່ງເປັນ ໂຊນ > ຕູ້ > ຊ່ອງ (ຄືຜັງບ່ອນນັ່ງໂຮງໜັງ)"""
+
+    zone = models.CharField("ໂຊນ", max_length=10)
+    cabinet = models.PositiveSmallIntegerField("ຕູ້")
+    position = models.PositiveSmallIntegerField("ຊ່ອງ")
+    is_active = models.BooleanField("ເປີດໃຊ້ງານ", default=True)
+
+    class Meta:
+        ordering = ["zone", "cabinet", "position"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["zone", "cabinet", "position"], name="unique_storage_slot"
+            )
+        ]
+        verbose_name = "ບ່ອນເກັບເກີບ"
+        verbose_name_plural = "ບ່ອນເກັບເກີບ"
+
+    @property
+    def code(self):
+        """ລະຫັດບ່ອນເກັບ ເຊັ່ນ A1-05 (ໂຊນ A ຕູ້ 1 ຊ່ອງ 5)"""
+        return f"{self.zone}{self.cabinet}-{self.position:02d}"
+
+    def __str__(self):
+        return self.code
+
+
 class Asset(models.Model):
     """ເກີບ/ສິນຄ້າທີ່ຮັບຝາກເຂົ້າຮ້ານ (Scope 2.3 — Asset Intake)"""
 
@@ -58,6 +85,14 @@ class Asset(models.Model):
         related_name="assigned_assets",
         verbose_name="ຊ່າງຮັບຜິດຊອບ",
     )
+    storage_slot = models.OneToOneField(
+        StorageSlot,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="asset",
+        verbose_name="ບ່ອນເກັບ",
+    )
     intake_date = models.DateTimeField("ວັນທີຮັບເຂົ້າ", auto_now_add=True)
     pickup_date = models.DateField("ວັນນັດຮັບເຄື່ອງ", null=True, blank=True)
     completed_at = models.DateTimeField("ວັນທີສົ່ງມອບ", null=True, blank=True)
@@ -96,6 +131,17 @@ class Asset(models.Model):
             update_fields = kwargs.get("update_fields")
             if update_fields is not None:
                 kwargs["update_fields"] = set(update_fields) | {"completed_at"}
+
+        # ສົ່ງມອບແລ້ວ → ຄືນບ່ອນເກັບໃຫ້ຫວ່າງອັດຕະໂນມັດ (ທຸກເສັ້ນທາງ: detail, kanban, admin)
+        if (
+            status_changed
+            and self.status == self.Status.RETURNED
+            and self.storage_slot_id is not None
+        ):
+            self.storage_slot = None
+            update_fields = kwargs.get("update_fields")
+            if update_fields is not None:
+                kwargs["update_fields"] = set(update_fields) | {"storage_slot"}
 
         super().save(*args, **kwargs)
 

@@ -1,0 +1,286 @@
+{% load i18n static %}
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
+<meta name="robots" content="noindex, nofollow">
+<title>{% if form.errors %}{% translate "Error:" %} {% endif %}{{ site_title|default:_("Django site admin") }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+        --bg-1: #0b0f19; --bg-2: #131b2e; --bg-3: #1e293b;
+        --surface: rgba(15, 23, 42, 0.75);
+        --surface-border: rgba(255, 255, 255, 0.08);
+        --text: #f8fafc; --text-soft: #cbd5e1; --text-muted: #94a3b8;
+        --accent: #38bdf8; --accent-2: #8b5cf6;
+        --field-bg: rgba(30, 41, 59, 0.6);
+        --field-border: rgba(255, 255, 255, 0.15);
+        --error-bg: rgba(248, 113, 113, 0.12);
+        --error-border: rgba(248, 113, 113, 0.4);
+        --error-text: #fca5a5;
+        --toggle-bg: rgba(255, 255, 255, 0.06);
+        --toggle-border: rgba(255, 255, 255, 0.12);
+        --grid-dot: rgba(56, 189, 248, 0.08);
+    }
+    :root[data-theme="light"] {
+        --bg-1: #f0f6ff; --bg-2: #e8f0fb; --bg-3: #dbe7f5;
+        --surface: rgba(255, 255, 255, 0.85);
+        --surface-border: rgba(15, 23, 42, 0.08);
+        --text: #0f172a; --text-soft: #334155; --text-muted: #64748b;
+        --accent: #0058be; --accent-2: #7c3aed;
+        --field-bg: rgba(255, 255, 255, 0.9);
+        --field-border: rgba(15, 23, 42, 0.15);
+        --error-bg: rgba(220, 38, 38, 0.08);
+        --error-border: rgba(220, 38, 38, 0.35);
+        --error-text: #b91c1c;
+        --toggle-bg: rgba(15, 23, 42, 0.05);
+        --toggle-border: rgba(15, 23, 42, 0.12);
+        --grid-dot: rgba(0, 88, 190, 0.10);
+    }
+
+    body {
+        font-family: "Noto Sans Lao", sans-serif;
+        background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 60%, var(--bg-3) 100%);
+        background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px),
+                           linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 60%, var(--bg-3) 100%);
+        background-size: 26px 26px, cover;
+        color: var(--text); min-height: 100dvh;
+        display: flex; align-items: center; justify-content: center;
+        padding: 24px 16px;
+        transition: background .3s ease, color .3s ease;
+    }
+
+    .theme-toggle {
+        position: fixed; top: 16px; right: 16px; z-index: 10;
+        width: 44px; height: 44px; border-radius: 50%;
+        background: var(--toggle-bg); border: 1px solid var(--toggle-border);
+        color: var(--text-muted); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        backdrop-filter: blur(8px);
+        transition: color .2s ease, transform .2s ease;
+    }
+    .theme-toggle:hover { color: var(--accent); transform: rotate(15deg); }
+    .theme-toggle svg { width: 20px; height: 20px; }
+    :root[data-theme="light"] .icon-sun { display: none; }
+    :root:not([data-theme="light"]) .icon-moon { display: none; }
+
+    .wrap { width: 100%; max-width: 380px; }
+
+    .brand { text-align: center; margin-bottom: 28px; }
+    .brand-icon {
+        width: 64px; height: 64px; margin: 0 auto 16px; border-radius: 50%;
+        background: var(--surface); border: 1px solid var(--surface-border);
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 0 30px rgba(56, 189, 248, 0.18);
+    }
+    .brand-icon svg { width: 30px; height: 30px; color: var(--accent); }
+    .brand h1 {
+        font-family: "Plus Jakarta Sans", "Noto Sans Lao", sans-serif;
+        font-size: 26px; font-weight: 700; letter-spacing: -.01em;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+    }
+    .brand p { color: var(--text-muted); font-size: 13px; margin-top: 4px; letter-spacing: .02em; }
+
+    .card {
+        background: var(--surface); border: 1px solid var(--surface-border);
+        border-radius: 20px; padding: 28px 26px; backdrop-filter: blur(14px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    .field-group { margin-bottom: 18px; }
+    .field-group:last-of-type { margin-bottom: 0; }
+    .field-label {
+        display: block; font-size: 13px; font-weight: 600; color: var(--text-soft);
+        margin-bottom: 7px;
+    }
+    .field-shell { position: relative; }
+    .field-shell svg.field-icon {
+        position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+        width: 18px; height: 18px; color: var(--text-muted); pointer-events: none;
+    }
+    #login-form input[type="text"],
+    #login-form input[type="password"] {
+        width: 100%; background: var(--field-bg); border: 1px solid var(--field-border);
+        border-radius: 12px; padding: 13px 14px 13px 42px; color: var(--text); font-size: 16px;
+        font-family: "Noto Sans Lao", sans-serif;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    #login-form input[type="password"] { padding-right: 42px; }
+    #login-form input[type="text"]:focus,
+    #login-form input[type="password"]:focus {
+        outline: none; border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+    .pw-toggle {
+        position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+        width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+        background: transparent; border: none; color: var(--text-muted); cursor: pointer;
+        border-radius: 8px; transition: color .15s ease;
+    }
+    .pw-toggle:hover { color: var(--accent); }
+    .pw-toggle svg { width: 18px; height: 18px; }
+    .pw-toggle .icon-eye-off { display: none; }
+
+    .field-error { color: var(--error-text); font-size: 12.5px; margin-top: 6px; }
+
+    .errornote {
+        background: var(--error-bg); border: 1px solid var(--error-border);
+        color: var(--error-text); border-radius: 10px; padding: 11px 14px; font-size: 13.5px;
+        margin-bottom: 18px; line-height: 1.5;
+    }
+
+    .submit-btn {
+        width: 100%; margin-top: 22px; border: none; cursor: pointer;
+        background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #fff;
+        border-radius: 12px; padding: 14px; font-size: 16px; font-weight: 700;
+        font-family: "Noto Sans Lao", sans-serif;
+        box-shadow: 0 4px 18px rgba(56, 189, 248, 0.3);
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .submit-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(56, 189, 248, 0.45); }
+    .submit-btn:active { transform: translateY(0); }
+    .submit-btn svg { width: 18px; height: 18px; }
+
+    .reset-link { text-align: center; margin-top: 16px; }
+    .reset-link a, .footer-note a { color: var(--accent); font-size: 13.5px; text-decoration: none; }
+    .reset-link a:hover, .footer-note a:hover { text-decoration: underline; }
+
+    .footer-note {
+        text-align: center; margin-top: 24px; color: var(--text-muted); font-size: 12.5px;
+    }
+
+    @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="{% translate 'Toggle color theme' %}">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32 1.41-1.41"/>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+    </button>
+
+    <div class="wrap">
+        <div class="brand">
+            <div class="brand-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 18c0-1.5 1-2.5 2-3l4.5-1.8c.6-.2 1-.8 1-1.4V9.5c0-.8.5-1.5 1.3-1.8L15 6.2c.7-.3 1.5 0 1.9.6l1.6 2.4c.3.5.9.8 1.5.8H21c.6 0 1 .4 1 1v3c0 1.7-1.3 3-3 3H4c-1.1 0-2-.9-2-2Z"/>
+                    <path d="M2 18h20"/>
+                    <path d="M11 8v4"/>
+                </svg>
+            </div>
+            <h1>Hug ເກີບ</h1>
+            <p>{% translate "Shop Management System" %}</p>
+        </div>
+
+        <div class="card">
+            {% if form.errors and not form.non_field_errors %}
+            <p class="errornote">
+                {% blocktranslate count counter=form.errors.items|length %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktranslate %}
+            </p>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+            {% for error in form.non_field_errors %}
+            <p class="errornote">{{ error }}</p>
+            {% endfor %}
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            <p class="errornote">
+                {% blocktranslate trimmed %}
+                    You are authenticated as {{ username }}, but are not authorized to
+                    access this page. Would you like to login to a different account?
+                {% endblocktranslate %}
+            </p>
+            {% endif %}
+
+            <form action="{{ app_path }}" method="post" id="login-form">
+                {% csrf_token %}
+                <div class="field-group">
+                    <label class="field-label" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+                    <div class="field-shell">
+                        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        {{ form.username }}
+                    </div>
+                    {% for error in form.username.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                </div>
+                <div class="field-group">
+                    <label class="field-label" for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+                    <div class="field-shell">
+                        <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        {{ form.password }}
+                        <button type="button" class="pw-toggle" onclick="togglePasswordVisibility(this)" aria-label="{% translate 'Show password' %}">
+                            <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.6 21.6 0 0 1 5.06-6.06M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.6 21.6 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        </button>
+                    </div>
+                    {% for error in form.password.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+                    <input type="hidden" name="next" value="{{ next }}">
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+                    </svg>
+                    {% translate 'Log in' %}
+                </button>
+            </form>
+
+            {% url 'admin_password_reset' as password_reset_url %}
+            {% if password_reset_url %}
+            <div class="reset-link">
+                <a href="{{ password_reset_url }}">{% translate 'Forgotten your login credentials?' %}</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <p class="footer-note">© Hug ເກີບ · ຈຳກັດສະເພາະພະນັກງານ</p>
+    </div>
+
+    <script>
+        (function () {
+            const saved = localStorage.getItem("hug-kerb-theme");
+            const prefersLight = matchMedia("(prefers-color-scheme: light)").matches;
+            if (saved === "light" || (!saved && prefersLight)) {
+                document.documentElement.dataset.theme = "light";
+            }
+        })();
+        function toggleTheme() {
+            const root = document.documentElement;
+            const next = root.dataset.theme === "light" ? "dark" : "light";
+            if (next === "light") root.dataset.theme = "light";
+            else delete root.dataset.theme;
+            localStorage.setItem("hug-kerb-theme", next);
+        }
+        function togglePasswordVisibility(btn) {
+            const input = document.getElementById("{{ form.password.id_for_label }}");
+            const showing = input.type === "text";
+            input.type = showing ? "password" : "text";
+            btn.querySelector(".icon-eye").style.display = showing ? "" : "none";
+            btn.querySelector(".icon-eye-off").style.display = showing ? "none" : "";
+            btn.setAttribute("aria-label", showing ? "{% translate 'Show password' %}" : "{% translate 'Hide password' %}");
+        }
+    </script>
+</body>
+</html>

@@ -36,7 +36,14 @@
                     {% if asset.status == stage.id %}
                     <div class="bg-surface rounded-xl p-4 shadow-sm border border-outline-variant cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary transition-all duration-200 kanban-card group" draggable="true" ondragstart="drag(event)" id="asset-{{ asset.pk }}" data-id="{{ asset.pk }}">
                         <div class="flex justify-between items-start mb-2">
-                            <span class="text-xs font-mono bg-primary-container text-on-primary-container px-2 py-0.5 rounded">{{ asset.ticket_number }}</span>
+                            <span class="flex items-center gap-1.5 min-w-0">
+                                <span class="text-xs font-mono bg-primary-container text-on-primary-container px-2 py-0.5 rounded truncate">{{ asset.ticket_number }}</span>
+                                {% if asset.storage_slot %}
+                                <span class="text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 px-1.5 py-0.5 rounded inline-flex items-center gap-0.5 shrink-0" title="{% trans 'Storage location' %}">
+                                    <span class="material-symbols-outlined text-[12px] leading-none">pin_drop</span>{{ asset.storage_slot.code }}
+                                </span>
+                                {% endif %}
+                            </span>
                             <!-- QR Tag Print Button -->
                             <a href="{% url 'asset_intake:ticket_view' asset.pk %}" target="_blank" class="text-on-surface-variant hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="{% trans 'Print tag' %}">
                                 <span class="material-symbols-outlined text-sm">qr_code_2</span>

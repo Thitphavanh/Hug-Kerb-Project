@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Storage Map" %} — Hug ເກີບ AI{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+    <!-- Header + KPI -->
+    <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-ai-cyan">{% trans "Customer shoe storage" %}</p>
+            <h1 class="mt-1 text-2xl font-bold font-heading text-on-surface">{% trans "Storage Map" %}</h1>
+            <p class="mt-1 text-sm text-on-surface-variant">{% trans "Green = free, red = occupied. Click an occupied slot to open its job." %}</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="glass-card rounded-xl px-4 py-2 text-center">
+                <p class="text-lg font-bold font-data-mono text-on-surface">{{ total_slots }}</p>
+                <p class="text-[11px] text-on-surface-variant">{% trans "Total" %}</p>
+            </div>
+            <div class="glass-card rounded-xl px-4 py-2 text-center">
+                <p class="text-lg font-bold font-data-mono text-emerald-500">{{ free_slots }}</p>
+                <p class="text-[11px] text-on-surface-variant">{% trans "Free" %}</p>
+            </div>
+            <div class="glass-card rounded-xl px-4 py-2 text-center">
+                <p class="text-lg font-bold font-data-mono text-red-500">{{ occupied_slots }}</p>
+                <p class="text-[11px] text-on-surface-variant">{% trans "Occupied" %}</p>
+            </div>
+        </div>
+    </div>
+
+    {% if assign_asset %}
+    <!-- Assign-mode banner -->
+    <div class="glass-card rounded-xl border border-ai-cyan/40 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+            <span class="material-symbols-outlined text-ai-cyan">pin_drop</span>
+            <div>
+                <p class="text-sm font-bold text-on-surface">
+                    {% trans "Choosing a slot for" %}
+                    <span class="font-data-mono text-ai-cyan">{{ assign_asset.ticket_number }}</span>
+                    — {{ assign_asset.brand }} {{ assign_asset.model_name }}
+                </p>
+                <p class="text-xs text-on-surface-variant">{% trans "Tap any green slot to store this pair there." %}</p>
+            </div>
+        </div>
+        <a href="{% url 'asset_intake:detail' assign_asset.pk %}" class="text-xs font-semibold text-on-surface-variant hover:text-status-error transition-colors">{% trans "Cancel" %}</a>
+    </div>
+    {% endif %}
+
+    <!-- Search + Legend -->
+    <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="relative w-full max-w-xs">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+            <input id="slot-search" type="text" placeholder="{% trans 'Find ticket / customer...' %}"
+                   class="w-full bg-surface-container border border-white/10 rounded-full py-2 pl-10 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-ai-cyan focus:ring-1 focus:ring-ai-cyan transition-colors">
+        </div>
+        <div class="flex items-center gap-4 text-xs text-on-surface-variant">
+            <span class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded bg-emerald-500/20 border border-emerald-500 inline-block"></span>
+                {% trans "Free" %}
+            </span>
+            <span class="flex items-center gap-1.5">
+                <span class="w-3.5 h-3.5 rounded bg-red-500/20 border border-red-500 inline-block"></span>
+                {% trans "Occupied" %}
+            </span>
+        </div>
+    </div>
+
+    {% if not zones %}
+    <!-- Empty state -->
+    <div class="glass-card rounded-2xl p-10 text-center space-y-3">
+        <span class="material-symbols-outlined text-5xl text-on-surface-variant">shelves</span>
+        <h2 class="text-lg font-bold text-on-surface">{% trans "No storage slots yet" %}</h2>
+        <p class="text-sm text-on-surface-variant">{% trans "Create the shelf layout first:" %} <code class="font-data-mono text-ai-cyan">python manage.py seed_storage</code> {% trans "or add slots in Admin." %}</p>
+    </div>
+    {% endif %}
+
+    <!-- Zones -->
+    {% for zone in zones %}
+    <section class="space-y-3">
+        <h2 class="flex items-center gap-2 text-lg font-bold text-on-surface">
+            <span class="material-symbols-outlined text-ai-cyan">shelves</span>
+            {% trans "Zone" %} {{ zone.name }}
+        </h2>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {% for cabinet in zone.cabinets %}
+            <div class="glass-card rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-on-surface-variant tracking-wide">{% trans "Cabinet" %} {{ zone.name }}{{ cabinet.number }}</h3>
+                </div>
+                <div class="grid grid-cols-4 gap-2">
+                    {% for item in cabinet.slots %}
+                        {% if item.asset %}
+                        <!-- ເຕັມ (ແດງ) → ເປີດວຽກຂອງຄູ່ນັ້ນ -->
+                        <a href="{% url 'asset_intake:detail' item.asset.pk %}"
+                           class="slot-cell group relative aspect-square rounded-lg border border-red-500/60 bg-red-500/15 hover:bg-red-500/25 hover:border-red-500 transition-colors flex flex-col items-center justify-center cursor-pointer"
+                           data-search="{{ item.asset.ticket_number|lower }} {{ item.asset.customer.name|lower }} {{ item.asset.brand|lower }}"
+                           title="{{ item.asset.ticket_number }} · {{ item.asset.brand }} {{ item.asset.model_name }} · {{ item.asset.customer.name }}">
+                            <span class="material-symbols-outlined text-red-500 text-[18px] leading-none">steps</span>
+                            <span class="font-data-mono text-[10px] font-semibold text-red-500 mt-0.5">{{ item.slot.code }}</span>
+                            <span class="font-data-mono text-[9px] text-on-surface-variant truncate max-w-full px-1">{{ item.asset.ticket_number|slice:"-6:" }}</span>
+                        </a>
+                        {% elif assign_asset %}
+                        <!-- ຫວ່າງ (ຂຽວ) + ໂໝດເລືອກ → ກົດເພື່ອມອບບ່ອນ -->
+                        <form method="post" action="{% url 'asset_intake:storage_assign' %}" class="contents">
+                            {% csrf_token %}
+                            <input type="hidden" name="asset_id" value="{{ assign_asset.pk }}">
+                            <input type="hidden" name="slot_id" value="{{ item.slot.pk }}">
+                            <button type="submit"
+                                    class="slot-cell aspect-square rounded-lg border border-emerald-500/60 bg-emerald-500/15 hover:bg-emerald-500/30 hover:border-emerald-500 hover:scale-105 transition-all flex flex-col items-center justify-center cursor-pointer"
+                                    data-search="{{ item.slot.code|lower }}"
+                                    title="{% trans 'Store here' %}: {{ item.slot.code }}">
+                                <span class="material-symbols-outlined text-emerald-500 text-[18px] leading-none">add_circle</span>
+                                <span class="font-data-mono text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">{{ item.slot.code }}</span>
+                            </button>
+                        </form>
+                        {% else %}
+                        <!-- ຫວ່າງ (ຂຽວ) -->
+                        <div class="slot-cell aspect-square rounded-lg border border-emerald-500/40 bg-emerald-500/10 flex flex-col items-center justify-center"
+                             data-search="{{ item.slot.code|lower }}"
+                             title="{% trans 'Free' %}: {{ item.slot.code }}">
+                            <span class="font-data-mono text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">{{ item.slot.code }}</span>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endfor %}
+</div>
+
+<script>
+    // ຄົ້ນຫາ: highlight ຊ່ອງທີ່ກົງ, ຫຼຸດຄວາມເດັ່ນຊ່ອງອື່ນ
+    (function () {
+        const input = document.getElementById("slot-search");
+        if (!input) return;
+        input.addEventListener("input", function () {
+            const q = input.value.trim().toLowerCase();
+            document.querySelectorAll(".slot-cell").forEach(function (cell) {
+                const hay = cell.getAttribute("data-search") || "";
+                const match = q && hay.includes(q);
+                cell.classList.toggle("opacity-25", Boolean(q) && !match);
+                cell.classList.toggle("ring-2", match);
+                cell.classList.toggle("ring-ai-cyan", match);
+            });
+        });
+    })();
+</script>
+{% endblock %}

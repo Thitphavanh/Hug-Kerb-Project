@@ -17,7 +17,7 @@ from media_backup.models import MediaFile
 from notifications.services import build_wa_link
 
 from .forms import IntakeForm
-from .models import Asset
+from .models import Asset, StorageSlot
 from .utils import absolute_url, qr_data_uri
 
 
@@ -115,7 +115,9 @@ def intake_create(request):
 
 @login_required
 def intake_detail(request, pk):
-    asset = get_object_or_404(Asset.objects.select_related("customer"), pk=pk)
+    asset = get_object_or_404(
+        Asset.objects.select_related("customer", "storage_slot"), pk=pk
+    )
 
     if request.method == "POST" and "upload_stage" in request.POST:
         stage = request.POST.get("upload_stage", MediaFile.Stage.BEFORE)
@@ -386,9 +388,9 @@ def social_image(request, pk):
 def kanban_board(request):
     # ວຽກຄ້າງທັງໝົດ + ວຽກທີ່ສົ່ງມອບພາຍໃນ 7 ວັນຫຼ້າສຸດ (ຖັນ Completed ບໍ່ຮົກ)
     week_ago = timezone.now() - timedelta(days=7)
-    assets = Asset.objects.select_related("customer", "assigned_to").filter(
-        ~Q(status=Asset.Status.RETURNED) | Q(updated_at__gte=week_ago)
-    )
+    assets = Asset.objects.select_related(
+        "customer", "assigned_to", "storage_slot"
+    ).filter(~Q(status=Asset.Status.RETURNED) | Q(updated_at__gte=week_ago))
 
     stages = [
         {"id": "received", "name": _("Intake")},
@@ -427,3 +429,94 @@ def kanban_update_status(request):
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)}, status=400)
     return JsonResponse({"success": False, "error": "Invalid request"}, status=400)
+
+
+@login_required
+def storage_map(request):
+    """ຜັງບ່ອນເກັບເກີບ — ຄືຜັງບ່ອນນັ່ງໂຮງໜັງ (ຂຽວ=ຫວ່າງ, ແດງ=ເຕັມ)
+    ໂໝດເລືອກບ່ອນ: ?assign=<asset_pk> → ກົດຊ່ອງຫວ່າງເພື່ອມອບບ່ອນເກັບໃຫ້ asset ນັ້ນ"""
+    assign_asset = None
+    assign_pk = request.GET.get("assign")
+    if assign_pk:
+        assign_asset = (
+            Asset.objects.select_related("customer")
+            .filter(pk=assign_pk)
+            .exclude(status=Asset.Status.RETURNED)
+            .first()
+        )
+
+    slots = StorageSlot.objects.filter(is_active=True).select_related(
+        "asset", "asset__customer"
+    )
+
+    zones = {}
+    total = occupied = 0
+    for slot in slots:
+        occupant = slot.asset if hasattr(slot, "asset") else None
+        total += 1
+        if occupant:
+            occupied += 1
+        zones.setdefault(slot.zone, {}).setdefault(slot.cabinet, []).append(
+            {"slot": slot, "asset": occupant}
+        )
+
+    zone_list = [
+        {
+            "name": zone,
+            "cabinets": [
+                {"number": cab, "slots": items} for cab, items in cabinets.items()
+            ],
+        }
+        for zone, cabinets in zones.items()
+    ]
+
+    return render(
+        request,
+        "asset_intake/storage_map.html",
+        {
+            "active_nav": "storage",
+            "zones": zone_list,
+            "assign_asset": assign_asset,
+            "total_slots": total,
+            "occupied_slots": occupied,
+            "free_slots": total - occupied,
+        },
+    )
+
+
+@login_required
+def storage_assign(request):
+    """ມອບບ່ອນເກັບໃຫ້ asset (POST: asset_id, slot_id)"""
+    if request.method != "POST":
+        return redirect("asset_intake:storage")
+
+    asset = get_object_or_404(Asset, pk=request.POST.get("asset_id"))
+    slot = get_object_or_404(
+        StorageSlot, pk=request.POST.get("slot_id"), is_active=True
+    )
+
+    if asset.status == Asset.Status.RETURNED:
+        messages.error(request, _("This item was already delivered — no storage slot needed."))
+        return redirect("asset_intake:detail", pk=asset.pk)
+
+    if hasattr(slot, "asset") and slot.asset.pk != asset.pk:
+        messages.error(request, _("That slot is already occupied. Please pick a green one."))
+        return redirect(f"{reverse('asset_intake:storage')}?assign={asset.pk}")
+
+    asset.storage_slot = slot
+    asset.save(update_fields=["storage_slot", "updated_at"])
+    messages.success(request, _("Storage slot saved:") + f" {slot.code}")
+    return redirect("asset_intake:detail", pk=asset.pk)
+
+
+@login_required
+def storage_release(request):
+    """ຄືນບ່ອນເກັບ (POST: asset_id)"""
+    if request.method != "POST":
+        return redirect("asset_intake:storage")
+
+    asset = get_object_or_404(Asset, pk=request.POST.get("asset_id"))
+    asset.storage_slot = None
+    asset.save(update_fields=["storage_slot", "updated_at"])
+    messages.success(request, _("Storage slot released."))
+    return redirect("asset_intake:detail", pk=asset.pk)

@@ -4,7 +4,7 @@ from django.utils.html import format_html
 
 from media_backup.models import MediaFile
 
-from .models import Asset
+from .models import Asset, StorageSlot
 
 
 class MediaFileInline(admin.TabularInline):
@@ -36,3 +36,14 @@ class AssetAdmin(admin.ModelAdmin):
     def ticket_link(self, obj):
         url = reverse("asset_intake:ticket_view", args=[obj.pk])
         return format_html('<a href="{}" target="_blank">🖨️ ພິມ</a>', url)
+
+
+@admin.register(StorageSlot)
+class StorageSlotAdmin(admin.ModelAdmin):
+    list_display = ["code", "zone", "cabinet", "position", "is_active", "occupant"]
+    list_filter = ["zone", "cabinet", "is_active"]
+    search_fields = ["zone"]
+
+    @admin.display(description="ເກີບທີ່ເກັບຢູ່")
+    def occupant(self, obj):
+        return getattr(obj, "asset", None) or "—"

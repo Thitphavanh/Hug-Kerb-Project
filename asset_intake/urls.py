@@ -16,4 +16,7 @@ urlpatterns = [
     path("<int:pk>/social.png", views.social_image, name="social_image"),
     path("kanban/", views.kanban_board, name="kanban"),
     path("kanban/update/", views.kanban_update_status, name="kanban_update"),
+    path("storage/", views.storage_map, name="storage"),
+    path("storage/assign/", views.storage_assign, name="storage_assign"),
+    path("storage/release/", views.storage_release, name="storage_release"),
 ]
