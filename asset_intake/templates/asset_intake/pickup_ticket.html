@@ -3,6 +3,7 @@
 <html lang="lo">
 <head>
 <meta charset="UTF-8">
+{% if not for_pdf %}<link rel="icon" href="{% static 'images/hug-kerb-logo.jpeg' %}">{% endif %}
 <title>ໃບນັດຮັບເຄື່ອງ {{ asset.ticket_number }}</title>
 <style>
     {% if for_pdf %}
@@ -16,6 +17,8 @@
     h1 { font-size: 18px; margin-bottom: 0; }
     .muted { color: #64748b; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0f172a; padding-bottom: 12px; }
+    .brand-line { display: flex; align-items: center; gap: 10px; }
+    .brand-line img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
     table { width: 100%; border-collapse: collapse; margin-top: 16px; }
     td { padding: 6px 4px; vertical-align: top; }
     .label { color: #64748b; width: 140px; }
@@ -27,7 +30,10 @@
 <body>
     <div class="header">
         <div>
-            <h1>Hug ເກີບ</h1>
+            <div class="brand-line">
+                <img src="{% if for_pdf %}{{ pdf_logo }}{% else %}{% static 'images/hug-kerb-logo.jpeg' %}{% endif %}" alt="Hug ເກີບ">
+                <h1>Hug ເກີບ</h1>
+            </div>
             <p class="muted">ບ້ານ ທ່າແຮ່, ນະຄອນໄກສອນ ພົມວິຫານ, ແຂວງສະຫວັນນະເຂດ, ສປປ ລາວ</p>
         </div>
         <div style="text-align:right;">

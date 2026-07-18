@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.translation import gettext as _
+from django.utils.translation import gettext as _, gettext_noop
 
 from ai_mart_grading.models import ChecklistItem
 from crm.models import Customer
@@ -22,21 +22,21 @@ from .utils import absolute_url, qr_data_uri
 
 
 CHECKLIST_LABELS = {
-    "ຮອຍເປື້ອນ/ຄວາມສະອາດຂອງໜ້າເກີບ": "Upper cleanliness and stains",
-    "Laces condition": "Laces condition",
-    "ຮອຍຈີກ/ຮອຍແຕກຂອງວັດສະດຸໜ້າເກີບ": "Upper material tears or cracks",
-    "Upper / body condition": "Upper / body condition",
-    "ສີຊີດຈາງ/ປ່ຽນສີ": "Fading or discoloration",
-    "Sole condition": "Sole condition",
-    "ການສຶກຫຼໍ່ຂອງພື້ນນອກ (Outsole)": "Outsole wear",
-    "Insole condition": "Insole condition",
-    "Midsole ແຕກ/ຍຸບ/ເສື່ອມ": "Midsole cracks, compression, or deterioration",
-    "Color condition": "Color condition",
-    "ພື້ນເຫຼືອງ (Oxidation)": "Sole yellowing (oxidation)",
-    "ສະພາບພື້ນໃນ ແລະ ກິ່ນ": "Insole condition and odor",
-    "ສາຍເກີບຄົບ ແລະ ສະພາບດີ": "Laces completeness and condition",
-    "ກ່ອງ/ອຸປະກອນເສີມຄົບຖ້ວນ": "Box and accessories completeness",
-    "ການກວດຄວາມແທ້ເບື້ອງຕົ້ນ (Authenticity)": "Preliminary authenticity check",
+    "ຮອຍເປື້ອນ/ຄວາມສະອາດຂອງໜ້າເກີບ": gettext_noop("Upper cleanliness and stains"),
+    "Laces condition": gettext_noop("Laces condition"),
+    "ຮອຍຈີກ/ຮອຍແຕກຂອງວັດສະດຸໜ້າເກີບ": gettext_noop("Upper material tears or cracks"),
+    "Upper / body condition": gettext_noop("Upper / body condition"),
+    "ສີຊີດຈາງ/ປ່ຽນສີ": gettext_noop("Fading or discoloration"),
+    "Sole condition": gettext_noop("Sole condition"),
+    "ການສຶກຫຼໍ່ຂອງພື້ນນອກ (Outsole)": gettext_noop("Outsole wear"),
+    "Insole condition": gettext_noop("Insole condition"),
+    "Midsole ແຕກ/ຍຸບ/ເສື່ອມ": gettext_noop("Midsole cracks, compression, or deterioration"),
+    "Color condition": gettext_noop("Color condition"),
+    "ພື້ນເຫຼືອງ (Oxidation)": gettext_noop("Sole yellowing (oxidation)"),
+    "ສະພາບພື້ນໃນ ແລະ ກິ່ນ": gettext_noop("Insole condition and odor"),
+    "ສາຍເກີບຄົບ ແລະ ສະພາບດີ": gettext_noop("Laces completeness and condition"),
+    "ກ່ອງ/ອຸປະກອນເສີມຄົບຖ້ວນ": gettext_noop("Box and accessories completeness"),
+    "ການກວດຄວາມແທ້ເບື້ອງຕົ້ນ (Authenticity)": gettext_noop("Preliminary authenticity check"),
 }
 
 # ບໍລິການທີ່ໃຊ້ AI Grading checklist + ລາຄາຂາຍຕໍ່ — ບໍລິການອື່ນ (ຊັກ/ສ້ອມ/ສະປາ) ບໍ່ຕ້ອງການ 2 ອັນນີ້
@@ -118,6 +118,7 @@ def intake_detail(request, pk):
     asset = get_object_or_404(
         Asset.objects.select_related("customer", "storage_slot"), pk=pk
     )
+    ai_mode = request.GET.get("ai") == "1" or request.POST.get("ai_mode") == "1"
 
     if request.method == "POST" and "upload_stage" in request.POST:
         stage = request.POST.get("upload_stage", MediaFile.Stage.BEFORE)
@@ -132,6 +133,9 @@ def intake_detail(request, pk):
                 ),
             )
         messages.success(request, _("Files uploaded successfully."))
+        if ai_mode:
+            detail_url = reverse("asset_intake:detail", args=[asset.pk])
+            return redirect(f"{detail_url}?ai=1#ai-photo-upload")
         return redirect("asset_intake:detail", pk=asset.pk)
 
     if request.method == "POST" and "status" in request.POST:
@@ -217,7 +221,8 @@ def intake_detail(request, pk):
     )
     service_names = {item.service_type.name for item in order_items_with_service}
     show_ai_grading = (
-        not order_items_with_service
+        ai_mode
+        or not order_items_with_service
         or AI_GRADING_SERVICE_NAME in service_names
         or latest_assessment is not None
         or asset.valuations.exists()
@@ -271,6 +276,7 @@ def intake_detail(request, pk):
         "latest_assessment": latest_assessment,
         "checklist_status": checklist_status,
         "show_ai_grading": show_ai_grading,
+        "ai_mode": ai_mode,
         "work_services": work_services,
         "work_progress_stages": work_progress_stages,
         "valuations": valuations,
@@ -421,11 +427,30 @@ def kanban_update_status(request):
             asset_id = data.get("asset_id")
             new_status = data.get("status")
             
-            asset = Asset.objects.get(pk=asset_id)
+            asset = Asset.objects.select_related("customer").get(pk=asset_id)
             if new_status in [choice[0] for choice in Asset.Status.choices]:
                 asset.status = new_status
                 asset.save(update_fields=["status", "updated_at"])
-                return JsonResponse({"success": True, "status": asset.status})
+                # ຜົນການແຈ້ງເຕືອນທີ່ຫາກໍສົ່ງ (Telegram/WhatsApp) — ໃຫ້ໜ້າ board ໂຊ toast
+                from notifications.models import NotificationLog
+
+                notifications = list(
+                    NotificationLog.objects.filter(
+                        asset=asset,
+                        created_at__gte=timezone.now() - timedelta(seconds=10),
+                    ).values("channel", "is_sent")
+                )
+                return JsonResponse(
+                    {
+                        "success": True,
+                        "status": asset.status,
+                        "ticket": asset.ticket_number,
+                        "customer": asset.customer.name,
+                        "notifications": notifications,
+                        # ລິ້ງ wa.me ສຳຮອງ — ໃຫ້ພະນັກງານກົດສົ່ງເອງ ຖ້າຍັງບໍ່ໄດ້ຕັ້ງ Cloud API
+                        "wa_link": build_wa_link(asset),
+                    }
+                )
         except Exception as e:
             return JsonResponse({"success": False, "error": str(e)}, status=400)
     return JsonResponse({"success": False, "error": "Invalid request"}, status=400)

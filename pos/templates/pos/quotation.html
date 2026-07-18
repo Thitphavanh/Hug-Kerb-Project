@@ -79,8 +79,17 @@
             <input type="hidden" name="promo_code" id="promo-code-input">
 
             <!-- Bento Grid: Modules Selection -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {% for service in all_services %}
+            {% for service_group in service_groups %}
+            {% if service_group.services %}
+            <section class="space-y-3 mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">
+                        {% if service_group.key == "ai_assessment" %}psychology{% elif service_group.key == "primary" %}cleaning_services{% else %}construction{% endif %}
+                    </span>
+                    <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans service_group.title %}</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for service in service_group.services %}
                 <div class="cursor-pointer group hover:shadow-md transition-shadow relative border rounded-xl p-5 flex flex-col justify-between min-h-[200px] {% if service in order_services %}border-secondary bg-surface-container-low ai-border-glow{% else %}border-outline-variant bg-surface-container-lowest{% endif %}" id="card-{{ service.pk }}" onclick="toggleService('{{ service.pk }}')">
                     <!-- Checkbox Box (hidden) -->
                     <input type="checkbox" name="services" value="{{ service.pk }}" data-price="{{ service.price }}" data-name="{{ service.name|service_name }}" class="hidden service-checkbox" id="checkbox-{{ service.pk }}" {% if service in order_services %}checked{% endif %}>
@@ -93,16 +102,12 @@
                     <!-- Category Icon -->
                     <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-transform group-hover:scale-105 {% if service in order_services %}bg-secondary-container text-on-secondary-container{% else %}bg-surface-variant text-primary{% endif %}" id="icon-box-{{ service.pk }}">
                         <span class="material-symbols-outlined text-[24px]">
-                            {% if "grading" in service.name|lower or "grade" in service.name|lower or "g" in service.name|lower %}
+                            {% if service.category == "ai_assessment" %}
                                 psychology
-                            {% elif "inventory" in service.name|lower or "sago" in service.name|lower %}
-                                inventory_2
-                            {% elif "analytics" in service.name|lower or "report" in service.name|lower %}
-                                monitoring
-                            {% elif "crm" in service.name|lower or "member" in service.name|lower %}
-                                hub
+                            {% elif service.category == "primary" %}
+                                cleaning_services
                             {% else %}
-                                package
+                                construction
                             {% endif %}
                         </span>
                     </div>
@@ -110,26 +115,22 @@
                     <div>
                         <h3 class="font-headline-sm text-headline-sm text-on-surface mb-1 font-bold">{{ service.name|service_name }}</h3>
                         <p class="font-body-md text-body-md text-on-surface-variant leading-relaxed text-sm mb-4">
-                            {% if "grading" in service.name|lower or "grade" in service.name|lower %}
+                            {% if service.category == "ai_assessment" %}
                                 {% trans "Automated high-accuracy AI product condition assessment." %}
-                            {% elif "inventory" in service.name|lower %}
-                                {% trans "Essential inventory management for small and medium businesses." %}
-                            {% elif "analytics" in service.name|lower %}
-                                {% trans "Advanced reporting and data analysis powered by machine learning." %}
-                            {% elif "crm" in service.name|lower %}
-                                {% trans "Customer relationship management integration for seamless service." %}
+                            {% elif service.category == "primary" %}
+                                {% trans "Main shoe-care service selected from the shop's fixed price list." %}
                             {% else %}
-                                {% trans "Specialized add-on service for specific needs." %}
+                                {% trans "Optional repair or restoration service for specific needs." %}
                             {% endif %}
                         </p>
                     </div>
 
                     <div class="flex justify-between items-center mt-auto">
                         <span class="font-label-md text-label-md {% if service in order_services %}text-secondary bg-surface-bright border-secondary-fixed{% else %}text-on-surface-variant border-outline-variant{% endif %} px-2.5 py-0.5 rounded-full border text-[11px]" id="badge-{{ service.pk }}">
-                            {% if service.price >= 1500000 %}
-                                {% trans "Recommended" %}
-                            {% elif service.price < 1000000 %}
-                                {% trans "Basic" %}
+                            {% if service.category == "ai_assessment" %}
+                                {% trans "AI assessment" %}
+                            {% elif service.category == "primary" %}
+                                {% trans "Primary service" %}
                             {% else %}
                                 {% trans "Add-on" %}
                             {% endif %}
@@ -138,7 +139,10 @@
                     </div>
                 </div>
                 {% endfor %}
-            </div>
+                </div>
+            </section>
+            {% endif %}
+            {% endfor %}
 
             <!-- Promo & Coupons -->
             <div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-6 shadow-sm mt-4">

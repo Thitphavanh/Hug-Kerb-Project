@@ -132,6 +132,8 @@ FORMAT_MODULE_PATH = [
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = "static/"
+# ໂຟນເດີ static ລະດັບ project (core/static/) — ບໍ່ຂຶ້ນກັບແອັບໃດແອັບໜຶ່ງ (logo, fonts, ລາຍເຊັນ...)
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Media files (uploads)
 MEDIA_URL = "media/"
@@ -153,3 +155,9 @@ SITE_BASE_URL = os.getenv("SITE_BASE_URL", "http://127.0.0.1:8000")
 
 # Token ຂອງ Telegram Bot (ສ້າງຜ່ານ @BotFather)
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+
+# WhatsApp Business Cloud API (Meta) — ສົ່ງແຈ້ງເຕືອນຫາລູກຄ້າອັດຕະໂນມັດ
+# ສະໝັກທີ່ developers.facebook.com > WhatsApp > API Setup
+WHATSAPP_ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN", "")
+WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")
+STATIC_ROOT = '/Users/hery/My-Project/Hug-Kerb-Project/staticfiles'

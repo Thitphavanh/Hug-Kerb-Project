@@ -21,12 +21,23 @@ def generate_order_number():
 class ServiceType(models.Model):
     """ປະເພດບໍລິການຂອງຮ້ານ ເຊັ່ນ ຊັກເກີບ, ທາສີຄືນ, ສ້ອມແປງ"""
 
+    class Category(models.TextChoices):
+        AI_ASSESSMENT = "ai_assessment", "AI assessment"
+        PRIMARY = "primary", "Primary service"
+        ADD_ON = "add_on", "Add-on service"
+
     name = models.CharField("ຊື່ບໍລິການ", max_length=150)
+    category = models.CharField(
+        "ໝວດບໍລິການ",
+        max_length=20,
+        choices=Category.choices,
+        default=Category.PRIMARY,
+    )
     price = models.DecimalField("ລາຄາ", max_digits=12, decimal_places=2)
     is_active = models.BooleanField("ເປີດໃຫ້ບໍລິການ", default=True)
 
     class Meta:
-        ordering = ["name"]
+        ordering = ["category", "name"]
         verbose_name = "ປະເພດບໍລິການ"
         verbose_name_plural = "ປະເພດບໍລິການ"
 

@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from asset_intake.models import Asset
+from asset_intake.models import Asset, StorageSlot
 from crm.models import Customer
 
 from .models import Order, OrderItem, ServiceType
@@ -61,6 +61,112 @@ class PosCustomerSearchTests(TestCase):
         self.assertEqual(order.customer, self.customer)
         self.assertEqual(Customer.objects.count(), 1)
 
+    def test_create_order_assigns_selected_storage_slot(self):
+        slot = StorageSlot.objects.create(zone="A", cabinet=1, position=1)
+
+        response = self.client.post(
+            reverse("pos:create"),
+            {
+                "customer_id": str(self.customer.pk),
+                "customer_name": self.customer.name,
+                "customer_phone": self.customer.phone,
+                "item_indices": "0",
+                "brand_0": "Nike",
+                "model_name_0": "Air Force 1",
+                "size_0": "40",
+                "storage_slot_0": str(slot.pk),
+                "service_0": str(self.service.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            Asset.objects.get(model_name="Air Force 1").storage_slot,
+            slot,
+        )
+
+    def test_save_and_ai_scan_opens_new_asset_photo_upload(self):
+        self.client.post(
+            reverse("set_language"),
+            {"language": "en", "next": reverse("pos:create")},
+        )
+        response = self.client.post(
+            reverse("pos:create"),
+            {
+                "next_action": "ai_scan",
+                "customer_id": str(self.customer.pk),
+                "customer_name": self.customer.name,
+                "customer_phone": self.customer.phone,
+                "item_indices": "0",
+                "brand_0": "Nike",
+                "model_name_0": "AI scan pair",
+                "service_0": str(self.service.pk),
+            },
+        )
+
+        asset = Asset.objects.get(model_name="AI scan pair")
+        expected_url = (
+            f"{reverse('asset_intake:detail', args=[asset.pk])}"
+            "?ai=1#ai-photo-upload"
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, expected_url)
+
+        detail = self.client.get(expected_url.split("#", 1)[0])
+        self.assertContains(detail, 'id="ai-photo-upload"')
+        self.assertContains(detail, "Start AI assessment")
+        self.assertContains(detail, "AI assessment")
+
+    def test_storage_picker_map_marks_only_unoccupied_slot_as_free(self):
+        free_slot = StorageSlot.objects.create(zone="A", cabinet=1, position=1)
+        occupied_slot = StorageSlot.objects.create(zone="A", cabinet=1, position=2)
+        Asset.objects.create(
+            customer=self.customer,
+            brand="Nike",
+            model_name="Occupied pair",
+            storage_slot=occupied_slot,
+        )
+
+        create_response = self.client.get(reverse("pos:create"))
+        self.assertContains(create_response, reverse("pos:storage_map_data"))
+
+        map_response = self.client.get(reverse("pos:storage_map_data"))
+        slots = [
+            slot
+            for zone in map_response.json()["zones"]
+            for cabinet in zone["cabinets"]
+            for slot in cabinet["slots"]
+        ]
+        slots_by_id = {slot["id"]: slot for slot in slots}
+
+        self.assertTrue(slots_by_id[free_slot.pk]["free"])
+        self.assertFalse(slots_by_id[occupied_slot.pk]["free"])
+
+    def test_duplicate_storage_selection_does_not_assign_two_pairs(self):
+        slot = StorageSlot.objects.create(zone="A", cabinet=1, position=1)
+
+        response = self.client.post(
+            reverse("pos:create"),
+            {
+                "customer_id": str(self.customer.pk),
+                "customer_name": self.customer.name,
+                "customer_phone": self.customer.phone,
+                "item_indices": "0,1",
+                "brand_0": "Nike",
+                "model_name_0": "Pair one",
+                "storage_slot_0": str(slot.pk),
+                "service_0": str(self.service.pk),
+                "brand_1": "Adidas",
+                "model_name_1": "Pair two",
+                "storage_slot_1": str(slot.pk),
+                "service_1": str(self.service.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Asset.objects.filter(storage_slot=slot).count(), 1)
+        self.assertEqual(Asset.objects.filter(storage_slot__isnull=True).count(), 1)
+
     def test_create_page_uses_theme_styled_color_and_size_dropdowns(self):
         self.client.post(
             reverse("set_language"),
@@ -81,6 +187,47 @@ class PosCustomerSearchTests(TestCase):
         )
         response = self.client.get(reverse("pos:create"))
         self.assertContains(response, "ບໍລິການຊັກສະອາດເລິກ")
+
+    def test_create_page_separates_ai_assessment_from_care_services(self):
+        ServiceType.objects.create(
+            name="AI Condition Report",
+            category=ServiceType.Category.AI_ASSESSMENT,
+            price=Decimal("45000.00"),
+            is_active=True,
+        )
+        self.client.post(
+            reverse("set_language"),
+            {"language": "en", "next": reverse("pos:create")},
+        )
+
+        response = self.client.get(reverse("pos:create"))
+
+        self.assertContains(response, "Basic Clean Service")
+        self.assertNotContains(response, "AI Condition Report")
+
+    def test_create_order_rejects_ai_report_as_shoe_care_service(self):
+        ai_report = ServiceType.objects.create(
+            name="AI Condition Report",
+            category=ServiceType.Category.AI_ASSESSMENT,
+            price=Decimal("45000.00"),
+            is_active=True,
+        )
+
+        response = self.client.post(
+            reverse("pos:create"),
+            {
+                "customer_id": str(self.customer.pk),
+                "customer_name": self.customer.name,
+                "customer_phone": self.customer.phone,
+                "item_indices": "0",
+                "brand_0": "Nike",
+                "model_name_0": "Air Force 1",
+                "service_0": str(ai_report.pk),
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(OrderItem.objects.filter(service_type=ai_report).exists())
 
     def test_scan_lookup_returns_saved_color_and_size(self):
         asset = Asset.objects.create(
@@ -153,3 +300,22 @@ class QuotationLanguageTests(TestCase):
         self.assertContains(quotation, "ໂປຣໂມຊັນ ແລະ ສ່ວນຫຼຸດ")
         self.assertContains(signature, "ຂັ້ນຕອນສຸດທ້າຍ")
         self.assertContains(signature, "ຊື່ຜູ້ມີອຳນາດລົງນາມ")
+
+    def test_quotation_groups_ai_primary_and_add_on_services(self):
+        ServiceType.objects.create(
+            name="AI Condition Report",
+            category=ServiceType.Category.AI_ASSESSMENT,
+            price=Decimal("45000.00"),
+        )
+        ServiceType.objects.create(
+            name="Color Touch-up",
+            category=ServiceType.Category.ADD_ON,
+            price=Decimal("180000.00"),
+        )
+
+        self.set_language("en")
+        response = self.client.get(reverse("pos:quotation", args=[self.order.pk]))
+
+        self.assertContains(response, "AI assessment")
+        self.assertContains(response, "Primary services")
+        self.assertContains(response, "Repair and add-on services")

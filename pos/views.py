@@ -1,10 +1,13 @@
 import re
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.loader import render_to_string
+from django.urls import reverse
+from django.utils.translation import gettext
 
 from inventory.models import StockMovement, Supply
 
@@ -31,6 +34,53 @@ def customer_search(request):
             {"id": customer.pk, "name": customer.name, "phone": customer.phone}
             for customer in customers
         ]
+    })
+
+
+@login_required
+def storage_map_data(request):
+    """JSON storage map ສຳລັບ modal ເລືອກບ່ອນເກັບໃນໜ້າສ້າງອໍເດີ (POS)
+    ໂຄງສ້າງດຽວກັບ asset_intake:storage ແຕ່ເປັນ read-only (ຍັງບໍ່ມີ Asset ຈິງຕອນນີ້)
+    """
+    from asset_intake.models import StorageSlot
+
+    slots = StorageSlot.objects.filter(is_active=True).select_related(
+        "asset", "asset__customer"
+    )
+
+    zones = {}
+    total = free = 0
+    for slot in slots:
+        occupant = getattr(slot, "asset", None)
+        total += 1
+        if occupant is None:
+            free += 1
+        zones.setdefault(slot.zone, {}).setdefault(slot.cabinet, []).append({
+            "id": slot.pk,
+            "code": slot.code,
+            "free": occupant is None,
+            "ticket_number": occupant.ticket_number if occupant else "",
+            "customer_name": occupant.customer.name if occupant else "",
+            "brand_model": (
+                f"{occupant.brand} {occupant.model_name}".strip() if occupant else ""
+            ),
+        })
+
+    zone_list = [
+        {
+            "name": zone,
+            "cabinets": [
+                {"number": cab, "slots": items} for cab, items in cabinets.items()
+            ],
+        }
+        for zone, cabinets in zones.items()
+    ]
+
+    return JsonResponse({
+        "zones": zone_list,
+        "total": total,
+        "free": free,
+        "occupied": total - free,
     })
 
 
@@ -113,13 +163,14 @@ def scan_lookup(request):
 @login_required
 def create_order(request):
     if request.method == "POST":
+        next_action = request.POST.get("next_action", "quotation")
         customer_id = request.POST.get("customer_id", "").strip()
         customer_name = request.POST.get("customer_name", "").strip()
         customer_phone = request.POST.get("customer_phone", "").strip()
 
         if customer_name and customer_phone:
             from crm.models import Customer
-            from asset_intake.models import Asset
+            from asset_intake.models import Asset, StorageSlot
 
             customer = (
                 Customer.objects.filter(pk=customer_id).first()
@@ -145,6 +196,7 @@ def create_order(request):
                 status=Order.Status.OPEN,
                 created_by=request.user,
             )
+            created_assets = []
 
             if indices:
                 # Multi-item processing
@@ -154,8 +206,27 @@ def create_order(request):
                     color = request.POST.get(f"color_{idx}", "").strip()
                     size = request.POST.get(f"size_{idx}", "").strip()
                     service_id = request.POST.get(f"service_{idx}", "")
+                    storage_slot_id = request.POST.get(
+                        f"storage_slot_{idx}", ""
+                    ).strip()
 
                     if brand or model_name:
+                        storage_slot = None
+                        if storage_slot_id.isdigit():
+                            storage_slot = StorageSlot.objects.filter(
+                                pk=storage_slot_id,
+                                is_active=True,
+                                asset__isnull=True,
+                            ).first()
+                            if storage_slot is None:
+                                messages.warning(
+                                    request,
+                                    gettext(
+                                        "The selected storage slot is no longer "
+                                        "available. Please choose another slot."
+                                    ),
+                                )
+
                         # Create Asset
                         asset = Asset.objects.create(
                             customer=customer,
@@ -163,12 +234,16 @@ def create_order(request):
                             model_name=model_name,
                             color=color,
                             size=size,
-                            status=Asset.Status.RECEIVED
+                            status=Asset.Status.RECEIVED,
+                            storage_slot=storage_slot,
                         )
+                        created_assets.append(asset)
 
                         # Create OrderItem
                         try:
-                            service = ServiceType.objects.get(pk=service_id)
+                            service = ServiceType.objects.exclude(
+                                category=ServiceType.Category.AI_ASSESSMENT
+                            ).get(pk=service_id)
                             desc = f"{service.name} for {brand} {model_name}"
                             if color:
                                 desc += f" ({color})"
@@ -189,18 +264,39 @@ def create_order(request):
                 color = request.POST.get("color", "").strip()
                 size = request.POST.get("size", "").strip()
                 service_id = request.POST.get("service", "")
+                storage_slot_id = request.POST.get("storage_slot", "").strip()
                 
                 if brand or model_name:
+                    storage_slot = None
+                    if storage_slot_id.isdigit():
+                        storage_slot = StorageSlot.objects.filter(
+                            pk=storage_slot_id,
+                            is_active=True,
+                            asset__isnull=True,
+                        ).first()
+                        if storage_slot is None:
+                            messages.warning(
+                                request,
+                                gettext(
+                                    "The selected storage slot is no longer "
+                                    "available. Please choose another slot."
+                                ),
+                            )
+
                     asset = Asset.objects.create(
                         customer=customer,
                         brand=brand,
                         model_name=model_name,
                         color=color,
                         size=size,
-                        status=Asset.Status.RECEIVED
+                        status=Asset.Status.RECEIVED,
+                        storage_slot=storage_slot,
                     )
+                    created_assets.append(asset)
                     try:
-                        service = ServiceType.objects.get(pk=service_id)
+                        service = ServiceType.objects.exclude(
+                            category=ServiceType.Category.AI_ASSESSMENT
+                        ).get(pk=service_id)
                         desc = f"{service.name} for {brand} {model_name}"
                         if color:
                             desc += f" ({color})"
@@ -215,6 +311,12 @@ def create_order(request):
                     except ServiceType.DoesNotExist:
                         pass
 
+            if next_action == "ai_scan" and created_assets:
+                detail_url = reverse(
+                    "asset_intake:detail", args=[created_assets[0].pk]
+                )
+                return redirect(f"{detail_url}?ai=1#ai-photo-upload")
+
             return redirect("pos:quotation", pk=order.pk)
 
     recent_orders = Order.objects.select_related("customer").prefetch_related(
@@ -222,9 +324,19 @@ def create_order(request):
     )[:6]
     latest_order = recent_orders[0] if recent_orders else None
     supplies = Supply.objects.filter(is_active=True)
+    care_services = ServiceType.objects.filter(is_active=True).exclude(
+        category=ServiceType.Category.AI_ASSESSMENT
+    ).order_by("-category", "price", "name")
+    from asset_intake.models import StorageSlot
+
+    storage_slots = StorageSlot.objects.filter(
+        is_active=True, asset__isnull=True
+    ).order_by("zone", "cabinet", "position")
     context = {
         "active_nav": "pos",
-        "services": ServiceType.objects.filter(is_active=True)[:8],
+        # AI assessment is shown in its own panel, not mixed into shoe-care choices.
+        "services": care_services,
+        "storage_slots": storage_slots,
         "recent_orders": recent_orders,
         "latest_order": latest_order,
         "next_order_number": generate_order_number(),
@@ -243,6 +355,25 @@ def quotation_view(request, pk):
         pk=pk
     )
     all_services = ServiceType.objects.filter(is_active=True)
+    service_groups = [
+        {
+            "key": ServiceType.Category.AI_ASSESSMENT,
+            "title": "AI assessment",
+            "services": all_services.filter(
+                category=ServiceType.Category.AI_ASSESSMENT
+            ),
+        },
+        {
+            "key": ServiceType.Category.PRIMARY,
+            "title": "Primary services",
+            "services": all_services.filter(category=ServiceType.Category.PRIMARY),
+        },
+        {
+            "key": ServiceType.Category.ADD_ON,
+            "title": "Repair and add-on services",
+            "services": all_services.filter(category=ServiceType.Category.ADD_ON),
+        },
+    ]
     order_services = [item.service_type for item in order.items.all() if item.service_type]
     
     if request.method == "POST":
@@ -297,6 +428,7 @@ def quotation_view(request, pk):
         "active_nav": "pos",
         "order": order,
         "all_services": all_services,
+        "service_groups": service_groups,
         "order_services": order_services,
     }
     return render(request, "pos/quotation.html", context)

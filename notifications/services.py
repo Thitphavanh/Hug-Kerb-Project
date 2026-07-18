@@ -10,6 +10,7 @@ from django.conf import settings
 logger = logging.getLogger(__name__)
 
 TELEGRAM_API_URL = "https://api.telegram.org/bot{token}/sendMessage"
+WHATSAPP_API_URL = "https://graph.facebook.com/v20.0/{phone_number_id}/messages"
 
 # ຂໍ້ຄວາມແຈ້ງເຕືອນແຍກຕາມສະຖານະ (ສົ່ງທຸກຄັ້ງທີ່ຂັ້ນຕອນປ່ຽນ)
 STATUS_TEXT = {
@@ -57,28 +58,72 @@ def send_telegram(chat_id, text):
         return False, str(exc)[:200]
 
 
+def send_whatsapp(to_digits, text):
+    """ສົ່ງຂໍ້ຄວາມຜ່ານ WhatsApp Business Cloud API (Meta) — ຄືນຄ່າ (ok, error)"""
+    token = settings.WHATSAPP_ACCESS_TOKEN
+    phone_number_id = settings.WHATSAPP_PHONE_NUMBER_ID
+    if not token or not phone_number_id:
+        return False, "WHATSAPP_ACCESS_TOKEN/WHATSAPP_PHONE_NUMBER_ID ຍັງບໍ່ໄດ້ຕັ້ງຄ່າໃນ .env"
+    try:
+        resp = requests.post(
+            WHATSAPP_API_URL.format(phone_number_id=phone_number_id),
+            headers={"Authorization": f"Bearer {token}"},
+            json={
+                "messaging_product": "whatsapp",
+                "to": to_digits,
+                "type": "text",
+                "text": {"body": text},
+            },
+            timeout=10,
+        )
+        if resp.ok:
+            return True, ""
+        return False, f"HTTP {resp.status_code}: {resp.text[:200]}"
+    except requests.RequestException as exc:
+        return False, str(exc)[:200]
+
+
 def notify_status_change(asset):
-    """ແຈ້ງລູກຄ້າຜ່ານ Telegram ທຸກຄັ້ງທີ່ຂັ້ນຕອນປ່ຽນ — ບໍ່ throw exception"""
+    """ແຈ້ງລູກຄ້າທຸກຊ່ອງທາງທີ່ຕັ້ງຄ່າໄວ້ (Telegram + WhatsApp) ທຸກຄັ້ງທີ່ຂັ້ນຕອນປ່ຽນ
+    — ບໍ່ throw exception ເພື່ອບໍ່ໃຫ້ກະທົບການບັນທຶກສະຖານະ"""
     from .models import NotificationLog
 
     try:
-        chat_id = (asset.customer.telegram_chat_id or "").strip()
-        if not chat_id:
-            return
         message = build_status_message(asset)
-        ok, error = send_telegram(chat_id, message)
-        NotificationLog.objects.create(
-            asset=asset,
-            channel=NotificationLog.Channel.TELEGRAM,
-            recipient=chat_id,
-            message=message,
-            is_sent=ok,
-            error=error,
-        )
-        if not ok:
-            logger.warning(
-                "Telegram notify failed for %s: %s", asset.ticket_number, error
+
+        # Telegram (ຖ້າລູກຄ້າມີ chat_id)
+        chat_id = (asset.customer.telegram_chat_id or "").strip()
+        if chat_id:
+            ok, error = send_telegram(chat_id, message)
+            NotificationLog.objects.create(
+                asset=asset,
+                channel=NotificationLog.Channel.TELEGRAM,
+                recipient=chat_id,
+                message=message,
+                is_sent=ok,
+                error=error,
             )
+            if not ok:
+                logger.warning(
+                    "Telegram notify failed for %s: %s", asset.ticket_number, error
+                )
+
+        # WhatsApp (ຖ້າຕັ້ງຄ່າ Cloud API ແລ້ວ ແລະ ລູກຄ້າມີເບີໂທ)
+        digits = whatsapp_phone(asset.customer.phone)
+        if digits and settings.WHATSAPP_ACCESS_TOKEN:
+            ok, error = send_whatsapp(digits, message)
+            NotificationLog.objects.create(
+                asset=asset,
+                channel=NotificationLog.Channel.WHATSAPP,
+                recipient=digits,
+                message=message,
+                is_sent=ok,
+                error=error,
+            )
+            if not ok:
+                logger.warning(
+                    "WhatsApp notify failed for %s: %s", asset.ticket_number, error
+                )
     except Exception:
         logger.exception("notify_status_change failed for asset %s", asset.pk)
 
@@ -94,8 +139,14 @@ def whatsapp_phone(phone):
 
 
 def build_wa_link(asset):
-    """ລິ້ງ wa.me ພ້ອມຂໍ້ຄວາມຕາມສະຖານະປັດຈຸບັນ ໃຫ້ພະນັກງານກົດສົ່ງຫາລູກຄ້າ"""
+    """ລິ້ງ WhatsApp ພ້ອມຂໍ້ຄວາມຕາມສະຖານະປັດຈຸບັນ ໃຫ້ພະນັກງານກົດສົ່ງຫາລູກຄ້າ
+
+    ໃຊ້ api.whatsapp.com/send ໂດຍກົງ ບໍ່ຜ່ານ wa.me — server redirect ຂອງ wa.me
+    ຈະປ່ຽນ emoji ໃນ text ເປັນ U+FFFD (�) ເຮັດໃຫ້ຂໍ້ຄວາມເພ້"""
     digits = whatsapp_phone(asset.customer.phone)
     if not digits:
         return ""
-    return f"https://wa.me/{digits}?text={quote(build_status_message(asset))}"
+    return (
+        f"https://api.whatsapp.com/send?phone={digits}"
+        f"&text={quote(build_status_message(asset))}"
+    )

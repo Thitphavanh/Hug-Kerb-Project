@@ -7,12 +7,21 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
+from django.views.generic import RedirectView
 
 admin.site.site_header = _("Hug ເກີບ — Shop Management")
 admin.site.site_title = "Hug ເກີບ Admin"
 admin.site.index_title = _("Management")
 
 urlpatterns = [
+    path(
+        "favicon.ico",
+        RedirectView.as_view(
+            url=f"{settings.STATIC_URL}images/hug-kerb-favicon-rounded.png",
+            permanent=True,
+        ),
+        name="favicon",
+    ),
     path("admin/", admin.site.urls),
     path("i18n/", include("django.conf.urls.i18n")),
     path("", include("home.urls")),

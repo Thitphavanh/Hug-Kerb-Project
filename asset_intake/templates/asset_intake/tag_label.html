@@ -1,9 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="lo">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
+<link rel="icon" href="{% static 'images/hug-kerb-logo.jpeg' %}">
 <title>ປ້າຍແທັກ {{ asset.ticket_number }}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -62,6 +64,12 @@
     :root:not([data-theme="light"]) .icon-moon { display: none; }
 
     .brand-header { text-align: center; }
+    .brand-header-logo {
+        width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 50%;
+        overflow: hidden; border: 1px solid var(--surface-border);
+        box-shadow: 0 0 20px rgba(56, 189, 248, 0.18);
+    }
+    .brand-header-logo img { width: 100%; height: 100%; object-fit: cover; }
     .brand-header h1 {
         font-size: 28px; letter-spacing: .02em;
         background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -104,7 +112,7 @@
         border-radius: 50%; margin-top: 1.5mm; flex-shrink: 0;
         background: radial-gradient(circle, #f1f5f9 40%, #fff 41%);
     }
-    .brand { font-weight: 700; font-size: 11px; letter-spacing: .12em; color: #0b1c30; }
+    .brand-mark { height: 7mm; border-radius: 2px; display: block; }
     .qr {
         width: 40mm; height: 40mm; display: block;
         image-rendering: pixelated; /* ໃຫ້ QR ຄົມ ບໍ່ blur ຕອນຂະຫຍາຍ */
@@ -155,7 +163,8 @@
     </button>
 
     <div class="brand-header">
-        <h1>Hug ເກີບ 👟</h1>
+        <div class="brand-header-logo"><img src="{% static 'images/hug-kerb-logo.jpeg' %}" alt="Hug ເກີບ"></div>
+        <h1>Hug ເກີບ</h1>
         <p>Shoe Cleaning &amp; Care — Savannakhet</p>
     </div>
 
@@ -163,7 +172,7 @@
         <div class="stage-label">ຕົວຢ່າງປ້າຍແທັກ (50 × 80 mm)</div>
         <div class="tag">
             <div class="hole"></div>
-            <div class="brand">Hug ເກີບ 👟</div>
+            <img class="brand-mark" src="{% static 'images/hug-kerb-logo.jpeg' %}" alt="Hug ເກີບ">
             <img class="qr" src="{{ tag_qr }}" alt="QR ຕິດຕາມສະຖານະ {{ asset.ticket_number }}">
             <div class="ticket">{{ asset.ticket_number }}</div>
             <div class="meta">

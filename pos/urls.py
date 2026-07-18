@@ -8,6 +8,7 @@ urlpatterns = [
     path("create/", views.create_order, name="create"),
     path("api/customers/search/", views.customer_search, name="customer_search"),
     path("api/scan-lookup/", views.scan_lookup, name="scan_lookup"),
+    path("api/storage-map/", views.storage_map_data, name="storage_map_data"),
     path("orders/<int:pk>/quotation/", views.quotation_view, name="quotation"),
     path("orders/<int:pk>/quotation/sign/", views.quotation_sign_view, name="quotation_sign"),
     path("orders/<int:pk>/invoice/", views.invoice_view, name="invoice"),

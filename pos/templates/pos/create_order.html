@@ -249,6 +249,23 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="mb-4 max-w-md">
+                            <label class="block font-semibold text-xs text-on-surface-variant mb-1">
+                                {% trans "Storage location" %}
+                            </label>
+                            <input type="hidden" class="storage-select" id="storage-select-0" name="storage_slot_0" value="" data-code="">
+                            <button type="button" onclick="openStorageModal(0)"
+                                    class="storage-picker-btn w-full flex items-center justify-between gap-2 bg-surface border border-outline-variant/50 rounded-lg px-4 py-2.5 text-sm text-on-surface hover:border-primary transition-colors">
+                                <span class="flex items-center gap-2 truncate">
+                                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">shelves</span>
+                                    <span class="truncate text-on-surface-variant" id="storage-label-0">{% trans "Select a free storage slot (optional)" %}</span>
+                                </span>
+                                <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">chevron_right</span>
+                            </button>
+                            <p class="mt-1.5 text-xs text-on-surface-variant">
+                                {% blocktrans count counter=storage_slots|length %}{{ counter }} free slot available{% plural %}{{ counter }} free slots available{% endblocktrans %}
+                            </p>
+                        </div>
                         <div class="mb-4">
                             <label class="block font-semibold text-xs text-on-surface-variant mb-2">{% trans "Service Type" %}</label>
                             <div class="flex flex-wrap gap-2">
@@ -272,19 +289,12 @@
                                 <span class="material-symbols-outlined text-secondary">psychology</span>
                                 <span class="font-bold text-xs text-secondary">{% trans "AI Condition Assessment Recommended" %}</span>
                             </div>
-                            <p class="text-xs text-on-surface-variant mb-3">{% trans "Capture a photo to automatically grade wear and log pre-existing damage." %}</p>
-                            
-                            {% if latest_order.items.first.asset %}
-                            <a href="{% url 'ai_mart_grading:run_assessment' latest_order.items.first.asset.pk %}" class="bg-gradient-to-r from-primary to-secondary text-on-primary font-bold text-xs py-1.5 px-3 rounded flex items-center gap-1 shadow-sm hover:opacity-90 transition-opacity w-fit">
+                            <p class="text-xs text-on-surface-variant mb-3">{% trans "Save this order, then upload photos and analyze the new pair with AI." %}</p>
+
+                            <button type="submit" name="next_action" value="ai_scan" class="bg-gradient-to-r from-primary to-secondary text-on-primary font-bold text-xs py-1.5 px-3 rounded flex items-center gap-1 shadow-sm hover:opacity-90 transition-opacity w-fit">
                                 <span class="material-symbols-outlined text-[16px]">photo_camera</span>
-                                {% trans "Launch AI Scanner" %}
-                            </a>
-                            {% else %}
-                            <button type="button" disabled class="bg-outline-variant/30 text-on-surface-variant/40 font-bold text-xs py-1.5 px-3 rounded flex items-center gap-1 cursor-not-allowed w-fit">
-                                <span class="material-symbols-outlined text-[16px]">photo_camera</span>
-                                {% trans "Launch AI Scanner (No item yet)" %}
+                                {% trans "Save & open AI scanner" %}
                             </button>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -325,7 +335,7 @@
                 
                 <!-- Actions -->
                 <div class="p-6 pt-0 bg-surface-container-lowest rounded-b-xl flex flex-col gap-3">
-                    <button type="submit" class="w-full bg-primary text-on-primary font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-md hover:scale-[1.02] active:scale-95">
+                    <button type="submit" name="next_action" value="quotation" class="w-full bg-primary text-on-primary font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-md hover:scale-[1.02] active:scale-95">
                         <span class="material-symbols-outlined">point_of_sale</span>
                         {% trans "Confirm & Pay" %}
                     </button>
@@ -398,6 +408,186 @@
         if (!option) return false;
         select.value = option.value;
         return true;
+    }
+
+    function syncStorageSelections() {
+        // ຄວາມຖືກຕ້ອງ (ຫ້າມເລືອກຊ້ຳກັນລະຫວ່າງລາຍການ) ຖືກກວດຢູ່ຕອນເປີດ modal ແລ້ວ (getTakenSlotIdsExcept)
+        updateCart();
+    }
+
+    // ---- Storage Map Modal: ເລືອກບ່ອນເກັບແບບເບິ່ງຜັງ (ຄືໜ້າ /intake/storage/) ----
+    let currentStorageItemIdx = null;
+    let storageMapDataPromise = null;
+
+    function fetchStorageMapData() {
+        if (!storageMapDataPromise) {
+            storageMapDataPromise = fetch("{% url 'pos:storage_map_data' %}")
+                .then((r) => r.json())
+                .catch((err) => {
+                    storageMapDataPromise = null;
+                    throw err;
+                });
+        }
+        return storageMapDataPromise;
+    }
+
+    function getTakenSlotIdsExcept(idx) {
+        const taken = new Map();
+        document.querySelectorAll('.storage-select').forEach((input) => {
+            const rowIdx = input.id.replace('storage-select-', '');
+            if (rowIdx === String(idx)) return;
+            if (input.value) taken.set(input.value, rowIdx);
+        });
+        return taken;
+    }
+
+    function openStorageModal(idx) {
+        currentStorageItemIdx = idx;
+        const modal = document.getElementById('storage-map-modal');
+        const body = document.getElementById('storage-map-modal-body');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.getElementById('storage-map-search').value = '';
+        body.innerHTML = `
+            <div class="flex flex-col items-center justify-center gap-2 py-16 text-on-surface-variant">
+                <span class="material-symbols-outlined text-3xl animate-spin">progress_activity</span>
+                <p class="text-sm">{% trans "Loading storage map..." %}</p>
+            </div>`;
+        fetchStorageMapData().then(renderStorageModalGrid).catch(function () {
+            body.innerHTML = `
+                <div class="flex flex-col items-center justify-center gap-2 py-16 text-status-error">
+                    <span class="material-symbols-outlined text-3xl">error</span>
+                    <p class="text-sm">{% trans "Could not load the storage map. Please try again." %}</p>
+                </div>`;
+        });
+    }
+
+    function closeStorageModal() {
+        const modal = document.getElementById('storage-map-modal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        currentStorageItemIdx = null;
+    }
+
+    function renderStorageModalGrid(data) {
+        const idx = currentStorageItemIdx;
+        const takenByOthers = getTakenSlotIdsExcept(idx);
+        const currentInput = document.getElementById(`storage-select-${idx}`);
+        const currentValue = currentInput ? currentInput.value : '';
+
+        document.getElementById('storage-map-kpi').textContent =
+            `${data.free} {% trans "free" %} / ${data.total} {% trans "total" %}`;
+
+        const zonesHtml = data.zones.map((zone) => `
+            <section class="space-y-2">
+                <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                    <span class="material-symbols-outlined text-[16px] text-primary">shelves</span>
+                    {% trans "Zone" %} ${zone.name}
+                </h3>
+                <div class="grid gap-3 md:grid-cols-2">
+                    ${zone.cabinets.map((cabinet) => `
+                        <div class="rounded-xl border border-outline-variant/30 bg-surface p-3">
+                            <p class="text-[11px] font-bold text-on-surface-variant mb-2">{% trans "Cabinet" %} ${zone.name}${cabinet.number}</p>
+                            <div class="grid grid-cols-4 gap-1.5">
+                                ${cabinet.slots.map((slot) => renderStorageSlotCell(slot, idx, currentValue, takenByOthers)).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </section>
+        `).join('');
+
+        document.getElementById('storage-map-modal-body').innerHTML = zonesHtml || `
+            <p class="text-sm text-on-surface-variant text-center py-10">{% trans "No storage slots configured yet." %}</p>`;
+        applyStorageModalSearch();
+    }
+
+    function renderStorageSlotCell(slot, idx, currentValue, takenByOthers) {
+        const search = `${slot.code} ${slot.ticket_number} ${slot.customer_name}`.toLowerCase();
+        const isCurrent = String(slot.id) === String(currentValue);
+
+        if (isCurrent) {
+            return `
+                <button type="button" onclick="selectStorageSlot(${slot.id}, '${escapeJsString(slot.code)}')"
+                        class="slot-cell aspect-square rounded-lg border-2 border-ai-cyan bg-ai-cyan/20 flex flex-col items-center justify-center cursor-pointer ring-2 ring-ai-cyan"
+                        data-search="${search}" title="{% trans 'Currently selected' %}: ${slot.code}">
+                    <span class="material-symbols-outlined text-ai-cyan text-[16px] leading-none">check_circle</span>
+                    <span class="font-mono text-[10px] font-bold text-ai-cyan mt-0.5">${slot.code}</span>
+                </button>`;
+        }
+        if (!slot.free) {
+            return `
+                <div class="slot-cell aspect-square rounded-lg border border-red-500/50 bg-red-500/15 flex flex-col items-center justify-center cursor-not-allowed"
+                     data-search="${search}" title="{% trans 'Occupied' %}: ${slot.ticket_number} · ${slot.brand_model} · ${slot.customer_name}">
+                    <span class="material-symbols-outlined text-red-500 text-[16px] leading-none">steps</span>
+                    <span class="font-mono text-[9px] font-semibold text-red-500 mt-0.5">${slot.code}</span>
+                </div>`;
+        }
+        if (takenByOthers.has(String(slot.id))) {
+            const otherIdx = takenByOthers.get(String(slot.id));
+            return `
+                <div class="slot-cell aspect-square rounded-lg border border-amber-500/50 bg-amber-500/10 flex flex-col items-center justify-center cursor-not-allowed"
+                     data-search="${search}" title="{% trans 'Already chosen for item' %} #${parseInt(otherIdx, 10) + 1}">
+                    <span class="material-symbols-outlined text-amber-500 text-[16px] leading-none">block</span>
+                    <span class="font-mono text-[9px] font-semibold text-amber-600 mt-0.5">${slot.code}</span>
+                </div>`;
+        }
+        return `
+            <button type="button" onclick="selectStorageSlot(${slot.id}, '${escapeJsString(slot.code)}')"
+                    class="slot-cell aspect-square rounded-lg border border-emerald-500/60 bg-emerald-500/15 hover:bg-emerald-500/30 hover:border-emerald-500 hover:scale-105 transition-all flex flex-col items-center justify-center cursor-pointer"
+                    data-search="${search}" title="{% trans 'Store here' %}: ${slot.code}">
+                <span class="material-symbols-outlined text-emerald-500 text-[16px] leading-none">add_circle</span>
+                <span class="font-mono text-[9px] font-semibold text-emerald-600 mt-0.5">${slot.code}</span>
+            </button>`;
+    }
+
+    function escapeJsString(str) {
+        return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    }
+
+    function selectStorageSlot(slotId, code) {
+        const idx = currentStorageItemIdx;
+        if (idx === null) return;
+        const input = document.getElementById(`storage-select-${idx}`);
+        const label = document.getElementById(`storage-label-${idx}`);
+        if (input) {
+            input.value = slotId;
+            input.dataset.code = code;
+        }
+        if (label) {
+            label.textContent = code;
+            label.classList.remove('text-on-surface-variant');
+            label.classList.add('text-ai-cyan', 'font-semibold');
+        }
+        closeStorageModal();
+        updateCart();
+    }
+
+    function clearStorageSlot() {
+        const idx = currentStorageItemIdx;
+        if (idx === null) return;
+        const input = document.getElementById(`storage-select-${idx}`);
+        const label = document.getElementById(`storage-label-${idx}`);
+        if (input) {
+            input.value = '';
+            input.dataset.code = '';
+        }
+        if (label) {
+            label.textContent = "{% trans 'Select a free storage slot (optional)' %}";
+            label.classList.add('text-on-surface-variant');
+            label.classList.remove('text-ai-cyan', 'font-semibold');
+        }
+        closeStorageModal();
+        updateCart();
+    }
+
+    function applyStorageModalSearch() {
+        const q = document.getElementById('storage-map-search').value.trim().toLowerCase();
+        document.querySelectorAll('#storage-map-modal-body .slot-cell').forEach((cell) => {
+            const hay = cell.getAttribute('data-search') || '';
+            const match = !q || hay.includes(q);
+            cell.classList.toggle('opacity-20', !match);
+        });
     }
     
     function addItem() {
@@ -497,6 +687,23 @@
                         </select>
                     </div>
                 </div>
+                <div class="mb-4 max-w-md">
+                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">
+                        {% trans "Storage location" %}
+                    </label>
+                    <input type="hidden" class="storage-select" id="storage-select-${maxIdx}" name="storage_slot_${maxIdx}" value="" data-code="">
+                    <button type="button" onclick="openStorageModal(${maxIdx})"
+                            class="storage-picker-btn w-full flex items-center justify-between gap-2 bg-surface border border-outline-variant/50 rounded-lg px-4 py-2.5 text-sm text-on-surface hover:border-primary transition-colors">
+                        <span class="flex items-center gap-2 truncate">
+                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">shelves</span>
+                            <span class="truncate text-on-surface-variant" id="storage-label-${maxIdx}">{% trans "Select a free storage slot (optional)" %}</span>
+                        </span>
+                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">chevron_right</span>
+                    </button>
+                    <p class="mt-1.5 text-xs text-on-surface-variant">
+                        {% blocktrans count counter=storage_slots|length %}{{ counter }} free slot available{% plural %}{{ counter }} free slots available{% endblocktrans %}
+                    </p>
+                </div>
                 <div class="mb-4">
                     <label class="block font-semibold text-xs text-on-surface-variant mb-2">{% trans "Service Type" %}</label>
                     <div class="flex flex-wrap gap-2">
@@ -529,7 +736,7 @@
         document.getElementById(`size-select-${maxIdx}`).addEventListener('change', updateCart);
 
         updateColorSwatch(maxIdx);
-        updateCart();
+        syncStorageSelections();
     }
     
     function removeItem(idx) {
@@ -549,7 +756,7 @@
         indices = indices.filter(i => i !== idx.toString());
         indicesInput.value = indices.join(',');
         
-        updateCart();
+        syncStorageSelections();
     }
 
     function updateCart() {
@@ -564,13 +771,20 @@
             const modelInput = document.getElementById(`model-input-${idx}`);
             const colorSelect = document.getElementById(`color-select-${idx}`);
             const sizeSelect = document.getElementById(`size-select-${idx}`);
+            const storageSelect = document.getElementById(`storage-select-${idx}`);
 
             const brandName = brandSelect ? brandSelect.value : 'Sneaker';
             const modelName = (modelInput && modelInput.value.trim()) ? modelInput.value.trim() : 'Item';
             const colorVal = colorSelect ? colorSelect.value : '';
             const sizeVal = sizeSelect ? sizeSelect.value : '';
+            const storageCode = storageSelect && storageSelect.value
+                ? storageSelect.dataset.code
+                : '';
 
-            const detailStr = `${brandName} ${modelName}` + (colorVal ? ` (${colorVal})` : '') + (sizeVal ? ` [Size: ${sizeVal}]` : '');
+            const detailStr = `${brandName} ${modelName}`
+                + (colorVal ? ` (${colorVal})` : '')
+                + (sizeVal ? ` [Size: ${sizeVal}]` : '')
+                + (storageCode ? ` [Storage: ${storageCode}]` : '');
 
             const selectedRadio = document.querySelector(`.service-radio-${idx}:checked`);
             if (selectedRadio) {
@@ -611,7 +825,7 @@
 
     // Initial run
     updateColorSwatch(0);
-    updateCart();
+    syncStorageSelections();
 
     // Existing customer autocomplete (Lao/English name or partial phone number)
     const CUSTOMER_SEARCH_URL = "{% url 'pos:customer_search' %}";
@@ -762,6 +976,39 @@
     </div>
 </div>
 
+<!-- Storage Map Modal (ເລືອກບ່ອນເກັບແບບເບິ່ງຜັງ — ຄືໜ້າ /intake/storage/) -->
+<div id="storage-map-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4" onclick="if(event.target===this)closeStorageModal()">
+    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+        <div class="border-b border-outline-variant/20 px-6 py-4 bg-surface-bright flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">shelves</span>
+                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Choose Storage Slot" %}</h2>
+            </div>
+            <button type="button" onclick="closeStorageModal()" class="text-on-surface-variant hover:text-status-error transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="px-6 py-3 border-b border-outline-variant/20 flex flex-wrap items-center gap-3 shrink-0">
+            <div class="relative flex-1 min-w-[180px]">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                <input id="storage-map-search" type="text" oninput="applyStorageModalSearch()"
+                       placeholder="{% trans 'Find slot / ticket...' %}"
+                       class="w-full bg-surface border border-outline-variant/50 rounded-full py-1.5 pl-9 pr-4 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors">
+            </div>
+            <span id="storage-map-kpi" class="text-xs font-mono font-semibold text-on-surface-variant shrink-0"></span>
+            <button type="button" onclick="clearStorageSlot()" class="text-xs font-semibold text-status-error hover:underline shrink-0">
+                {% trans "Don't store here" %}
+            </button>
+        </div>
+        <div class="flex items-center gap-4 px-6 py-2 text-[11px] text-on-surface-variant shrink-0 border-b border-outline-variant/10">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500 inline-block"></span>{% trans "Free" %}</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-500/20 border border-red-500 inline-block"></span>{% trans "Occupied" %}</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500 inline-block"></span>{% trans "Chosen for another item" %}</span>
+        </div>
+        <div id="storage-map-modal-body" class="p-6 space-y-4 overflow-y-auto"></div>
+    </div>
+</div>
+
 <script>
     const SCAN_LOOKUP_URL = "{% url 'pos:scan_lookup' %}";
     let cameraScanner = null;
@@ -896,7 +1143,10 @@
 
     // ESC ປິດ modal
     document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeScanModal();
+        if (e.key === 'Escape') {
+            closeScanModal();
+            closeStorageModal();
+        }
     });
 
     // Keyboard-wedge: ຍິງເຄື່ອງສະແກນ USB ໄດ້ເລີຍ ບໍ່ຕ້ອງເປີດ modal ກ່ອນ

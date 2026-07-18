@@ -8,6 +8,7 @@ from django.conf import settings
 from django.http import HttpResponse
 
 _FONT_DIR = settings.BASE_DIR / "static" / "fonts"
+_IMAGE_DIR = settings.BASE_DIR / "static" / "images"
 
 
 def pdf_font_context():
@@ -15,6 +16,7 @@ def pdf_font_context():
     return {
         "pdf_font_regular": (_FONT_DIR / "NotoSansLao-Regular.ttf").as_uri(),
         "pdf_font_bold": (_FONT_DIR / "NotoSansLao-Bold.ttf").as_uri(),
+        "pdf_logo": (_IMAGE_DIR / "hug-kerb-logo.jpeg").as_uri(),
     }
 
 

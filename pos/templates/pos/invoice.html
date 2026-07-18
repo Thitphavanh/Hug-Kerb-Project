@@ -6,6 +6,7 @@
 <meta charset="UTF-8">
 <title>ໃບບິນ {{ order.order_number }}</title>
 {% if not for_pdf %}
+<link rel="icon" href="{% static 'images/hug-kerb-logo.jpeg' %}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="light dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,6 +23,8 @@
     h1 { font-size: 20px; margin-bottom: 0; }
     h2 { font-size: 16px; margin: 0; }
     .muted { color: #64748b; }
+    .brand-line { display: flex; align-items: center; gap: 10px; }
+    .brand-line img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
     table { width: 100%; border-collapse: collapse; margin-top: 16px; }
     th, td { border-bottom: 1px solid #e2e8f0; padding: 6px 8px; text-align: left; }
     th { background: #f1f5f9; }
@@ -91,6 +94,8 @@
     h2 { font-size: 17px; margin: 0; color: var(--text); }
     .muted { color: var(--text-muted); }
     .mono { font-family: "JetBrains Mono", monospace; }
+    .brand-line { display: flex; align-items: center; gap: 10px; }
+    .brand-line img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 1px solid var(--surface-border); }
     table { width: 100%; border-collapse: collapse; margin-top: 18px; }
     th, td { border-bottom: 1px solid var(--row-border); padding: 10px 8px; text-align: left; }
     th { background: var(--thead-bg); font-weight: 600; font-size: 13px; color: var(--text-soft); }
@@ -147,7 +152,10 @@
 
     <div class="header">
         <div>
-            <h1>Hug ເກີບ</h1>
+            <div class="brand-line">
+                <img src="{% if for_pdf %}{{ pdf_logo }}{% else %}{% static 'images/hug-kerb-logo.jpeg' %}{% endif %}" alt="Hug ເກີບ">
+                <h1>Hug ເກີບ</h1>
+            </div>
             <p class="muted">ບ້ານ ທ່າແຮ່, ນະຄອນໄກສອນ ພົມວິຫານ, ແຂວງສະຫວັນນະເຂດ, ສປປ ລາວ</p>
         </div>
         <div class="text-right">

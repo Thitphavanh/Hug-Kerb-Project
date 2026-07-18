@@ -5,6 +5,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/png" sizes="any" href="{% static 'images/hug-kerb-favicon-rounded.png' %}">
+<link rel="apple-touch-icon" href="{% static 'images/hug-kerb-favicon-rounded.png' %}">
 <title>{% block title %}{% trans "Hug ເກີບ AI — SME Command Center" %}{% endblock %}</title>
 <script>
     (function () {
@@ -174,8 +176,8 @@
 
 <aside id="sidebar" class="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-surface-container border-r border-white/10 shrink-0 py-6 z-50 overflow-hidden">
     <a href="{% url 'home:index' %}" class="sidebar-brand px-6 mb-8 flex flex-col items-center text-center hover:opacity-85 transition-opacity block">
-        <div class="w-14 h-14 rounded-full bg-surface-variant border border-white/10 flex items-center justify-center mb-4 shadow-[0_0_24px_rgba(34,211,238,.16)]">
-            <span class="material-symbols-outlined text-ai-cyan text-3xl fill">steps</span>
+        <div class="w-14 h-14 rounded-full overflow-hidden border border-white/10 mb-4 shadow-[0_0_24px_rgba(34,211,238,.16)]">
+            <img src="{% static 'images/hug-kerb-logo.jpeg' %}" alt="Hug ເກີບ" class="w-full h-full object-cover">
         </div>
         <h1 class="font-display-lg text-ai-cyan font-bold tracking-tight" style="font-size:24px;line-height:1.1;">Hug ເກີບ AI</h1>
         <p class="font-body-sm text-on-surface-variant mt-1">{% trans "SME Command Center" %}</p>

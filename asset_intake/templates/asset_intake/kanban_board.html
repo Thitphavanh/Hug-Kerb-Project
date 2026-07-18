@@ -152,6 +152,50 @@
         });
     });
 
+    // ---- Toast ແບບ Notification ມືຖື (ມຸມຂວາເທິງ, ເລື່ອນເຂົ້າ-ອອກເອງ) ----
+    function showKanbanToast(title, lines, ok, waLink) {
+        let stack = document.getElementById("kanban-toast-stack");
+        if (!stack) {
+            stack = document.createElement("div");
+            stack.id = "kanban-toast-stack";
+            stack.className = "fixed top-20 right-4 z-[100] flex flex-col gap-2 w-80 max-w-[90vw]";
+            stack.setAttribute("aria-live", "polite");
+            document.body.appendChild(stack);
+        }
+        const toast = document.createElement("div");
+        toast.className = "glass-card rounded-2xl px-4 py-3 shadow-xl border " +
+            (ok ? "border-ai-cyan/30" : "border-status-alert/40") +
+            " translate-x-[120%] transition-transform duration-300 ease-out";
+        toast.innerHTML =
+            '<div class="flex items-start gap-3">' +
+                '<span class="material-symbols-outlined ' + (ok ? "text-ai-cyan" : "text-status-alert") + '">' +
+                    (ok ? "notifications_active" : "notifications_paused") + '</span>' +
+                '<div class="min-w-0">' +
+                    '<p class="text-sm font-bold text-on-surface truncate"></p>' +
+                    '<p class="text-xs text-on-surface-variant leading-relaxed"></p>' +
+                '</div>' +
+            '</div>';
+        toast.querySelector("p.text-sm").textContent = title;
+        toast.querySelector("p.text-xs").innerHTML = lines.map(function (l) { return l.replace(/</g, "&lt;"); }).join("<br>");
+        if (waLink) {
+            const btn = document.createElement("a");
+            btn.href = waLink;
+            btn.target = "_blank";
+            btn.rel = "noopener";
+            btn.className = "mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#25D366]/15 border border-[#25D366]/40 text-xs font-bold text-on-surface hover:bg-[#25D366]/25 transition-colors";
+            btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">send</span>{% trans "Send via WhatsApp" %}';
+            toast.querySelector(".min-w-0").appendChild(btn);
+        }
+        stack.appendChild(toast);
+        requestAnimationFrame(function () { toast.classList.remove("translate-x-[120%]"); });
+        setTimeout(function () {
+            toast.classList.add("translate-x-[120%]", "opacity-0");
+            setTimeout(function () { toast.remove(); }, 350);
+        }, 4500);
+    }
+
+    const channelNames = { telegram: "Telegram", whatsapp: "WhatsApp" };
+
     // AJAX Call to save status
     function saveStatus(assetId, status) {
         fetch("{% url 'asset_intake:kanban_update' %}", {
@@ -169,7 +213,23 @@
         .then(data => {
             if(!data.success) {
                 alert("{{ failed_update_message|escapejs }}");
+                return;
             }
+            const lines = [(data.ticket || "") + " · " + (data.customer || "")];
+            const notis = data.notifications || [];
+            if (notis.length) {
+                notis.forEach(function (n) {
+                    lines.push((n.is_sent ? "✓ " : "✗ ") + (channelNames[n.channel] || n.channel) +
+                        (n.is_sent ? " — {% trans 'notified' %}" : " — {% trans 'failed' %}"));
+                });
+            } else {
+                lines.push("{% trans 'Status updated — no notification channel configured for this customer.' %}");
+            }
+            const anyFail = notis.some(function (n) { return !n.is_sent; });
+            // ໂຊປຸ່ມ wa.me ເມື່ອ WhatsApp ຍັງບໍ່ຖືກສົ່ງອັດຕະໂນມັດ (ບໍ່ໄດ້ຕັ້ງ Cloud API ຫຼືສົ່ງບໍ່ຜ່ານ)
+            const waSent = notis.some(function (n) { return n.channel === "whatsapp" && n.is_sent; });
+            showKanbanToast("{% trans 'Customer notification' %}", lines, notis.length > 0 && !anyFail,
+                !waSent ? data.wa_link : null);
         })
         .catch(error => {
             console.error('Error:', error);

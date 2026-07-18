@@ -111,9 +111,10 @@
                 </form>
 
                 <!-- Upload Form & Drag Drop Area -->
-                <form method="post" enctype="multipart/form-data" class="block relative overflow-hidden group border-2 border-dashed border-outline-variant hover:border-ai-cyan/50 rounded-lg bg-surface-container-lowest/50 transition-colors cursor-pointer min-h-[220px]">
+                <form id="ai-photo-upload" method="post" enctype="multipart/form-data" class="block relative overflow-hidden group border-2 border-dashed border-outline-variant hover:border-ai-cyan/50 rounded-lg bg-surface-container-lowest/50 transition-colors cursor-pointer min-h-[220px]">
                     {% csrf_token %}
                     <input type="hidden" name="upload_stage" value="before">
+                    {% if ai_mode %}<input type="hidden" name="ai_mode" value="1">{% endif %}
                     <input type="file" name="photos" multiple accept="image/*,video/*" class="hidden" id="photo-upload-input" onchange="this.form.submit()">
                     <label for="photo-upload-input" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center p-6 text-center cursor-pointer">
                         <div class="absolute inset-0 w-full h-full p-2 opacity-30 group-hover:opacity-10 transition-opacity">
@@ -158,6 +159,7 @@
                         <form method="post" enctype="multipart/form-data" class="shrink-0 relative group">
                             {% csrf_token %}
                             <input type="hidden" name="upload_stage" value="before">
+                            {% if ai_mode %}<input type="hidden" name="ai_mode" value="1">{% endif %}
                             <input type="file" name="photos" accept="image/*,video/*" class="hidden" id="photo-upload-before-btn" onchange="this.form.submit()">
                             <label for="photo-upload-before-btn" class="w-14 h-14 rounded border border-dashed border-outline-variant flex items-center justify-center cursor-pointer hover:border-ai-cyan transition-colors bg-surface-container-low/30">
                                 <span class="material-symbols-outlined text-outline-variant text-sm group-hover:text-ai-cyan">add</span>
@@ -262,7 +264,7 @@
                 {% csrf_token %}
                 <button class="w-full py-2 px-4 rounded border border-white/20 text-on-surface hover:bg-white/5 transition-colors font-label-caps text-label-caps flex justify-center items-center gap-2">
                     <span class="material-symbols-outlined text-sm">refresh</span>
-                    {% trans "Re-scan asset" %}
+                    {% if latest_assessment %}{% trans "Re-scan asset" %}{% else %}{% trans "Start AI assessment" %}{% endif %}
                 </button>
             </form>
         </div>

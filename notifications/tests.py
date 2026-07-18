@@ -90,5 +90,14 @@ class WhatsAppLinkTest(TestCase):
         customer = Customer.objects.create(name="ທົດສອບ", phone="02011112222")
         asset = Asset.objects.create(customer=customer, brand="Nike")
         link = build_wa_link(asset)
-        self.assertIn("wa.me/8562011112222", link)
+        # ໃຊ້ api.whatsapp.com ໂດຍກົງ — redirect ຂອງ wa.me ທຳລາຍ emoji ໃນ text
+        self.assertIn("api.whatsapp.com/send?phone=8562011112222", link)
         self.assertIn(asset.ticket_number, link)
+
+    def test_wa_link_keeps_emoji_encoding(self):
+        customer = Customer.objects.create(name="ທົດສອບ", phone="02011112222")
+        asset = Asset.objects.create(customer=customer, brand="Nike")
+        link = build_wa_link(asset)
+        # 👟 ໃນຂໍ້ຄວາມທັກທາຍຕ້ອງ encode ເປັນ UTF-8 ຄົບ 4 byte ບໍ່ແມ່ນ U+FFFD
+        self.assertIn("%F0%9F%91%9F", link)
+        self.assertNotIn("%EF%BF%BD", link)

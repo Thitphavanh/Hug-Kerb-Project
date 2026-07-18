@@ -42,17 +42,22 @@ class Command(BaseCommand):
 
     def seed_services(self):
         rows = [
-            ("Deep Clean Service", "150000"),
-            ("Premium Spa + Deodorize", "220000"),
-            ("Sole Restoration", "300000"),
-            ("AI Condition Report", "45000"),
-            ("Color Touch-up", "180000"),
+            ("Basic Clean Service", ServiceType.Category.PRIMARY, "90000"),
+            ("Deep Clean Service", ServiceType.Category.PRIMARY, "150000"),
+            ("Premium Spa + Deodorize", ServiceType.Category.PRIMARY, "220000"),
+            ("Sole Restoration", ServiceType.Category.ADD_ON, "300000"),
+            ("AI Condition Report", ServiceType.Category.AI_ASSESSMENT, "45000"),
+            ("Color Touch-up", ServiceType.Category.ADD_ON, "180000"),
         ]
         services = {}
-        for name, price in rows:
+        for name, category, price in rows:
             service, _ = ServiceType.objects.update_or_create(
                 name=name,
-                defaults={"price": Decimal(price), "is_active": True},
+                defaults={
+                    "category": category,
+                    "price": Decimal(price),
+                    "is_active": True,
+                },
             )
             services[name] = service
         return services

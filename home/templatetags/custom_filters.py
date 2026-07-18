@@ -1,14 +1,15 @@
 from django import template
-from django.utils.translation import gettext
+from django.utils.translation import gettext, gettext_noop
 
 register = template.Library()
 
 SERVICE_NAME_MSGIDS = (
-    "AI Condition Report",
-    "Color Touch-up",
-    "Deep Clean Service",
-    "Premium Spa + Deodorize",
-    "Sole Restoration",
+    gettext_noop("AI Condition Report"),
+    gettext_noop("Basic Clean Service"),
+    gettext_noop("Color Touch-up"),
+    gettext_noop("Deep Clean Service"),
+    gettext_noop("Premium Spa + Deodorize"),
+    gettext_noop("Sole Restoration"),
 )
 
 @register.filter(name='money')

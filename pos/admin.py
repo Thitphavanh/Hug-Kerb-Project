@@ -7,8 +7,8 @@ from .models import Expense, Order, OrderItem, Payment, ServiceType
 
 @admin.register(ServiceType)
 class ServiceTypeAdmin(admin.ModelAdmin):
-    list_display = ["name", "price", "is_active"]
-    list_filter = ["is_active"]
+    list_display = ["name", "category", "price", "is_active"]
+    list_filter = ["category", "is_active"]
     search_fields = ["name"]
 
 

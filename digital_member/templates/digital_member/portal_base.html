@@ -6,6 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <meta name="color-scheme" content="light dark">
+<link rel="icon" href="{% static 'images/hug-kerb-logo.jpeg' %}">
 <title>{% block title %}Hug ເກີບ{% endblock %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,6 +74,12 @@
     :root:not([data-theme="light"]) .icon-moon { display: none; }
 
     .brand { text-align: center; margin-bottom: 22px; }
+    .brand-logo {
+        width: 64px; height: 64px; margin: 0 auto 12px; border-radius: 50%;
+        overflow: hidden; border: 1px solid var(--surface-border);
+        box-shadow: 0 0 24px rgba(56, 189, 248, 0.18);
+    }
+    .brand-logo img { width: 100%; height: 100%; object-fit: cover; }
     .brand h1 {
         font-size: 27px; letter-spacing: .02em;
         background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -119,7 +126,8 @@
 
     <div class="wrap">
         <div class="brand">
-            <h1>Hug ເກີບ 👟</h1>
+            <div class="brand-logo"><img src="{% static 'images/hug-kerb-logo.jpeg' %}" alt="Hug ເກີບ"></div>
+            <h1>Hug ເກີບ</h1>
             <p>Shoe Cleaning &amp; Care — Savannakhet</p>
         </div>
         {% block content %}{% endblock %}

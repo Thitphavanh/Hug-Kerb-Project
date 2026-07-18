@@ -9,6 +9,7 @@ OpenRouter API client (Scope 2.4)
 
 import json
 import os
+import re
 
 import requests
 
@@ -54,9 +55,32 @@ def _error_detail(response):
     except (ValueError, TypeError):
         return response.text[:500]
     error = payload.get("error", {}) if isinstance(payload, dict) else {}
-    if isinstance(error, dict) and error.get("message"):
-        return str(error["message"])[:500]
-    return response.text[:500]
+    detail = (
+        str(error["message"])
+        if isinstance(error, dict) and error.get("message")
+        else response.text
+    )
+    # Provider messages sometimes append a key-management URL. It is not
+    # useful to staff and can expose an internal key identifier in the UI.
+    detail = re.split(r"\s+To increase, visit\s+", detail, maxsplit=1)[0]
+    return detail[:500]
+
+
+def _credit_safe_max_tokens(response, requested_tokens):
+    """Return a smaller output limit when OpenRouter reports an affordable cap."""
+    if response.status_code != 402:
+        return None
+    match = re.search(
+        r"can only afford\s+([\d,]+)",
+        _error_detail(response),
+        flags=re.IGNORECASE,
+    )
+    if not match:
+        return None
+    affordable = int(match.group(1).replace(",", ""))
+    # Keep a small buffer because the available credit can change between calls.
+    retry_tokens = min(requested_tokens - 1, affordable - 64)
+    return retry_tokens if retry_tokens >= 256 else None
 
 
 def chat(
@@ -66,6 +90,7 @@ def chat(
     max_tokens=None,
     timeout=90,
     response_format=None,
+    reasoning=None,
 ):
     """ສົ່ງ messages ໄປ OpenRouter ແລ້ວຄືນ (ຂໍ້ຄວາມຕອບ, response ດິບ)"""
     api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
@@ -82,6 +107,8 @@ def chat(
     }
     if response_format:
         payload["response_format"] = response_format
+    if reasoning is not None:
+        payload["reasoning"] = reasoning
 
     response = requests.post(
         OPENROUTER_URL,
@@ -103,15 +130,42 @@ def chat(
             json=payload,
             timeout=timeout,
         )
+    retry_tokens = _credit_safe_max_tokens(response, payload["max_tokens"])
+    if retry_tokens is not None:
+        payload["max_tokens"] = retry_tokens
+        response = requests.post(
+            OPENROUTER_URL,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+            timeout=timeout,
+        )
     if response.status_code != 200:
         raise OpenRouterError(
             f"OpenRouter ຕອບ {response.status_code}: {_error_detail(response)}"
         )
-    data = response.json()
     try:
-        content = data["choices"][0]["message"]["content"]
-    except (KeyError, IndexError) as exc:
-        raise OpenRouterError(f"ຮູບແບບຄຳຕອບບໍ່ຖືກຕ້ອງ: {data}") from exc
+        data = response.json()
+    except (ValueError, TypeError) as exc:
+        raise OpenRouterError("OpenRouter ຕອບກັບມາບໍ່ແມ່ນ JSON") from exc
+    try:
+        choice = data["choices"][0]
+        content = choice["message"].get("content")
+    except (AttributeError, KeyError, IndexError, TypeError) as exc:
+        raise OpenRouterError("ຮູບແບບຄຳຕອບຈາກ OpenRouter ບໍ່ຖືກຕ້ອງ") from exc
+    if not isinstance(content, str) or not content.strip():
+        choice_error = choice.get("error") or {}
+        error_message = (
+            choice_error.get("message") if isinstance(choice_error, dict) else None
+        )
+        finish_reason = choice.get("finish_reason") or "unknown"
+        detail = error_message or (
+            "AI ບໍ່ໄດ້ສົ່ງເນື້ອຫາກັບມາ "
+            f"(finish_reason={finish_reason})"
+        )
+        raise OpenRouterError(detail)
     return content, data
 
 
@@ -124,6 +178,9 @@ def chat_json(messages, model=None, temperature=0.2, max_tokens=None, timeout=90
         max_tokens=max_tokens,
         timeout=timeout,
         response_format={"type": "json_object"},
+        # Condition grading only needs a compact structured answer. Disabling
+        # reasoning preserves the output budget for the actual JSON response.
+        reasoning={"effort": "none", "exclude": True},
     )
     text = content.strip()
     if text.startswith("```"):

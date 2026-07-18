@@ -1,9 +1,11 @@
 import base64
-import mimetypes
+import os
+from io import BytesIO
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 from asset_intake.models import Asset
 
@@ -13,31 +15,60 @@ from .services import OpenRouterError, chat_json
 SYSTEM_PROMPT = (
     "ເຈົ້າແມ່ນຜູ້ຊ່ຽວຊານກວດສະພາບເກີບມືສອງ (sneaker condition grading expert). "
     "ໃຫ້ກວດຮູບພາບ ແລະ ໃຫ້ຄະແນນແຕ່ລະຫົວຂໍ້ຕາມ checklist, ຄະແນນເປັນ 0 ຫາ max_score ຂອງແຕ່ລະຫົວຂໍ້. "
-    "ຕອບເປັນ JSON ເທົ່ານັ້ນ ຕາມຮູບແບບ: "
-    '{"items": [{"checklist_item_id": <int>, "score": <number>, "note": "<ໝາຍເຫດພາສາລາວ>"}], '
-    '"overall_grade": "A|B|C|D|F", "total_score": <number>, "summary": "<ສະຫຼູບພາສາລາວ 2-3 ປະໂຫຍກ>", '
-    '"confidence_score": <number>}'
+    "ຕອບໃຫ້ຄົບທຸກ checklist ແລະເປັນ JSON ເທົ່ານັ້ນ. "
+    "ໃຊ້ compact array [checklist_item_id, score, note]. "
+    "note ແຕ່ລະຂໍ້ເປັນພາສາລາວສັ້ນບໍ່ເກີນ 30 ຕົວອັກສອນ; summary ໜຶ່ງປະໂຫຍກບໍ່ເກີນ 100 ຕົວອັກສອນ. "
+    "ຮູບແບບ: "
+    '{"items":[[<id>,<score>,"<note>"],...],"overall_grade":"A|B|C|D|F",'
+    '"total_score":<number>,"summary":"<summary>","confidence_score":<number>}'
 )
 
 
-def _encode_images(media_qs, limit=6):
-    """ອ່ານໄຟລ໌ຮູບຈາກ MEDIA_ROOT ແລ້ວແປງເປັນ base64 data URL ສົ່ງໃຫ້ OpenRouter (ຕ້ອງໃຊ້ model ທີ່ຮອງຮັບ vision)"""
+AI_IMAGE_LIMIT = 3
+AI_IMAGE_MAX_SIZE = (1024, 1024)
+DEFAULT_VISION_MODEL = "google/gemini-2.5-flash-lite"
+
+
+def _assessment_entry_values(entry):
+    """Accept the compact AI schema and legacy object-shaped entries."""
+    if isinstance(entry, (list, tuple)) and len(entry) >= 2:
+        return entry[0], entry[1], entry[2] if len(entry) >= 3 else ""
+    if isinstance(entry, dict):
+        return (
+            entry.get("checklist_item_id"),
+            entry.get("score", 0),
+            entry.get("note", ""),
+        )
+    return None, 0, ""
+
+
+def _encode_images(media_qs, limit=AI_IMAGE_LIMIT):
+    """Resize intake photos before sending them to the vision model.
+
+    Three 1024px photos are enough for the main shoe angles and keep the
+    OpenRouter prompt comfortably below a typical key token limit.
+    """
     content = []
     for media in media_qs[:limit]:
         if media.media_type != "image":
             continue
         try:
             with media.file.open("rb") as fh:
-                b64 = base64.b64encode(fh.read()).decode("ascii")
-        except (FileNotFoundError, ValueError):
+                with Image.open(fh) as source:
+                    image = ImageOps.exif_transpose(source)
+                    image.thumbnail(AI_IMAGE_MAX_SIZE, Image.Resampling.LANCZOS)
+                    if image.mode != "RGB":
+                        image = image.convert("RGB")
+                    optimized = BytesIO()
+                    image.save(optimized, format="JPEG", quality=80, optimize=True)
+                    b64 = base64.b64encode(optimized.getvalue()).decode("ascii")
+        except (FileNotFoundError, OSError, UnidentifiedImageError, ValueError):
             continue
-        # mime ຕ້ອງກົງກັບໄຟລ໌ຈິງ (jpg/png/webp) — ຖ້າໃສ່ຜິດ (ເຊັ່ນ webp ແຕ່ບອກວ່າ jpeg)
-        # provider ຈະປະຕິເສດດ້ວຍ 400 "Provider returned error"
-        mime, _ = mimetypes.guess_type(media.file.name)
-        if not mime or not mime.startswith("image/"):
-            mime = "image/jpeg"
         content.append(
-            {"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}}
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{b64}"},
+            }
         )
     return content
 
@@ -73,18 +104,24 @@ def run_assessment(request, pk):
                     "content": [{"type": "text", "text": user_text}, *images],
                 },
             ],
-            max_tokens=3000,
+            # Compact arrays and short notes keep all checklist results inside
+            # the credit-constrained output budget.
+            model=os.environ.get(
+                "OPENROUTER_VISION_MODEL", DEFAULT_VISION_MODEL
+            ).strip() or DEFAULT_VISION_MODEL,
+            max_tokens=1800,
         )
         item_map = {c.id: c for c in checklist_items}
         for entry in result.get("items", []):
-            checklist_item = item_map.get(entry.get("checklist_item_id"))
+            item_id, score, note = _assessment_entry_values(entry)
+            checklist_item = item_map.get(item_id)
             if checklist_item is None:
                 continue
             AssessmentItem.objects.create(
                 assessment=assessment,
                 checklist_item=checklist_item,
-                score=entry.get("score", 0),
-                note=entry.get("note", ""),
+                score=score,
+                note=str(note)[:200],
             )
         assessment.overall_grade = result.get("overall_grade", "")
         assessment.total_score = result.get("total_score")
