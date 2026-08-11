@@ -12,6 +12,16 @@ class MediaFile(models.Model):
         IMAGE = "image", "ຮູບພາບ"
         VIDEO = "video", "ວິດີໂອ"
 
+    class CaptureAngle(models.TextChoices):
+        FRONT = "front", "Front / toe box"
+        HEEL = "heel", "Heel / rear"
+        SIDE = "side", "Side profile"
+        OUTSOLE = "outsole", "Outsole"
+        SIZE_LABEL = "size_label", "Size label / SKU"
+        INNER = "inner", "Inner side / insole"
+        BOX_ACCESSORIES = "box_accessories", "Box and accessories"
+        DEFECT = "defect", "Defect close-up"
+
     asset = models.ForeignKey(
         "asset_intake.Asset",
         on_delete=models.CASCADE,
@@ -23,6 +33,12 @@ class MediaFile(models.Model):
     )
     media_type = models.CharField(
         "ປະເພດໄຟລ໌", max_length=10, choices=MediaType.choices, default=MediaType.IMAGE
+    )
+    capture_angle = models.CharField(
+        "ມຸມຮູບສຳລັບການປະເມີນ",
+        max_length=30,
+        choices=CaptureAngle.choices,
+        blank=True,
     )
     file = models.FileField("ໄຟລ໌", upload_to="assets/%Y/%m/")
     note = models.CharField("ໝາຍເຫດ", max_length=200, blank=True)

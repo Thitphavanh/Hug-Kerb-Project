@@ -25,6 +25,8 @@ class ServiceType(models.Model):
         AI_ASSESSMENT = "ai_assessment", "AI assessment"
         PRIMARY = "primary", "Primary service"
         ADD_ON = "add_on", "Add-on service"
+        # ບໍລິການຮັບຊື້-ຂາຍເກີບມືສອງ — AI ຊ່ວຍປະເມີນສະພາບ + ລາຄາຮັບຊື້
+        BUYBACK = "buyback", "Second-hand buy-back"
 
     name = models.CharField("ຊື່ບໍລິການ", max_length=150)
     category = models.CharField(

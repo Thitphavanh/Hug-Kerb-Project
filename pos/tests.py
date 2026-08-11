@@ -117,6 +117,73 @@ class PosCustomerSearchTests(TestCase):
         self.assertContains(detail, "Start AI assessment")
         self.assertContains(detail, "AI assessment")
 
+    def test_buyback_only_order_skips_quotation_and_opens_ai_grading(self):
+        """ອໍເດີທີ່ມີແຕ່ບໍລິການ "ຮັບຊື້ເກີບມືສອງ" ຢ່າງດຽວ ບໍ່ມີຫຍັງໃຫ້ "ສະເໜີລາຄາ"
+        — ຄວນຂ້າມໜ້າໃບສະເໜີລາຄາ/ເຊັນຢືນຢັນ ແລ້ວພາໄປໜ້າ AI Grading ຂອງເກີບເລີຍ."""
+        buyback_service = ServiceType.objects.create(
+            name="Buy-back Evaluation",
+            category=ServiceType.Category.BUYBACK,
+            price=Decimal("0.00"),
+        )
+        response = self.client.post(
+            reverse("pos:create"),
+            {
+                "customer_id": str(self.customer.pk),
+                "customer_name": self.customer.name,
+                "customer_phone": self.customer.phone,
+                "item_indices": "0",
+                "brand_0": "Nike",
+                "model_name_0": "Buy-back pair",
+                "service_0": str(buyback_service.pk),
+            },
+        )
+
+        asset = Asset.objects.get(model_name="Buy-back pair")
+        expected_url = (
+            f"{reverse('asset_intake:detail', args=[asset.pk])}"
+            "?ai=1#ai-photo-upload"
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, expected_url)
+
+    def test_mixed_buyback_and_paid_order_still_goes_to_quotation(self):
+        """ຖ້າອໍເດີປະສົມ (ຮັບຊື້ + ບໍລິການທີ່ຄິດເງິນ) ຍັງມີຍອດທີ່ຕ້ອງອະນຸມັດແທ້ໆ
+        — ຄວນໄປໜ້າໃບສະເໜີລາຄາຄືເກົ່າ, ບໍ່ຂ້າມ."""
+        buyback_service = ServiceType.objects.create(
+            name="Buy-back Evaluation",
+            category=ServiceType.Category.BUYBACK,
+            price=Decimal("0.00"),
+        )
+        order = Order.objects.create(customer=self.customer)
+        asset1 = Asset.objects.create(customer=self.customer, brand="Nike")
+        asset2 = Asset.objects.create(customer=self.customer, brand="Adidas")
+        OrderItem.objects.create(
+            order=order, service_type=buyback_service, asset=asset1,
+            description="Buy-back", quantity=1, unit_price=0,
+        )
+        OrderItem.objects.create(
+            order=order, service_type=self.service, asset=asset2,
+            description="Deep clean", quantity=1, unit_price=self.service.price,
+        )
+
+        response = self.client.post(
+            reverse("pos:create"),
+            {
+                "customer_id": str(self.customer.pk),
+                "customer_name": self.customer.name,
+                "customer_phone": self.customer.phone,
+                "item_indices": "0,1",
+                "brand_0": "Nike",
+                "model_name_0": "Mixed pair A",
+                "service_0": str(buyback_service.pk),
+                "brand_1": "Nike",
+                "model_name_1": "Mixed pair B",
+                "service_1": str(self.service.pk),
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.url.endswith("/quotation/"))
+
     def test_storage_picker_map_marks_only_unoccupied_slot_as_free(self):
         free_slot = StorageSlot.objects.create(zone="A", cabinet=1, position=1)
         occupied_slot = StorageSlot.objects.create(zone="A", cabinet=1, position=2)

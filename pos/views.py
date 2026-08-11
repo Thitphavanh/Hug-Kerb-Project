@@ -311,7 +311,23 @@ def create_order(request):
                     except ServiceType.DoesNotExist:
                         pass
 
-            if next_action == "ai_scan" and created_assets:
+            # ອໍເດີທີ່ມີແຕ່ບໍລິການ "ຮັບຊື້ເກີບມືສອງ" ຢ່າງດຽວ (ບໍ່ມີບໍລິການທີ່ຄິດຄ່າບໍລິການ)
+            # ຂ້າມຂັ້ນຕອນໃບສະເໜີລາຄາ/ເຊັນຢືນຢັນ — ຮ້ານເປັນຝ່າຍຈ່າຍເງິນຊື້ ບໍ່ແມ່ນເກັບເງິນລູກຄ້າ
+            # ຈຶ່ງບໍ່ມີຫຍັງໃຫ້ "ສະເໜີລາຄາ" ໃຫ້ພາໄປໜ້າ AI Grading ຂອງເກີບເລີຍ ເພື່ອຖ່າຍຮູບປະເມີນລາຄາຮັບຊື້
+            order_items = list(order.items.select_related("service_type"))
+            has_buyback_item = any(
+                item.service_type
+                and item.service_type.category == ServiceType.Category.BUYBACK
+                for item in order_items
+            )
+            has_paid_item = any(
+                item.service_type
+                and item.service_type.category != ServiceType.Category.BUYBACK
+                for item in order_items
+            )
+            buyback_only = has_buyback_item and not has_paid_item
+
+            if (next_action == "ai_scan" or buyback_only) and created_assets:
                 detail_url = reverse(
                     "asset_intake:detail", args=[created_assets[0].pk]
                 )

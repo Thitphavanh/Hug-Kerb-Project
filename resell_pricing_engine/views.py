@@ -1,3 +1,5 @@
+import os
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
@@ -5,17 +7,32 @@ from django.shortcuts import get_object_or_404, redirect
 from ai_mart_grading.models import Assessment
 from ai_mart_grading.services import OpenRouterError, chat, chat_json
 from asset_intake.models import Asset
+from media_backup.models import MediaFile
 
 from .models import PriceValuation, PromoContent
 
 VALUATION_SYSTEM_PROMPT = (
-    "ເຈົ້າແມ່ນຜູ້ຊ່ຽວຊານປະເມີນລາຄາຂາຍຕໍ່ເກີບມືສອງໃນຕະຫຼາດ (ສະກຸນເງິນ THB). "
+    "ເຈົ້າແມ່ນຜູ້ຊ່ຽວຊານປະເມີນລາຄາຂາຍຕໍ່ ແລະລາຄາຮັບຊື້ເກີບມືສອງ "
+    "ສຳລັບຮ້ານໃນລາວ (ສະກຸນເງິນ LAK). "
+    "recommended_buy_price ຕ້ອງຕ່ຳກວ່າ suggested_price ໂດຍຫັກຄ່າຟື້ນຟູ, "
+    "ຄວາມສ່ຽງ ແລະກຳໄລເປົ້າໝາຍຂອງຮ້ານ. "
     "ຕອບເປັນ JSON ເທົ່ານັ້ນ ຕາມຮູບແບບ: "
     '{"price_min": <number>, "price_max": <number>, "suggested_price": <number>, '
     '"base_price": <number>, "condition_adjustment": <number>, "rarity_premium": <number>, '
+    '"refurbishment_cost": <number>, "risk_reserve": <number>, '
+    '"target_margin_percent": <number>, "recommended_buy_price": <number>, '
     '"demand_level": "<High Demand|Normal Demand|Low Demand>", "confidence_score": <number>, '
     '"reasoning": "<ເຫດຜົນສັ້ນໆເປັນພາສາລາວ>"}'
 )
+
+PRICING_MODEL = "google/gemini-2.5-flash-lite"
+REQUIRED_BUYBACK_ANGLES = {
+    MediaFile.CaptureAngle.FRONT,
+    MediaFile.CaptureAngle.HEEL,
+    MediaFile.CaptureAngle.SIDE,
+    MediaFile.CaptureAngle.OUTSOLE,
+    MediaFile.CaptureAngle.SIZE_LABEL,
+}
 
 PROMO_SYSTEM_PROMPT = (
     "ເຈົ້າແມ່ນນັກການຕະຫຼາດຮ້ານຂາຍເກີບມືສອງ. ຂຽນຄຳໂປຣໂມດຂາຍເກີບເປັນພາສາລາວ ສັ້ນ ດຶງດູດ "
@@ -30,11 +47,37 @@ def run_valuation(request, pk):
         return redirect("asset_intake:detail", pk=asset.pk)
 
     latest_assessment = asset.assessments.filter(status=Assessment.Status.DONE).first()
+    if latest_assessment is None:
+        messages.error(
+            request,
+            "ກະລຸນາປະເມີນສະພາບດ້ວຍ AI ໃຫ້ສຳເລັດກ່ອນປະເມີນລາຄາ",
+        )
+        return redirect("asset_intake:detail", pk=asset.pk)
+
+    has_buyback_service = asset.order_items.filter(
+        service_type__category="buyback"
+    ).exists()
+    if has_buyback_service:
+        captured_angles = set(
+            asset.media_files.filter(
+                stage=MediaFile.Stage.BEFORE,
+                media_type=MediaFile.MediaType.IMAGE,
+            )
+            .exclude(capture_angle="")
+            .values_list("capture_angle", flat=True)
+        )
+        if not REQUIRED_BUYBACK_ANGLES.issubset(captured_angles):
+            messages.error(
+                request,
+                "ກະລຸນາອັບໂຫຼດຮູບ Buy-back ບັງຄັບໃຫ້ຄົບກ່ອນປະເມີນລາຄາ",
+            )
+            return redirect("asset_intake:detail", pk=asset.pk)
+
     user_text = (
         f"ເກີບ: {asset.brand} {asset.model_name}, ສີ {asset.color}, ເບີ {asset.size}\n"
         f"ສະພາບ: "
-        f"{latest_assessment.overall_grade if latest_assessment else 'ຍັງບໍ່ໄດ້ປະເມີນ'} "
-        f"({latest_assessment.summary if latest_assessment else asset.condition_note})"
+        f"{latest_assessment.overall_grade} ({latest_assessment.summary})\n"
+        "ໝາຍເຫດ: ນີ້ເປັນລາຄາໂດຍປະມານ; ພະນັກງານຈະຢືນຢັນລາຄາສຸດທ້າຍ."
     )
     try:
         result, raw = chat_json(
@@ -42,6 +85,7 @@ def run_valuation(request, pk):
                 {"role": "system", "content": VALUATION_SYSTEM_PROMPT},
                 {"role": "user", "content": user_text},
             ],
+            model=os.environ.get("OPENROUTER_PRICING_MODEL", PRICING_MODEL),
             max_tokens=1200,
         )
         PriceValuation.objects.create(
@@ -50,6 +94,7 @@ def run_valuation(request, pk):
             price_min=result.get("price_min", 0),
             price_max=result.get("price_max", 0),
             suggested_price=result.get("suggested_price", 0),
+            currency="LAK",
             reasoning=result.get("reasoning", ""),
             ai_model=raw.get("model", ""),
             raw_response={**raw, **result},

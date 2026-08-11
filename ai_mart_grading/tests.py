@@ -4,17 +4,56 @@ from io import BytesIO
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
-from django.test import SimpleTestCase
+from django.contrib.auth import get_user_model
+from django.test import SimpleTestCase, TestCase
+from django.urls import reverse
 from PIL import Image
 
+from asset_intake.models import Asset
+from crm.models import Customer
+from pos.models import Order, OrderItem, ServiceType
+
+from .models import Assessment, ChecklistItem
 from .services import OpenRouterError, chat, chat_json
 from .views import (
     AI_IMAGE_LIMIT,
     AI_IMAGE_MAX_SIZE,
+    BUYBACK_IMAGE_LIMIT,
+    BUYBACK_IMAGE_MAX_SIZE,
     DEFAULT_VISION_MODEL,
     _assessment_entry_values,
     _encode_images,
 )
+
+
+class BuybackAssessmentGuardTests(TestCase):
+    def test_buyback_assessment_requires_all_five_labeled_photos(self):
+        user = get_user_model().objects.create_user("ai-buyback-staff")
+        self.client.force_login(user)
+        customer = Customer.objects.create(name="Seller", phone="02055551111")
+        asset = Asset.objects.create(customer=customer, brand="Jordan")
+        service = ServiceType.objects.create(
+            name="Buy-back Evaluation",
+            category=ServiceType.Category.BUYBACK,
+            price=0,
+        )
+        order = Order.objects.create(customer=customer, created_by=user)
+        OrderItem.objects.create(
+            order=order,
+            service_type=service,
+            asset=asset,
+            description="Buy-back",
+            unit_price=0,
+        )
+        ChecklistItem.objects.create(name="Condition")
+
+        response = self.client.post(
+            reverse("ai_mart_grading:run_assessment", args=[asset.pk])
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("?ai=1#ai-photo-upload", response.url)
+        self.assertFalse(Assessment.objects.exists())
 
 
 class VisionImagePreparationTests(SimpleTestCase):
@@ -38,6 +77,21 @@ class VisionImagePreparationTests(SimpleTestCase):
             self.assertEqual(result.format, "JPEG")
             self.assertLessEqual(result.width, AI_IMAGE_MAX_SIZE[0])
             self.assertLessEqual(result.height, AI_IMAGE_MAX_SIZE[1])
+
+    def test_buyback_can_send_eight_compressed_angles(self):
+        encoded = _encode_images(
+            [self._media() for _ in range(10)],
+            limit=BUYBACK_IMAGE_LIMIT,
+            max_size=BUYBACK_IMAGE_MAX_SIZE,
+        )
+
+        self.assertEqual(len(encoded), 8)
+        image_bytes = base64.b64decode(
+            encoded[-1]["image_url"]["url"].split(",", 1)[1]
+        )
+        with Image.open(BytesIO(image_bytes)) as result:
+            self.assertLessEqual(result.width, BUYBACK_IMAGE_MAX_SIZE[0])
+            self.assertLessEqual(result.height, BUYBACK_IMAGE_MAX_SIZE[1])
 
     def test_compact_and_legacy_assessment_entries_are_supported(self):
         self.assertEqual(DEFAULT_VISION_MODEL, "google/gemini-2.5-flash-lite")

@@ -1,6 +1,8 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Max, Prefetch
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils.translation import gettext as _
 
 from asset_intake.models import Asset
 from ai_mart_grading.models import Assessment
@@ -18,6 +20,13 @@ def index(request):
         tier_val = request.POST.get("tier", "basic").strip()
 
         if name and phone:
+            if Customer.objects.filter(phone=phone).exists():
+                messages.error(
+                    request,
+                    _("This phone number is already used by another customer."),
+                )
+                return redirect("crm:index")
+
             customer = Customer.objects.create(name=name, phone=phone, email=email)
             import random
             card_number = f"KV-{random.randint(1000, 9999)}-{random.randint(100, 999)}"
@@ -105,14 +114,22 @@ def index(request):
 def edit_customer(request, pk):
     customer = get_object_or_404(Customer, pk=pk)
     if request.method == "POST":
+        phone = request.POST.get("phone", "").strip()
+        if Customer.objects.exclude(pk=customer.pk).filter(phone=phone).exists():
+            messages.error(
+                request,
+                _("This phone number is already used by another customer."),
+            )
+            return redirect(f"/crm/?customer={customer.pk}")
+
         customer.name = request.POST.get("name", "").strip()
-        customer.phone = request.POST.get("phone", "").strip()
+        customer.phone = phone
         customer.email = request.POST.get("email", "").strip()
         customer.save()
 
         tier_val = request.POST.get("tier", "").strip()
         if tier_val:
-            member_card, _ = MemberCard.objects.get_or_create(customer=customer)
+            member_card, _card_created = MemberCard.objects.get_or_create(customer=customer)
             member_card.tier = tier_val
             member_card.save()
 

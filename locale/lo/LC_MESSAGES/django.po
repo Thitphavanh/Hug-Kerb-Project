@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Hug ເກີບ AI\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 06:24+0700\n"
+"POT-Creation-Date: 2026-07-18 12:17+0700\n"
 "PO-Revision-Date: 2026-07-09 00:00+0700\n"
 "Last-Translator: Hug ເກີບ AI\n"
 "Language-Team: Lao\n"
@@ -151,10 +151,10 @@ msgid "Name"
 msgstr "ຊື່"
 
 #: accounting/forms.py:144
-#: asset_intake/templates/asset_intake/intake_detail.html:81
-#: asset_intake/templates/asset_intake/intake_detail.html:542
+#: asset_intake/templates/asset_intake/intake_detail.html:94
+#: asset_intake/templates/asset_intake/intake_detail.html:557
 #: pos/templates/pos/create_order.html:182
-#: pos/templates/pos/create_order.html:464
+#: pos/templates/pos/create_order.html:620
 msgid "Color"
 msgstr "ສີ (Color)"
 
@@ -220,7 +220,7 @@ msgstr "ລາຍຈ່າຍຈາກ POS"
 msgid "Daily ledger"
 msgstr "ບັນຊີປະຈຳວັນ"
 
-#: accounting/templates/accounting/_nav.html:7 templates/base.html:219
+#: accounting/templates/accounting/_nav.html:7 templates/base.html:221
 msgid "Reports"
 msgstr "ລາຍງານ"
 
@@ -627,7 +627,7 @@ msgid "Transaction details"
 msgstr "ຂໍ້ມູນລາຍການ"
 
 #: accounting/templates/accounting/transaction_form.html:27
-#: asset_intake/templates/asset_intake/intake_detail.html:555
+#: asset_intake/templates/asset_intake/intake_detail.html:570
 #: asset_intake/templates/asset_intake/storage_map.html:46
 #: crm/templates/crm/index.html:255 crm/templates/crm/index.html:294
 #: inventory/templates/inventory/index.html:141
@@ -687,267 +687,360 @@ msgstr "ລົບງົບປະມານສຳເລັດແລ້ວ"
 msgid "%(ticket)s — AI grading"
 msgstr "%(ticket)s — ການປະເມີນ AI"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:17
+#: asset_intake/templates/asset_intake/intake_detail.html:18
 msgid "AI inspection and price estimation (AI Smart Grading)"
 msgstr "ລະບົບກວດສອບ ແລະ ປະເມີນລາຄາ AI (AI Smart Grading)"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:28
+#: asset_intake/templates/asset_intake/intake_detail.html:22
+msgid "Second-hand buy-back"
+msgstr "ຮັບຊື້ເກີບມືສອງ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:27
+msgid "Cleaning & care service"
+msgstr "ບໍລິການຊັກ-ບຳລຸງຮັກສາ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:41
 #: asset_intake/templates/asset_intake/intake_list.html:17
 msgid "AI engine active"
 msgstr "ລະບົບ AI ກຳລັງເຮັດວຽກ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:32
+#: asset_intake/templates/asset_intake/intake_detail.html:45
 msgid "Ticket"
 msgstr "ໃບຮັບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:34
+#: asset_intake/templates/asset_intake/intake_detail.html:47
 msgid "Print the QR shoe tag"
 msgstr "ພິມປ້າຍ QR ຫ້ອຍຕິດເກີບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:36
+#: asset_intake/templates/asset_intake/intake_detail.html:49
 msgid "QR tag"
 msgstr "ປ້າຍ QR"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:38
+#: asset_intake/templates/asset_intake/intake_detail.html:51
 msgid "Open the public customer tracking page"
 msgstr "ເປີດໜ້າຕິດຕາມສະຖານະສຳລັບລູກຄ້າ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:43
+#: asset_intake/templates/asset_intake/intake_detail.html:56
 msgid "Notify the customer via WhatsApp"
 msgstr "ແຈ້ງລູກຄ້າຜ່ານ WhatsApp"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:48
+#: asset_intake/templates/asset_intake/intake_detail.html:61
 msgid "Download a Before/After image for Facebook or Instagram"
 msgstr "ດາວໂຫຼດຮູບກ່ອນ/ຫຼັງ ສຳລັບ Facebook ຫຼື Instagram"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:50
+#: asset_intake/templates/asset_intake/intake_detail.html:63
 msgid "Social image"
 msgstr "ຮູບສຳລັບໂພສ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:63
+#: asset_intake/templates/asset_intake/intake_detail.html:76
 msgid "Asset intake"
 msgstr "ຂໍ້ມູນຮັບເຄື່ອງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:64
+#: asset_intake/templates/asset_intake/intake_detail.html:77
 msgid "Edit intake details"
 msgstr "ແກ້ໄຂຂໍ້ມູນຮັບເຄື່ອງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:67
+#: asset_intake/templates/asset_intake/intake_detail.html:80
 msgid "Are you sure you want to delete this intake asset?"
 msgstr "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບເກີບຝາກຄູ່ນີ້?"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:69
+#: asset_intake/templates/asset_intake/intake_detail.html:82
 msgid "Delete intake"
 msgstr "ລຶບລາຍການຮັບເຄື່ອງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:85
-#: asset_intake/templates/asset_intake/intake_detail.html:546
+#: asset_intake/templates/asset_intake/intake_detail.html:98
+#: asset_intake/templates/asset_intake/intake_detail.html:561
 msgid "Size"
 msgstr "ເບີ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:89
+#: asset_intake/templates/asset_intake/intake_detail.html:102
 msgid "Pickup date"
 msgstr "ວັນທີນັດຮັບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:93
+#: asset_intake/templates/asset_intake/intake_detail.html:106
 msgid "Created at"
 msgstr "ສ້າງເມື່ອ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:103
+#: asset_intake/templates/asset_intake/intake_detail.html:116
 msgid "Not assigned to a technician"
 msgstr "ຍັງບໍ່ໄດ້ມອບວຽກໃຫ້ຊ່າງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:110
-#: asset_intake/templates/asset_intake/intake_detail.html:500
+#: asset_intake/templates/asset_intake/intake_detail.html:123
+#: asset_intake/templates/asset_intake/intake_detail.html:515
 #: inventory/templates/inventory/index.html:142
 #: inventory/templates/inventory/index.html:193
 msgid "Save"
 msgstr "ບັນທຶກ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:130
+#: asset_intake/templates/asset_intake/intake_detail.html:144
 msgid "Upload sneaker photos"
 msgstr "ອັບໂຫຼດຮູບເກີບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:131
+#: asset_intake/templates/asset_intake/intake_detail.html:145
 msgid "Drag and drop or click to browse."
 msgstr "ລາກໄຟລ໌ມາວາງ ຫຼື ຄລິກເພື່ອເລືອກໄຟລ໌."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:132
+#: asset_intake/templates/asset_intake/intake_detail.html:146
 msgid "JPG, PNG (max. 5 MB)"
 msgstr "JPG, PNG (ສູງສຸດ 5 MB)"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:142
+#: asset_intake/templates/asset_intake/intake_detail.html:156
 msgid "Before media"
 msgstr "ຮູບ/ວິດີໂອກ່ອນເຮັດ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:171
+#: asset_intake/templates/asset_intake/intake_detail.html:186
 msgid "After media"
 msgstr "ຮູບ/ວິດີໂອຫຼັງເຮັດ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:208
+#: asset_intake/templates/asset_intake/intake_detail.html:223
 #: pos/templates/pos/quotation.html:131
 msgid "AI assessment"
 msgstr "ຜົນການປະເມີນ AI"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:215
+#: asset_intake/templates/asset_intake/intake_detail.html:230
 msgid "Latest grade"
 msgstr "ເກຣດລ່າສຸດ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:256
+#: asset_intake/templates/asset_intake/intake_detail.html:271
 msgid "No checklist items are defined. Add checklist items in Admin."
 msgstr "ຍັງບໍ່ມີລາຍການກວດສອບ. ກະລຸນາເພີ່ມລາຍການໃນ Admin."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:265
+#: asset_intake/templates/asset_intake/intake_detail.html:280
 msgid "Re-scan asset"
 msgstr "ກວດສອບເຄື່ອງໃໝ່"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:274
+#: asset_intake/templates/asset_intake/intake_detail.html:280
+msgid "Start AI assessment"
+msgstr "ເລີ່ມປະເມີນດ້ວຍ AI"
+
+# Buy-back photo checklist and valuation workflow
+msgid "Buy-back photo checklist"
+msgstr "ລາຍການຮູບສຳລັບປະເມີນຮັບຊື້"
+
+msgid "Upload real photos of the offered pair. Required angles must be complete before AI assessment."
+msgstr "ອັບໂຫຼດຮູບຈິງຂອງເກີບທີ່ນຳມາສະເໜີຂາຍ ແລະຕ້ອງຄົບທຸກມຸມບັງຄັບກ່ອນປະເມີນ AI"
+
+msgid "Required"
+msgstr "ບັງຄັບ"
+
+msgid "Required photos are complete. AI assessment is ready."
+msgstr "ຮູບບັງຄັບຄົບແລ້ວ ພ້ອມເລີ່ມປະເມີນ AI"
+
+msgid "Complete all five required photos to unlock AI assessment."
+msgstr "ອັບໂຫຼດຮູບບັງຄັບໃຫ້ຄົບ 5 ມຸມ ເພື່ອເປີດການປະເມີນ AI"
+
+msgid "Complete required photos first"
+msgstr "ກະລຸນາອັບໂຫຼດຮູບບັງຄັບໃຫ້ຄົບກ່ອນ"
+
+msgid "Complete photos and AI assessment first"
+msgstr "ກະລຸນາເຮັດຮູບ ແລະປະເມີນ AI ໃຫ້ສຳເລັດກ່ອນ"
+
+msgid "Front / toe box"
+msgstr "ດ້ານໜ້າ / Toe box"
+
+msgid "Show both shoes, toe boxes, laces, and overall shape."
+msgstr "ໃຫ້ເຫັນເກີບທັງສອງ, ຫົວເກີບ, ສາຍເກີບ ແລະຮູບຊົງລວມ"
+
+msgid "Heel / rear"
+msgstr "ສົ້ນເກີບ / ດ້ານຫຼັງ"
+
+msgid "Show heel logos, stitching, and rear sole wear."
+msgstr "ໃຫ້ເຫັນ Logo ສົ້ນເກີບ, ຮອຍຫຍິບ ແລະການສຶກຂອງພື້ນດ້ານຫຼັງ"
+
+msgid "Side profile"
+msgstr "ດ້ານຂ້າງ"
+
+msgid "Show materials, Swoosh, stitching, and midsole."
+msgstr "ໃຫ້ເຫັນວັດສະດຸ, Swoosh, ຮອຍຫຍິບ ແລະ Midsole"
+
+msgid "Outsole"
+msgstr "ພື້ນນອກ"
+
+msgid "Show the complete tread and wear on both soles."
+msgstr "ໃຫ້ເຫັນດອກຢາງ ແລະການສຶກຂອງພື້ນເກີບທັງສອງຂ້າງ"
+
+msgid "Size label / SKU"
+msgstr "ປ້າຍ Size / SKU"
+
+msgid "Make the SKU, size, dates, and QR code readable."
+msgstr "ຖ່າຍໃຫ້ອ່ານ SKU, Size, ວັນຜະລິດ ແລະ QR code ໄດ້ຊັດເຈນ"
+
+msgid "Inner side / insole"
+msgstr "ດ້ານໃນ / Insole"
+
+msgid "Show the inner side, insole logo, and inner stitching."
+msgstr "ໃຫ້ເຫັນດ້ານໃນ, Logo ພື້ນໃນ ແລະຮອຍຫຍິບດ້ານໃນ"
+
+msgid "Box and accessories"
+msgstr "ກ່ອງ ແລະອຸປະກອນເສີມ"
+
+msgid "Show the box label, receipt, spare laces, and accessories."
+msgstr "ໃຫ້ເຫັນປ້າຍກ່ອງ, ໃບຊື້, ສາຍເກີບສຳຮອງ ແລະອຸປະກອນເສີມ"
+
+msgid "Defect close-up"
+msgstr "ຮູບໃກ້ຂອງຕຳໜິ"
+
+msgid "Add a close-up of any stain, tear, crack, or repair."
+msgstr "ເພີ່ມຮູບໃກ້ຂອງຄາບເປື້ອນ, ຮອຍຈີກ, ຮອຍແຕກ ຫຼືຮອຍສ້ອມ"
+
+msgid "Refurbishment cost"
+msgstr "ຄ່າຟື້ນຟູ"
+
+msgid "Risk reserve"
+msgstr "ເງິນສຳຮອງຄວາມສ່ຽງ"
+
+msgid "Target shop margin"
+msgstr "ກຳໄລເປົ້າໝາຍຂອງຮ້ານ"
+
+msgid "Recommended shop buy-back offer"
+msgstr "ລາຄາຮັບຊື້ທີ່ AI ແນະນຳ"
+
+msgid "AI estimate only. Staff must inspect the physical pair and confirm the final offer."
+msgstr "ເປັນລາຄາປະເມີນຈາກ AI ເທົ່ານັ້ນ ພະນັກງານຕ້ອງກວດເກີບຕົວຈິງ ແລະຢືນຢັນລາຄາສຸດທ້າຍ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html:289
 msgid "Work progress"
 msgstr "ຄວາມຄືບໜ້າວຽກ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:287
+#: asset_intake/templates/asset_intake/intake_detail.html:302
 msgid "In progress"
 msgstr "ກຳລັງເຮັດ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:294
+#: asset_intake/templates/asset_intake/intake_detail.html:309
 msgid "Ordered services"
 msgstr "ບໍລິການທີ່ສັ່ງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:301
+#: asset_intake/templates/asset_intake/intake_detail.html:316
 msgid "No services linked to an order yet."
 msgstr "ຍັງບໍ່ມີບໍລິການທີ່ຕິດກັບອໍເດີ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:319
+#: asset_intake/templates/asset_intake/intake_detail.html:334
 msgid "Resell price valuation"
-msgstr "ຜົນການປະເມີນລາຄາຂາຍຕໍ່"
+msgstr "ຜົນການປະເມີນລາຄາຮັບຊື້ເກີບມືສອງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:325
+#: asset_intake/templates/asset_intake/intake_detail.html:340
 msgid "Estimated market price"
 msgstr "ລາຄາຕະຫຼາດໂດຍປະມານ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:336
+#: asset_intake/templates/asset_intake/intake_detail.html:351
 msgid "Base market price"
 msgstr "ລາຄາຕະຫຼາດພື້ນຖານ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:340
+#: asset_intake/templates/asset_intake/intake_detail.html:355
 msgid "Condition adjustment"
 msgstr "ການປັບລາຄາຕາມສະພາບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:348
+#: asset_intake/templates/asset_intake/intake_detail.html:363
 msgid "Rarity premium"
 msgstr "ມູນຄ່າເພີ່ມຈາກຄວາມຫາຍາກ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:360
+#: asset_intake/templates/asset_intake/intake_detail.html:375
 msgid "Recommended resell price"
-msgstr "ລາຄາຂາຍຕໍ່ທີ່ແນະນຳ"
+msgstr "ລາຄາຮັບຊື້ທີ່ແນະນຳ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:374
+#: asset_intake/templates/asset_intake/intake_detail.html:389
 msgid "AI confidence score"
 msgstr "ຄະແນນຄວາມໝັ້ນໃຈຂອງ AI"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:385
+#: asset_intake/templates/asset_intake/intake_detail.html:400
 msgid "No valuation has been generated yet."
 msgstr "ຍັງບໍ່ມີຜົນການປະເມີນລາຄາ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:389
+#: asset_intake/templates/asset_intake/intake_detail.html:404
 msgid "Run valuation"
 msgstr "ເລີ່ມປະເມີນລາຄາ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:402
+#: asset_intake/templates/asset_intake/intake_detail.html:417
 msgid "Revalue asset"
 msgstr "ປະເມີນລາຄາໃໝ່"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:416
+#: asset_intake/templates/asset_intake/intake_detail.html:431
 msgid "AI promotional content"
 msgstr "ເນື້ອຫາໂປຣໂມຊັນຈາກ AI"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:425
+#: asset_intake/templates/asset_intake/intake_detail.html:440
 msgid "Generate"
 msgstr "ສ້າງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:444
+#: asset_intake/templates/asset_intake/intake_detail.html:459
 msgid ""
 "Create a promotion for this brand next month because demand is increasing."
 msgstr "ຈັດໂປຣໂມຊັນສຳລັບແບຣນນີ້ໃນເດືອນໜ້າ ເນື່ອງຈາກຄວາມຕ້ອງການເພີ່ມຂຶ້ນ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:454
+#: asset_intake/templates/asset_intake/intake_detail.html:469
 #: asset_intake/templates/asset_intake/kanban_board.html:42
 #: pos/templates/pos/create_order.html:254
-#: pos/templates/pos/create_order.html:536
+#: pos/templates/pos/create_order.html:692
 msgid "Storage location"
 msgstr "ບ່ອນເກັບເກີບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:461
+#: asset_intake/templates/asset_intake/intake_detail.html:476
 #: asset_intake/templates/asset_intake/storage_map.html:94
-#: pos/templates/pos/create_order.html:260
-#: pos/templates/pos/create_order.html:542
+#: pos/templates/pos/create_order.html:485
 msgid "Zone"
 msgstr "ໂຊນ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:461
+#: asset_intake/templates/asset_intake/intake_detail.html:476
 #: asset_intake/templates/asset_intake/storage_map.html:100
-#: pos/templates/pos/create_order.html:260
-#: pos/templates/pos/create_order.html:542
+#: pos/templates/pos/create_order.html:490
 msgid "Cabinet"
 msgstr "ຕູ້"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:461
-#: pos/templates/pos/create_order.html:260
-#: pos/templates/pos/create_order.html:542
+#: asset_intake/templates/asset_intake/intake_detail.html:476
 msgid "Slot"
 msgstr "ຊ່ອງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:465
+#: asset_intake/templates/asset_intake/intake_detail.html:480
 msgid "Move"
 msgstr "ຍ້າຍບ່ອນ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:469
+#: asset_intake/templates/asset_intake/intake_detail.html:484
 msgid "Release"
 msgstr "ຄືນບ່ອນ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:477
+#: asset_intake/templates/asset_intake/intake_detail.html:492
 msgid "No slot assigned yet — pick one so it's easy to find at pickup."
 msgstr "ຍັງບໍ່ໄດ້ເລືອກບ່ອນເກັບ — ເລືອກໄວ້ເພື່ອຊອກງ່າຍຕອນລູກຄ້າມາຮັບ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:481
+#: asset_intake/templates/asset_intake/intake_detail.html:496
 msgid "Choose slot"
 msgstr "ເລືອກບ່ອນເກັບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:485
+#: asset_intake/templates/asset_intake/intake_detail.html:500
 msgid "Delivered — slot already released."
 msgstr "ສົ່ງມອບແລ້ວ — ຄືນບ່ອນເກັບແລ້ວ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:492
+#: asset_intake/templates/asset_intake/intake_detail.html:507
 msgid "Update status manually"
 msgstr "ອັບເດດສະຖານະດ້ວຍຕົນເອງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:512
+#: asset_intake/templates/asset_intake/intake_detail.html:527
 msgid "Save draft"
 msgstr "ບັນທຶກຮ່າງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:516
+#: asset_intake/templates/asset_intake/intake_detail.html:531
 msgid "Publish to inventory"
 msgstr "ນຳເຂົ້າສາງສິນຄ້າ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:525
+#: asset_intake/templates/asset_intake/intake_detail.html:540
 msgid "Edit Intake Shoe Details"
 msgstr "ແກ້ໄຂຂໍ້ມູນເກີບຝາກ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:533
+#: asset_intake/templates/asset_intake/intake_detail.html:548
 #: pos/templates/pos/create_order.html:168
-#: pos/templates/pos/create_order.html:450
+#: pos/templates/pos/create_order.html:606
 msgid "Brand"
 msgstr "ຍີ່ຫໍ້ (Brand)"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:537
+#: asset_intake/templates/asset_intake/intake_detail.html:552
 msgid "Model Name"
 msgstr "ລຸ້ນ / ສີ (Model Name)"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:551
+#: asset_intake/templates/asset_intake/intake_detail.html:566
 msgid "Condition / Notes"
 msgstr "ໝາຍເຫດ/ສະພາບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:556
+#: asset_intake/templates/asset_intake/intake_detail.html:571
 #: crm/templates/crm/index.html:295
 msgid "Save Changes"
 msgstr "ບັນທຶກການແກ້ໄຂ"
@@ -1082,18 +1175,21 @@ msgid "Green = free, red = occupied. Click an occupied slot to open its job."
 msgstr "ສີຂຽວ = ຫວ່າງ, ສີແດງ = ເຕັມ. ກົດຊ່ອງສີແດງເພື່ອເປີດວຽກຂອງເກີບຄູ່ນັ້ນ."
 
 #: asset_intake/templates/asset_intake/storage_map.html:19
-#: pos/templates/pos/create_order.html:338
+#: pos/templates/pos/create_order.html:330
 msgid "Total"
 msgstr "ລວມທັງໝົດ"
 
 #: asset_intake/templates/asset_intake/storage_map.html:23
 #: asset_intake/templates/asset_intake/storage_map.html:68
 #: asset_intake/templates/asset_intake/storage_map.html:132
+#: pos/templates/pos/create_order.html:1004
 msgid "Free"
 msgstr "ຫວ່າງ"
 
 #: asset_intake/templates/asset_intake/storage_map.html:27
 #: asset_intake/templates/asset_intake/storage_map.html:72
+#: pos/templates/pos/create_order.html:521
+#: pos/templates/pos/create_order.html:1005
 msgid "Occupied"
 msgstr "ເຕັມ"
 
@@ -1127,6 +1223,7 @@ msgid "or add slots in Admin."
 msgstr "ຫຼື ເພີ່ມບ່ອນເກັບໃນ Admin."
 
 #: asset_intake/templates/asset_intake/storage_map.html:123
+#: pos/templates/pos/create_order.html:538
 msgid "Store here"
 msgstr "ເກັບບ່ອນນີ້"
 
@@ -1139,7 +1236,7 @@ msgid "Not found on the map — this pair may not have a storage slot yet."
 msgstr "ບໍ່ພົບໃນຜັງ — ເກີບຄູ່ນີ້ອາດຍັງບໍ່ໄດ້ເລືອກບ່ອນເກັບ."
 
 #: asset_intake/templates/asset_intake/storage_map.html:238
-#: pos/templates/pos/create_order.html:923
+#: pos/templates/pos/create_order.html:1111
 msgid "Starting camera..."
 msgstr "ກຳລັງເປີດກ້ອງ..."
 
@@ -1212,99 +1309,99 @@ msgstr "ຄວາມຄົບຖ້ວນຂອງກ່ອງ ແລະ ອຸ�
 msgid "Preliminary authenticity check"
 msgstr "ການກວດສອບຄວາມແທ້ເບື້ອງຕົ້ນ"
 
-#: asset_intake/views.py:52 asset_intake/views.py:203
+#: asset_intake/views.py:52 asset_intake/views.py:207
 msgid "Received"
 msgstr "ຮັບເຂົ້າ"
 
-#: asset_intake/views.py:53 asset_intake/views.py:204 asset_intake/views.py:397
+#: asset_intake/views.py:53 asset_intake/views.py:208 asset_intake/views.py:416
 msgid "Cleaning"
 msgstr "ກຳລັງຊັກ"
 
-#: asset_intake/views.py:54 asset_intake/views.py:205 asset_intake/views.py:398
+#: asset_intake/views.py:54 asset_intake/views.py:209 asset_intake/views.py:417
 msgid "Repairing"
 msgstr "ກຳລັງສ້ອມແປງ"
 
-#: asset_intake/views.py:55 asset_intake/views.py:206 asset_intake/views.py:399
+#: asset_intake/views.py:55 asset_intake/views.py:210 asset_intake/views.py:418
 msgid "Ready for pickup"
 msgstr "ພ້ອມໃຫ້ລູກຄ້າຮັບ"
 
-#: asset_intake/views.py:56 asset_intake/views.py:207 asset_intake/views.py:400
+#: asset_intake/views.py:56 asset_intake/views.py:211 asset_intake/views.py:419
 msgid "Completed"
 msgstr "ສົ່ງມອບແລ້ວ"
 
-#: asset_intake/views.py:134
+#: asset_intake/views.py:135
 msgid "Files uploaded successfully."
 msgstr "ອັບໂຫຼດໄຟລ໌ສຳເລັດ."
 
-#: asset_intake/views.py:142
+#: asset_intake/views.py:146
 msgid "Status updated successfully."
 msgstr "ອັບເດດສະຖານະສຳເລັດ."
 
-#: asset_intake/views.py:144
+#: asset_intake/views.py:148
 msgid "Invalid status."
 msgstr "ສະຖານະບໍ່ຖືກຕ້ອງ."
 
-#: asset_intake/views.py:151
+#: asset_intake/views.py:155
 msgid "Work assigned to the technician successfully."
 msgstr "ມອບວຽກໃຫ້ຊ່າງສຳເລັດ."
 
-#: asset_intake/views.py:171
+#: asset_intake/views.py:175
 msgid "Like new"
 msgstr "ຄືໃໝ່"
 
-#: asset_intake/views.py:174
+#: asset_intake/views.py:178
 msgid "Minor scuffs"
 msgstr "ມີຮອຍເລັກນ້ອຍ"
 
-#: asset_intake/views.py:177
+#: asset_intake/views.py:181
 msgid "Worn"
 msgstr "ມີການສຶກຫຼໍ່"
 
-#: asset_intake/views.py:196
+#: asset_intake/views.py:200
 msgid "Pending"
 msgstr "ລໍຖ້າກວດ"
 
-#: asset_intake/views.py:254
+#: asset_intake/views.py:270
 msgid "High demand"
 msgstr "ຄວາມຕ້ອງການສູງ"
 
-#: asset_intake/views.py:255
+#: asset_intake/views.py:271
 msgid "Normal demand"
 msgstr "ຄວາມຕ້ອງການປົກກະຕິ"
 
-#: asset_intake/views.py:256
+#: asset_intake/views.py:272
 msgid "Low demand"
 msgstr "ຄວາມຕ້ອງການຕ່ຳ"
 
-#: asset_intake/views.py:396
+#: asset_intake/views.py:415
 msgid "Intake"
 msgstr "ຮັບເຂົ້າ"
 
-#: asset_intake/views.py:400
+#: asset_intake/views.py:419
 msgid "Last 7 days"
 msgstr "7 ວັນຫຼ້າສຸດ"
 
-#: asset_intake/views.py:518
+#: asset_intake/views.py:537
 msgid "This item was already delivered — no storage slot needed."
 msgstr "ເຄື່ອງນີ້ສົ່ງມອບແລ້ວ — ບໍ່ຕ້ອງໃຊ້ບ່ອນເກັບ."
 
-#: asset_intake/views.py:522
+#: asset_intake/views.py:541
 msgid "That slot is already occupied. Please pick a green one."
 msgstr "ຊ່ອງນັ້ນມີເກີບເກັບຢູ່ແລ້ວ ກະລຸນາເລືອກຊ່ອງສີຂຽວ."
 
-#: asset_intake/views.py:527
+#: asset_intake/views.py:546
 msgid "Storage slot saved:"
 msgstr "ບັນທຶກບ່ອນເກັບແລ້ວ:"
 
-#: asset_intake/views.py:540
+#: asset_intake/views.py:559
 msgid "Storage slot released."
 msgstr "ຄືນບ່ອນເກັບແລ້ວ."
 
-#: core/urls.py:11
+#: core/urls.py:12
 msgid "Hug ເກີບ — Shop Management"
 msgstr "Hug ເກີບ — ລະບົບບໍລິຫານຮ້ານ"
 
-#: core/urls.py:13
+#: core/urls.py:14
 msgid "Management"
 msgstr "ບໍລິຫານຈັດການ"
 
@@ -1468,6 +1565,10 @@ msgstr "ແກ້ໄຂຂໍ້ມູນລູກຄ້າ"
 msgid "Email"
 msgstr "ອີເມວ"
 
+#: crm/views.py:26 crm/views.py:121
+msgid "This phone number is already used by another customer."
+msgstr "ເບີໂທນີ້ຖືກໃຊ້ໂດຍລູກຄ້າຄົນອື່ນແລ້ວ."
+
 #: dashboard/templates/dashboard/index.html:5
 msgid "Dashboard — Hug ເກີບ AI"
 msgstr "ແດຊບອດ — Hug ເກີບ AI"
@@ -1546,7 +1647,7 @@ msgstr "ກິດຈະກຳຫຼ້າສຸດ"
 msgid "No activities yet."
 msgstr "ຍັງບໍ່ມີກິດຈະກຳ."
 
-#: home/templates/home/index.html:4 templates/base.html:8
+#: home/templates/home/index.html:4 templates/base.html:10
 msgid "Hug ເກີບ AI — SME Command Center"
 msgstr "Hug ເກີບ AI — ສູນຄວບຄຸມ SME"
 
@@ -1582,7 +1683,7 @@ msgstr "ສະຕັອກຕ່ຳ"
 msgid "Open Dashboard"
 msgstr "ເປີດແດຊບອດ"
 
-#: home/templates/home/index.html:37 templates/base.html:233
+#: home/templates/home/index.html:37 templates/base.html:235
 msgid "Create Order"
 msgstr "ສ້າງອໍເດີ"
 
@@ -1595,7 +1696,7 @@ msgid "Process services, issue receipts, and start AI scans."
 msgstr "ດຳເນີນງານບໍລິການ, ອອກໃບບິນ ແລະ ເລີ່ມສະແກນ AI."
 
 #: home/templates/home/index.html:50 inventory/templates/inventory/index.html:9
-#: templates/base.html:194
+#: templates/base.html:196
 msgid "Inventory"
 msgstr "ສາງສິນຄ້າ"
 
@@ -1611,7 +1712,7 @@ msgstr "CRM ແລະ ສະມາຊິກ"
 msgid "Manage customers, digital cards, and service history."
 msgstr "ຈັດການລູກຄ້າ, ບັດດິຈິຕອນ ແລະ ປະຫວັດບໍລິການ."
 
-#: home/templates/home/index.html:60 templates/base.html:202
+#: home/templates/home/index.html:60 templates/base.html:204
 msgid "AI Grading"
 msgstr "ກວດສະພາບ AI"
 
@@ -1627,7 +1728,7 @@ msgstr "ລາຍງານການເງິນ"
 msgid "Review income, expenses, cashflow, and RFM insights."
 msgstr "ກວດລາຍຮັບ, ລາຍຈ່າຍ, ກະແສເງິນ ແລະ insight RFM."
 
-#: home/templates/home/index.html:70 templates/base.html:228
+#: home/templates/home/index.html:70 templates/base.html:230
 msgid "Admin"
 msgstr "ຜູ້ດູແລ"
 
@@ -1645,18 +1746,22 @@ msgid "Basic Clean Service"
 msgstr "ບໍລິການຊັກສະອາດທົ່ວໄປ"
 
 #: home/templatetags/custom_filters.py:9
+msgid "Buy-back Evaluation"
+msgstr "ການປະເມີນຮັບຊື້ເກີບມືສອງ"
+
+#: home/templatetags/custom_filters.py:10
 msgid "Color Touch-up"
 msgstr "ແຕ່ງສີສ້ອມແຊມ"
 
-#: home/templatetags/custom_filters.py:10
+#: home/templatetags/custom_filters.py:11
 msgid "Deep Clean Service"
 msgstr "ບໍລິການຊັກສະອາດເລິກ"
 
-#: home/templatetags/custom_filters.py:11
+#: home/templatetags/custom_filters.py:12
 msgid "Premium Spa + Deodorize"
 msgstr "ສະປາພຣີມຽມ + ກຳຈັດກິ່ນ"
 
-#: home/templatetags/custom_filters.py:12
+#: home/templatetags/custom_filters.py:13
 msgid "Sole Restoration"
 msgstr "ຟື້ນຟູພື້ນເກີບ"
 
@@ -1894,8 +1999,8 @@ msgid "Process new service orders and manage intake."
 msgstr "ສ້າງອໍເດີບໍລິການໃໝ່ ແລະ ຈັດການຮັບເຄື່ອງ."
 
 #: pos/templates/pos/create_order.html:104
-#: pos/templates/pos/create_order.html:797 templates/base.html:255
-#: templates/base.html:386 templates/base.html:424
+#: pos/templates/pos/create_order.html:952 templates/base.html:257
+#: templates/base.html:388 templates/base.html:426
 msgid "Scan Barcode"
 msgstr "ສະແກນບາໂຄດ"
 
@@ -1933,137 +2038,173 @@ msgid "Item #1 Details"
 msgstr "ລາຍລະອຽດເກີບທີ 1"
 
 #: pos/templates/pos/create_order.html:178
-#: pos/templates/pos/create_order.html:460
+#: pos/templates/pos/create_order.html:616
 msgid "Model"
 msgstr "ລຸ້ນ"
 
 #: pos/templates/pos/create_order.html:202
-#: pos/templates/pos/create_order.html:484
+#: pos/templates/pos/create_order.html:640
 msgid "Size (US/EU)"
 msgstr "ຂະໜາດ (US/EU)"
 
 #: pos/templates/pos/create_order.html:204
-#: pos/templates/pos/create_order.html:486
+#: pos/templates/pos/create_order.html:642
 msgid "EU sizes"
 msgstr "ຂະໜາດ EU"
 
 #: pos/templates/pos/create_order.html:229
-#: pos/templates/pos/create_order.html:511
+#: pos/templates/pos/create_order.html:667
 msgid "US sizes"
 msgstr "ຂະໜາດ US"
 
 # POS storage selection
-#: pos/templates/pos/create_order.html:257
-#: pos/templates/pos/create_order.html:539
+#: pos/templates/pos/create_order.html:261
+#: pos/templates/pos/create_order.html:576
+#: pos/templates/pos/create_order.html:699
 msgid "Select a free storage slot (optional)"
 msgstr "ເລືອກຊ່ອງເກັບທີ່ຫວ່າງ (ບໍ່ບັງຄັບ)"
 
-#: pos/templates/pos/create_order.html:263
-#: pos/templates/pos/create_order.html:545
-msgid "No free storage slots"
-msgstr "ບໍ່ມີຊ່ອງເກັບທີ່ຫວ່າງ"
-
-#: pos/templates/pos/create_order.html:267
-#: pos/templates/pos/create_order.html:549
+#: pos/templates/pos/create_order.html:266
+#: pos/templates/pos/create_order.html:704
 #, python-format
 msgid "%(counter)s free slot available"
 msgid_plural "%(counter)s free slots available"
 msgstr[0] "ມີຊ່ອງເກັບຫວ່າງ %(counter)s ຊ່ອງ"
 
-#: pos/templates/pos/create_order.html:271
-#: pos/templates/pos/create_order.html:553
+#: pos/templates/pos/create_order.html:270
+#: pos/templates/pos/create_order.html:708
 msgid "Service Type"
 msgstr "ປະເພດບໍລິການ"
 
-#: pos/templates/pos/create_order.html:291
+#: pos/templates/pos/create_order.html:290
 msgid "AI Condition Assessment Recommended"
 msgstr "ແນະນຳໃຫ້ປະເມີນສະພາບດ້ວຍ AI"
 
-#: pos/templates/pos/create_order.html:293
-msgid ""
-"Capture a photo to automatically grade wear and log pre-existing damage."
-msgstr ""
+# POS save-and-scan flow
+#: pos/templates/pos/create_order.html:292
+msgid "Save this order, then upload photos and analyze the new pair with AI."
+msgstr "ບັນທຶກອໍເດີນີ້ ແລ້ວອັບໂຫຼດຮູບເພື່ອວິເຄາະເກີບຄູ່ໃໝ່ດ້ວຍ AI"
 
-#: pos/templates/pos/create_order.html:298
-msgid "Launch AI Scanner"
-msgstr "ເປີດ AI Scanner"
+#: pos/templates/pos/create_order.html:296
+msgid "Save & open AI scanner"
+msgstr "ບັນທຶກ ແລະເປີດ AI Scanner"
 
-#: pos/templates/pos/create_order.html:303
-msgid "Launch AI Scanner (No item yet)"
-msgstr "ເປີດ AI Scanner (ຍັງບໍ່ມີເກີບຝາກ)"
-
-#: pos/templates/pos/create_order.html:318
+#: pos/templates/pos/create_order.html:310
 msgid "Order Summary"
 msgstr "ສະຫຼຸບອໍເດີ"
 
-#: pos/templates/pos/create_order.html:330 pos/templates/pos/quotation.html:185
+#: pos/templates/pos/create_order.html:322 pos/templates/pos/quotation.html:185
 msgid "Subtotal"
 msgstr "ລວມຍ່ອຍ"
 
-#: pos/templates/pos/create_order.html:334
+#: pos/templates/pos/create_order.html:326
 #, python-format
 msgid "Tax (10%%)"
 msgstr "ພາສີ (10%%)"
 
-#: pos/templates/pos/create_order.html:348
+#: pos/templates/pos/create_order.html:340
 msgid "Confirm & Pay"
 msgstr "ຢືນຢັນ ແລະ ຊຳລະເງິນ"
 
-#: pos/templates/pos/create_order.html:354
-#: pos/templates/pos/create_order.html:363
+#: pos/templates/pos/create_order.html:346
+#: pos/templates/pos/create_order.html:355
 msgid "Receipt"
 msgstr "ໃບບິນ"
 
-#: pos/templates/pos/create_order.html:358
-#: pos/templates/pos/create_order.html:367
+#: pos/templates/pos/create_order.html:350
+#: pos/templates/pos/create_order.html:359
 msgid "Slip"
 msgstr "ໃບນັດຮັບ (Slip)"
 
-#: pos/templates/pos/create_order.html:447
+#: pos/templates/pos/create_order.html:454
+msgid "Loading storage map..."
+msgstr ""
+
+#: pos/templates/pos/create_order.html:460
+msgid "Could not load the storage map. Please try again."
+msgstr ""
+
+#: pos/templates/pos/create_order.html:479
+msgid "free"
+msgstr ""
+
+#: pos/templates/pos/create_order.html:479
+msgid "total"
+msgstr "ລວມທັງໝົດ"
+
+#: pos/templates/pos/create_order.html:501
+msgid "No storage slots configured yet."
+msgstr "ຍັງບໍ່ມີບ່ອນເກັບເກີບ"
+
+#: pos/templates/pos/create_order.html:513
+msgid "Currently selected"
+msgstr ""
+
+#: pos/templates/pos/create_order.html:530
+msgid "Already chosen for item"
+msgstr ""
+
+#: pos/templates/pos/create_order.html:603
 msgid "Item"
 msgstr "ເກີບ / ລາຍການ"
 
-#: pos/templates/pos/create_order.html:447
+#: pos/templates/pos/create_order.html:603
 msgid "Details"
 msgstr "ລາຍລະອຽດ"
 
-#: pos/templates/pos/create_order.html:592
+#: pos/templates/pos/create_order.html:747
 msgid "You must keep at least one item."
 msgstr "ທ່ານຕ້ອງຮັກສາລາຍການໄວ້ຢ່າງໜ້ອຍໜຶ່ງລາຍການ."
 
-#: pos/templates/pos/create_order.html:804
+#: pos/templates/pos/create_order.html:959
 msgid ""
 "Point the USB scanner at the QR tag, or type the ticket / order number (e.g. "
 "TK-DEMO-004)."
 msgstr ""
 
-#: pos/templates/pos/create_order.html:811 templates/base.html:406
+#: pos/templates/pos/create_order.html:966 templates/base.html:408
 msgid "or"
 msgstr "ຫຼື"
 
-#: pos/templates/pos/create_order.html:817
-#: pos/templates/pos/create_order.html:939
-#: pos/templates/pos/create_order.html:952
+#: pos/templates/pos/create_order.html:972
+#: pos/templates/pos/create_order.html:1127
+#: pos/templates/pos/create_order.html:1140
 msgid "Scan with Camera"
 msgstr ""
 
-#: pos/templates/pos/create_order.html:856
+#: pos/templates/pos/create_order.html:985
+msgid "Choose Storage Slot"
+msgstr "ເລືອກບ່ອນເກັບ"
+
+#: pos/templates/pos/create_order.html:995
+msgid "Find slot / ticket..."
+msgstr "ຄົ້ນຫາຊ່ອງ / ເລກປີ້..."
+
+#: pos/templates/pos/create_order.html:1000
+msgid "Don't store here"
+msgstr "ບໍ່ຕ້ອງເກັບບ່ອນນີ້"
+
+#: pos/templates/pos/create_order.html:1006
+msgid "Chosen for another item"
+msgstr ""
+
+#: pos/templates/pos/create_order.html:1044
 msgid "Searching..."
 msgstr "ກຳລັງຄົ້ນຫາ..."
 
-#: pos/templates/pos/create_order.html:863
+#: pos/templates/pos/create_order.html:1051
 msgid "Not found:"
 msgstr ""
 
-#: pos/templates/pos/create_order.html:895
+#: pos/templates/pos/create_order.html:1083
 msgid "Lookup failed. Check connection."
 msgstr ""
 
-#: pos/templates/pos/create_order.html:937
+#: pos/templates/pos/create_order.html:1125
 msgid "Stop Camera"
 msgstr ""
 
-#: pos/templates/pos/create_order.html:941
+#: pos/templates/pos/create_order.html:1129
 msgid "Camera unavailable. Check permission / use HTTPS."
 msgstr ""
 
@@ -2279,20 +2420,10 @@ msgstr "ຂອງ KicksVault AI ແລ້ວ"
 msgid "Confirm and send document"
 msgstr "ຢືນຢັນ ແລະ ສົ່ງເອກະສານ"
 
-#: pos/views.py:175 pos/views.py:230
+#: pos/views.py:225 pos/views.py:281
 msgid ""
 "The selected storage slot is no longer available. Please choose another slot."
 msgstr "ຊ່ອງ Storage ທີ່ເລືອກບໍ່ຫວ່າງແລ້ວ; ກະລຸນາເລືອກຊ່ອງໃໝ່"
-
-# POS save-and-scan flow
-msgid "Save this order, then upload photos and analyze the new pair with AI."
-msgstr "ບັນທຶກອໍເດີນີ້ ແລ້ວອັບໂຫຼດຮູບເພື່ອວິເຄາະເກີບຄູ່ໃໝ່ດ້ວຍ AI"
-
-msgid "Save & open AI scanner"
-msgstr "ບັນທຶກ ແລະເປີດ AI Scanner"
-
-msgid "Start AI assessment"
-msgstr "ເລີ່ມປະເມີນດ້ວຍ AI"
 
 # Financial overview report
 #: reports/templates/reports/income_expense.html:5
@@ -2526,90 +2657,126 @@ msgstr "ຜູ້ຈັດການ"
 msgid "Front desk"
 msgstr "ພະນັກງານໜ້າຮ້ານ"
 
-#: templates/admin/login.html:9
+#: templates/admin/login.html:11
 msgid "Error:"
 msgstr ""
 
-#: templates/admin/login.html:9
+#: templates/admin/login.html:11
 msgid "Django site admin"
 msgstr ""
 
-#: templates/admin/login.html:165 templates/base.html:273
+#: templates/admin/login.html:166 templates/base.html:275
 msgid "Toggle color theme"
 msgstr "ສະຫຼັບສີໜ້າຈໍ"
 
-#: templates/admin/login.html:185
+#: templates/admin/login.html:182
 msgid "Shop Management System"
 msgstr "ລະບົບຈັດການຮ້ານ"
 
-#: templates/admin/login.html:191
+#: templates/admin/login.html:188
 msgid "Please correct the error below."
 msgid_plural "Please correct the errors below."
 msgstr[0] ""
 
-#: templates/admin/login.html:203
+#: templates/admin/login.html:200
 #, python-format
 msgid ""
 "You are authenticated as %(username)s, but are not authorized to access this "
 "page. Would you like to login to a different account?"
 msgstr ""
 
-#: templates/admin/login.html:229 templates/admin/login.html:282
+#: templates/admin/login.html:226 templates/admin/login.html:279
 msgid "Show password"
 msgstr ""
 
-#: templates/admin/login.html:246
+#: templates/admin/login.html:243
 msgid "Log in"
 msgstr ""
 
-#: templates/admin/login.html:253
+#: templates/admin/login.html:250
 msgid "Forgotten your login credentials?"
 msgstr ""
 
-#: templates/admin/login.html:282
+#: templates/admin/login.html:279
 msgid "Hide password"
 msgstr ""
 
-#: templates/base.html:181
+#: templates/base.html:183
 msgid "SME Command Center"
 msgstr "ສູນຄວບຄຸມ SME"
 
-#: templates/base.html:186
+#: templates/base.html:188
 msgid "Dashboard"
 msgstr "ແດຊບອດ"
 
-#: templates/base.html:190
+#: templates/base.html:192
 msgid "POS"
 msgstr "ຂາຍໜ້າຮ້ານ"
 
-#: templates/base.html:198
+#: templates/base.html:200
 msgid "CRM"
 msgstr "ລູກຄ້າ"
 
-#: templates/base.html:206
+#: templates/base.html:208
 msgid "Kanban Tracking"
 msgstr "ຕິດຕາມວຽກ Kanban"
 
-#: templates/base.html:210
+#: templates/base.html:212
 msgid "Storage"
 msgstr "ບ່ອນເກັບເກີບ"
 
-#: templates/base.html:215
+#: templates/base.html:217
 msgid "Accounting"
 msgstr "ບັນຊີລາຍຮັບ–ລາຍຈ່າຍ"
 
-#: templates/base.html:223
+#: templates/base.html:225
 msgid "Staff"
 msgstr "ພະນັກງານ"
 
-#: templates/base.html:238
+#: templates/base.html:240
 msgid "Logout"
 msgstr "ອອກຈາກລະບົບ"
 
-#: templates/base.html:247
+#: templates/base.html:249
 msgid "Toggle sidebar"
 msgstr ""
 
-#: templates/base.html:253
+#: templates/base.html:255
 msgid "Search orders, clients, inventory..."
 msgstr "ຄົ້ນຫາອໍເດີ, ລູກຄ້າ, ສາງ..."
+
+#: asset_intake/templates/asset_intake/intake_detail.html
+msgid "AI cleaning price estimate"
+msgstr "ລາຄາຊັກໂດຍປະມານຈາກ AI"
+
+#: asset_intake/templates/asset_intake/intake_detail.html
+msgid "Configured shop price"
+msgstr "ລາຄາທີ່ຮ້ານກຳນົດ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html
+msgid "Dirt level"
+msgstr "ລະດັບຄວາມເປື້ອນ"
+
+#: asset_intake/views.py
+msgid "Light dirt"
+msgstr "ເປື້ອນໜ້ອຍ"
+
+#: asset_intake/views.py
+msgid "Moderate dirt"
+msgstr "ເປື້ອນປານກາງ"
+
+#: asset_intake/views.py
+msgid "Heavy dirt"
+msgstr "ເປື້ອນຫຼາຍ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html
+msgid "Recommended service"
+msgstr "ບໍລິການທີ່ແນະນຳ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html
+msgid "Estimated cleaning price"
+msgstr "ລາຄາຊັກໂດຍປະມານ"
+
+#: asset_intake/templates/asset_intake/intake_detail.html
+msgid "This is an approximate price from the shop service table. Staff must inspect the physical pair and confirm the final price."
+msgstr "ນີ້ແມ່ນລາຄາໂດຍປະມານຈາກຕາຕະລາງບໍລິການຂອງຮ້ານ. ພະນັກງານຕ້ອງກວດເບິ່ງເກີບຕົວຈິງ ແລະ ຢືນຢັນລາຄາສຸດທ້າຍ."

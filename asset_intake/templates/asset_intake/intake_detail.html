@@ -14,7 +14,20 @@
 <!-- Page Header -->
 <div class="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-4">
     <div class="min-w-0">
-        <h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">{% trans "AI inspection and price estimation (AI Smart Grading)" %}</h2>
+        <div class="flex flex-wrap items-center gap-3">
+            <h2 class="font-headline-lg text-headline-lg font-bold text-on-surface">{% trans "AI inspection and price estimation (AI Smart Grading)" %}</h2>
+            {% if has_buyback_service %}
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/30 text-xs font-bold uppercase tracking-wider shrink-0">
+                <span class="material-symbols-outlined text-sm">sell</span>
+                {% trans "Second-hand buy-back" %}
+            </span>
+            {% elif work_services or show_ai_grading %}
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/30 text-xs font-bold uppercase tracking-wider shrink-0">
+                <span class="material-symbols-outlined text-sm">dry_cleaning</span>
+                {% trans "Cleaning & care service" %}
+            </span>
+            {% endif %}
+        </div>
         <p class="text-on-surface-variant font-body-md mt-2 max-w-2xl">
             {{ asset.brand }} {{ asset.model_name }} · {{ asset.ticket_number }} · {{ asset.customer.name }} · {{ asset.customer.phone }}
         </p>
@@ -110,6 +123,65 @@
                     <button class="bg-ai-cyan text-surface-deep rounded-lg px-4 py-2 text-sm font-bold whitespace-nowrap shrink-0 transition-transform hover:scale-105 active:scale-95">{% trans "Save" %}</button>
                 </form>
 
+                {% if has_buyback_service %}
+                <!-- Buy-back photo checklist -->
+                <section id="ai-photo-upload" class="rounded-xl border border-ai-cyan/25 bg-ai-cyan/5 p-4">
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                        <div>
+                            <h4 class="text-sm font-bold text-on-surface flex items-center gap-2">
+                                <span class="material-symbols-outlined text-ai-cyan text-[20px]">photo_camera</span>
+                                {% trans "Buy-back photo checklist" %}
+                            </h4>
+                            <p class="text-xs text-on-surface-variant mt-1">{% trans "Upload real photos of the offered pair. Required angles must be complete before AI assessment." %}</p>
+                        </div>
+                        <span class="shrink-0 px-2.5 py-1 rounded-full text-xs font-data-mono font-bold {% if buyback_photo_complete %}bg-emerald-500/15 text-emerald-500{% else %}bg-status-alert/15 text-status-alert{% endif %}">
+                            {{ buyback_captured_required_count }}/{{ buyback_required_photo_count }}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        {% for photo in buyback_photo_checklist %}
+                        <form method="post" enctype="multipart/form-data" class="relative rounded-lg overflow-hidden border {% if photo.media %}border-emerald-500/50{% elif photo.required %}border-status-alert/40{% else %}border-white/10{% endif %} bg-surface-container-low min-h-[150px] group">
+                            {% csrf_token %}
+                            <input type="hidden" name="upload_stage" value="before">
+                            <input type="hidden" name="capture_angle" value="{{ photo.angle }}">
+                            {% if ai_mode %}<input type="hidden" name="ai_mode" value="1">{% endif %}
+                            <input type="file" name="photos" accept="image/*" class="hidden" id="buyback-photo-{{ photo.angle }}" onchange="this.form.submit()">
+                            <label for="buyback-photo-{{ photo.angle }}" class="absolute inset-0 cursor-pointer flex flex-col justify-end">
+                                {% if photo.media %}
+                                    <img src="{{ photo.media.file.url }}" class="absolute inset-0 w-full h-full object-cover" alt="{{ photo.label }}">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent"></div>
+                                {% else %}
+                                    <div class="absolute inset-0 flex items-center justify-center">
+                                        <span class="material-symbols-outlined text-3xl {% if photo.required %}text-status-alert/70{% else %}text-outline{% endif %}">add_a_photo</span>
+                                    </div>
+                                {% endif %}
+                                <div class="relative z-10 p-3">
+                                    <div class="flex items-center gap-1.5">
+                                        {% if photo.media %}<span class="material-symbols-outlined text-emerald-400 text-[16px]">check_circle</span>{% endif %}
+                                        <span class="text-xs font-bold {% if photo.media %}text-white{% else %}text-on-surface{% endif %}">{{ photo.label }}</span>
+                                        {% if photo.required %}<span class="text-[9px] uppercase font-bold text-status-alert">{% trans "Required" %}</span>{% endif %}
+                                    </div>
+                                    <p class="text-[10px] mt-1 leading-snug {% if photo.media %}text-white/75{% else %}text-on-surface-variant{% endif %}">{{ photo.help_text }}</p>
+                                </div>
+                            </label>
+                        </form>
+                        {% endfor %}
+                    </div>
+
+                    {% if buyback_photo_complete %}
+                    <p class="mt-3 text-xs text-emerald-500 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px]">verified</span>
+                        {% trans "Required photos are complete. AI assessment is ready." %}
+                    </p>
+                    {% else %}
+                    <p class="mt-3 text-xs text-status-alert flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[16px]">info</span>
+                        {% trans "Complete all five required photos to unlock AI assessment." %}
+                    </p>
+                    {% endif %}
+                </section>
+                {% else %}
                 <!-- Upload Form & Drag Drop Area -->
                 <form id="ai-photo-upload" method="post" enctype="multipart/form-data" class="block relative overflow-hidden group border-2 border-dashed border-outline-variant hover:border-ai-cyan/50 rounded-lg bg-surface-container-lowest/50 transition-colors cursor-pointer min-h-[220px]">
                     {% csrf_token %}
@@ -134,6 +206,7 @@
                         </div>
                     </label>
                 </form>
+                {% endif %}
             </div>
 
             <!-- Uploaded Thumbnails -->
@@ -260,6 +333,14 @@
                 </div>
             </div>
 
+            {% if has_buyback_service and not buyback_photo_complete %}
+            <div class="mt-6">
+                <button type="button" disabled class="w-full py-2 px-4 rounded border border-white/10 text-outline cursor-not-allowed font-label-caps text-label-caps flex justify-center items-center gap-2 opacity-60">
+                    <span class="material-symbols-outlined text-sm">lock</span>
+                    {% trans "Complete required photos first" %}
+                </button>
+            </div>
+            {% else %}
             <form method="post" action="{% url 'ai_mart_grading:run_assessment' asset.pk %}" class="mt-6">
                 {% csrf_token %}
                 <button class="w-full py-2 px-4 rounded border border-white/20 text-on-surface hover:bg-white/5 transition-colors font-label-caps text-label-caps flex justify-center items-center gap-2">
@@ -267,6 +348,7 @@
                     {% if latest_assessment %}{% trans "Re-scan asset" %}{% else %}{% trans "Start AI assessment" %}{% endif %}
                 </button>
             </form>
+            {% endif %}
         </div>
         {% else %}
         <div class="glass-card rounded-xl p-6 h-full flex flex-col justify-between">
@@ -310,7 +392,48 @@
 
     <!-- Right Column: Results & Insights -->
     <div class="lg:col-span-3 flex flex-col gap-6">
-        {% if show_ai_grading %}
+        {% if care_price_recommendation %}
+        <div class="glass-card ai-glow-border p-6 rounded-xl relative overflow-hidden">
+            <div class="absolute top-0 right-0 p-4 opacity-10">
+                <span class="material-symbols-outlined text-6xl text-ai-cyan">local_laundry_service</span>
+            </div>
+            <div class="relative z-10">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-5">
+                    <h3 class="font-headline-md text-headline-md font-semibold text-on-surface">{% trans "AI cleaning price estimate" %}</h3>
+                    <span class="px-2 py-1 rounded-full bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/20 text-[10px] font-data-mono font-bold uppercase">
+                        {% trans "Configured shop price" %}
+                    </span>
+                </div>
+
+                <div class="rounded-lg bg-surface-container-low p-4 border border-white/5">
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="text-sm text-on-surface-variant">{% trans "Dirt level" %}</span>
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold {% if care_price_recommendation.dirt_level == 'light' %}bg-ai-cyan/10 text-ai-cyan{% elif care_price_recommendation.dirt_level == 'moderate' %}bg-status-alert/10 text-status-alert{% else %}bg-status-error/10 text-status-error{% endif %}">
+                            {{ care_price_recommendation.dirt_label }} · {{ care_price_recommendation.cleanliness_percentage }}%
+                        </span>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-white/5">
+                        <p class="text-xs text-on-surface-variant uppercase tracking-wider">{% trans "Recommended service" %}</p>
+                        <p class="text-on-surface font-semibold mt-1">{{ care_price_recommendation.service|service_name }}</p>
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <p class="font-label-caps text-label-caps text-on-surface-variant mb-1">{% trans "Estimated cleaning price" %}</p>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-display-lg text-display-lg font-bold text-ai-cyan glow-accent">{{ care_price_recommendation.price|money }}</span>
+                        <span class="font-body-md text-on-surface-variant">₭</span>
+                    </div>
+                </div>
+
+                <p class="mt-5 pt-4 border-t border-white/10 text-[11px] text-on-surface-variant leading-relaxed">
+                    {% trans "This is an approximate price from the shop service table. Staff must inspect the physical pair and confirm the final price." %}
+                </p>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if show_buyback %}
         <!-- Result Card -->
         <div class="glass-card ai-glow-border p-6 rounded-xl relative overflow-hidden flex flex-col justify-between">
             <div class="absolute top-0 right-0 p-4 opacity-10">
@@ -327,7 +450,7 @@
                             <p class="font-label-caps text-label-caps text-on-surface-variant mb-1 uppercase tracking-wider">{% trans "Estimated market price" %}</p>
                             <div class="flex items-baseline gap-1">
                                 <span class="font-display-lg text-display-lg font-bold text-on-surface">
-                                    {{ latest_price.raw_response.base_price|default:latest_price.suggested_price|money }}
+                                    {{ latest_price.suggested_price|money }}
                                 </span>
                                 <span class="font-body-md text-on-surface-variant">{{ latest_price.currency }}</span>
                             </div>
@@ -354,22 +477,37 @@
                                     <span class="text-ai-cyan">+0 {{ latest_price.currency }}</span>
                                 {% endif %}
                             </div>
+                            <div class="flex justify-between text-body-sm">
+                                <span class="text-on-surface-variant">{% trans "Refurbishment cost" %}</span>
+                                <span class="text-status-error">-{{ latest_price.raw_response.refurbishment_cost|default:0|money }} {{ latest_price.currency }}</span>
+                            </div>
+                            <div class="flex justify-between text-body-sm">
+                                <span class="text-on-surface-variant">{% trans "Risk reserve" %}</span>
+                                <span class="text-status-error">-{{ latest_price.raw_response.risk_reserve|default:0|money }} {{ latest_price.currency }}</span>
+                            </div>
+                            <div class="flex justify-between text-body-sm">
+                                <span class="text-on-surface-variant">{% trans "Target shop margin" %}</span>
+                                <span class="text-on-surface">{{ latest_price.raw_response.target_margin_percent|default:25 }}%</span>
+                            </div>
                         </div>
 
                         <div class="bg-surface-container-lowest/50 p-4 rounded-lg border border-white/5">
                             <p class="font-label-caps text-label-caps text-ai-cyan mb-1 flex items-center gap-1">
                                 <span class="material-symbols-outlined text-sm">trending_up</span>
-                                {% trans "Recommended resell price" %}
+                                {% trans "Recommended shop buy-back offer" %}
                             </p>
                             <div class="flex items-baseline gap-1">
                                 <span class="font-headline-lg text-headline-lg font-bold text-ai-cyan glow-accent">
-                                    {{ latest_price.suggested_price|money }}
+                                    {{ latest_price.raw_response.recommended_buy_price|default:latest_price.suggested_price|money }}
                                 </span>
                                 <span class="font-body-sm text-ai-cyan/70">{{ latest_price.currency }}</span>
                             </div>
                             <span class="inline-block mt-2 px-2 py-1 rounded bg-secondary-fixed/20 text-secondary-fixed font-data-mono text-[10px] uppercase font-bold">
                                 {{ latest_price.localized_demand }}
                             </span>
+                            <p class="mt-3 text-[11px] text-on-surface-variant leading-relaxed">
+                                {% trans "AI estimate only. Staff must inspect the physical pair and confirm the final offer." %}
+                            </p>
                         </div>
 
                         <div class="flex items-center justify-between pt-4 border-t border-white/10 text-xs">
@@ -385,18 +523,25 @@
                 {% else %}
                     <div class="text-on-surface-variant text-sm py-8 text-center bg-surface-container-low/30 rounded-lg border border-white/5">
                         <p class="mb-4">{% trans "No valuation has been generated yet." %}</p>
+                        {% if valuation_ready %}
                         <form method="post" action="{% url 'resell_pricing_engine:run_valuation' asset.pk %}">
                             {% csrf_token %}
                             <button class="w-full btn-gradient text-on-primary px-4 py-2.5 rounded-lg text-sm font-bold transition-transform hover:scale-105 active:scale-95">
                                 {% trans "Run valuation" %}
                             </button>
                         </form>
+                        {% else %}
+                        <button type="button" disabled class="w-full border border-white/10 text-outline px-4 py-2.5 rounded-lg text-sm font-bold cursor-not-allowed opacity-60 flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">lock</span>
+                            {% trans "Complete photos and AI assessment first" %}
+                        </button>
+                        {% endif %}
                     </div>
                 {% endif %}
                 {% endwith %}
             </div>
 
-            {% if valuations %}
+            {% if valuations and valuation_ready %}
                 <form method="post" action="{% url 'resell_pricing_engine:run_valuation' asset.pk %}" class="mt-6">
                     {% csrf_token %}
                     <button class="w-full py-2 px-4 rounded border border-white/20 text-on-surface hover:bg-white/5 transition-colors font-label-caps text-label-caps flex justify-center items-center gap-2">

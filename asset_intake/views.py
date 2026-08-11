@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext as _, gettext_noop
 
-from ai_mart_grading.models import ChecklistItem
+from ai_mart_grading.models import Assessment, ChecklistItem
 from crm.models import Customer
 from media_backup.models import MediaFile
 from notifications.services import build_wa_link
@@ -39,8 +39,153 @@ CHECKLIST_LABELS = {
     "ການກວດຄວາມແທ້ເບື້ອງຕົ້ນ (Authenticity)": gettext_noop("Preliminary authenticity check"),
 }
 
-# ບໍລິການທີ່ໃຊ້ AI Grading checklist + ລາຄາຂາຍຕໍ່ — ບໍລິການອື່ນ (ຊັກ/ສ້ອມ/ສະປາ) ບໍ່ຕ້ອງການ 2 ອັນນີ້
+# ບໍລິການທີ່ໃຊ້ AI Grading checklist — ບໍລິການອື່ນ (ຊັກ/ສ້ອມ/ສະປາ) ບໍ່ຕ້ອງການອັນນີ້
 AI_GRADING_SERVICE_NAME = "AI Condition Report"
+
+# The AI supplies only the cleanliness score. Service names and prices always
+# come from the shop-managed ServiceType table.
+CLEANLINESS_CHECKLIST_NAMES = {
+    "ຮອຍເປື້ອນ/ຄວາມສະອາດຂອງໜ້າເກີບ",
+    "Upper cleanliness and stains",
+}
+
+
+def build_care_price_recommendation(assessment):
+    """Map a completed AI cleanliness score to an active shop price tier.
+
+    The recommendation is intentionally deterministic: AI does not generate
+    money. Active primary services are sorted by their configured price, then
+    light/moderate/heavy dirt selects the low/middle/high tier respectively.
+    """
+    if not assessment or assessment.status != Assessment.Status.DONE:
+        return None
+
+    from pos.models import ServiceType
+
+    primary_services = list(
+        ServiceType.objects.filter(
+            is_active=True,
+            category=ServiceType.Category.PRIMARY,
+        ).order_by("price", "pk")
+    )
+    if not primary_services:
+        return None
+
+    assessment_items = list(assessment.items.select_related("checklist_item"))
+    if not assessment_items:
+        return None
+
+    cleanliness_item = next(
+        (
+            item
+            for item in assessment_items
+            if item.checklist_item.name in CLEANLINESS_CHECKLIST_NAMES
+        ),
+        None,
+    )
+    if cleanliness_item is None:
+        cleanliness_item = next(
+            (
+                item
+                for item in assessment_items
+                if "cleanliness" in item.checklist_item.name.lower()
+                or "stain" in item.checklist_item.name.lower()
+                or "ເປື້ອນ" in item.checklist_item.name
+            ),
+            None,
+        )
+
+    if cleanliness_item and cleanliness_item.checklist_item.max_score:
+        percentage = (
+            float(cleanliness_item.score)
+            / cleanliness_item.checklist_item.max_score
+            * 100
+        )
+    else:
+        # Legacy assessments may not have a dedicated cleanliness row. Use a
+        # weighted checklist average so an existing completed report can still
+        # produce a useful estimate.
+        maximum = sum(
+            item.checklist_item.max_score for item in assessment_items
+        )
+        if not maximum:
+            return None
+        percentage = (
+            sum(float(item.score) for item in assessment_items) / maximum * 100
+        )
+
+    percentage = max(0, min(100, round(percentage)))
+    if percentage >= 80:
+        dirt_level = "light"
+        dirt_label = _("Light dirt")
+        service = primary_services[0]
+    elif percentage >= 50:
+        dirt_level = "moderate"
+        dirt_label = _("Moderate dirt")
+        service = primary_services[len(primary_services) // 2]
+    else:
+        dirt_level = "heavy"
+        dirt_label = _("Heavy dirt")
+        service = primary_services[-1]
+
+    return {
+        "dirt_level": dirt_level,
+        "dirt_label": dirt_label,
+        "cleanliness_percentage": percentage,
+        "service": service,
+        "price": service.price,
+    }
+
+BUYBACK_PHOTO_REQUIREMENTS = (
+    (
+        MediaFile.CaptureAngle.FRONT,
+        gettext_noop("Front / toe box"),
+        gettext_noop("Show both shoes, toe boxes, laces, and overall shape."),
+        True,
+    ),
+    (
+        MediaFile.CaptureAngle.HEEL,
+        gettext_noop("Heel / rear"),
+        gettext_noop("Show heel logos, stitching, and rear sole wear."),
+        True,
+    ),
+    (
+        MediaFile.CaptureAngle.SIDE,
+        gettext_noop("Side profile"),
+        gettext_noop("Show materials, Swoosh, stitching, and midsole."),
+        True,
+    ),
+    (
+        MediaFile.CaptureAngle.OUTSOLE,
+        gettext_noop("Outsole"),
+        gettext_noop("Show the complete tread and wear on both soles."),
+        True,
+    ),
+    (
+        MediaFile.CaptureAngle.SIZE_LABEL,
+        gettext_noop("Size label / SKU"),
+        gettext_noop("Make the SKU, size, dates, and QR code readable."),
+        True,
+    ),
+    (
+        MediaFile.CaptureAngle.INNER,
+        gettext_noop("Inner side / insole"),
+        gettext_noop("Show the inner side, insole logo, and inner stitching."),
+        False,
+    ),
+    (
+        MediaFile.CaptureAngle.BOX_ACCESSORIES,
+        gettext_noop("Box and accessories"),
+        gettext_noop("Show the box label, receipt, spare laces, and accessories."),
+        False,
+    ),
+    (
+        MediaFile.CaptureAngle.DEFECT,
+        gettext_noop("Defect close-up"),
+        gettext_noop("Add a close-up of any stain, tear, crack, or repair."),
+        False,
+    ),
+)
 
 
 @login_required
@@ -122,6 +267,10 @@ def intake_detail(request, pk):
 
     if request.method == "POST" and "upload_stage" in request.POST:
         stage = request.POST.get("upload_stage", MediaFile.Stage.BEFORE)
+        capture_angle = request.POST.get("capture_angle", "").strip()
+        valid_angles = {value for value, _label in MediaFile.CaptureAngle.choices}
+        if capture_angle not in valid_angles:
+            capture_angle = ""
         for f in request.FILES.getlist("photos"):
             is_video = (f.content_type or "").startswith("video")
             MediaFile.objects.create(
@@ -131,6 +280,7 @@ def intake_detail(request, pk):
                 media_type=(
                     MediaFile.MediaType.VIDEO if is_video else MediaFile.MediaType.IMAGE
                 ),
+                capture_angle=capture_angle,
             )
         messages.success(request, _("Files uploaded successfully."))
         if ai_mode:
@@ -159,6 +309,9 @@ def intake_detail(request, pk):
     latest_assessment = asset.assessments.prefetch_related(
         "items__checklist_item"
     ).first()
+    latest_completed_assessment = asset.assessments.prefetch_related(
+        "items__checklist_item"
+    ).filter(status=Assessment.Status.DONE).first()
 
     assessment_items_map = {}
     if latest_assessment:
@@ -213,20 +366,36 @@ def intake_detail(request, pk):
     asset.localized_status = status_labels.get(asset.status, asset.status)
 
     # ບໍລິການທີ່ຕິດກັບ order ນີ້ — ຖ້າບໍ່ມີ order (ຮັບເຄື່ອງຜ່ານໜ້າ AI Grading ໂດຍກົງ)
-    # ຫຼືມີບໍລິການ AI Condition Report ຢູ່ນຳ ຫຼືເຄີຍ run assessment/valuation ໄປແລ້ວ
-    # (ບໍ່ຢາກເຊື່ອງຜົນທີ່ AI ສ້າງໄວ້ແລ້ວ) ໃຫ້ສະແດງ block AI checklist + ລາຄາຂາຍຕໍ່ຄືເກົ່າ.
-    # ຖ້າມີແຕ່ບໍລິການອື່ນ (ຊັກ/ສ້ອມ/ສະປາ) ແລະ ບໍ່ເຄີຍປະເມີນ ໃຫ້ສະແດງ block ຄວາມຄືບໜ້າວຽກແທນ.
+    # ຫຼືມີບໍລິການ AI Condition Report / ຮັບຊື້ເກີບມືສອງ ຢູ່ນຳ ຫຼືເຄີຍ run assessment ໄປແລ້ວ
+    # (ບໍ່ຢາກເຊື່ອງຜົນທີ່ AI ສ້າງໄວ້ແລ້ວ) ໃຫ້ສະແດງ block checklist ສະພາບ.
+    # checklist ນີ້ແມ່ນໂຄງລ່າງຮ່ວມ — ໃຊ້ຮ່ວມກັນທັງ 2 ບໍລິການ (ຄວາມສະອາດ ສຳລັບຊັກເກີບ,
+    # ຄວາມແທ້/ອຸປະກອນຄົບຖ້ວນ ສຳລັບປະເມີນລາຄາຮັບຊື້) ຈຶ່ງບໍ່ຕ້ອງແຍກຕາມບໍລິການ.
+    from pos.models import ServiceType
+
     order_items_with_service = list(
         asset.order_items.select_related("service_type").exclude(service_type__isnull=True)
     )
     service_names = {item.service_type.name for item in order_items_with_service}
+    has_buyback_service = any(
+        item.service_type.category == ServiceType.Category.BUYBACK
+        for item in order_items_with_service
+    )
     show_ai_grading = (
         ai_mode
         or not order_items_with_service
         or AI_GRADING_SERVICE_NAME in service_names
+        or has_buyback_service
         or latest_assessment is not None
         or asset.valuations.exists()
     )
+    # ຜົນການປະເມີນລາຄາຮັບຊື້ (panel ຄໍລຳຂວາ) ແຍກອອກຕ່າງຫາກ — ສະແດງສະເພາະອໍເດີທີ່ມີ
+    # ບໍລິການ "ຮັບຊື້ເກີບມືສອງ" ແທ້ໆ ຫຼືເຄີຍປະເມີນລາຄາໄວ້ແລ້ວ (ຮັກສາຂໍ້ມູນເກົ່າກ່ອນຈະແຍກ category ນີ້)
+    show_buyback = has_buyback_service or asset.valuations.exists()
+    care_price_recommendation = None
+    if not show_buyback:
+        care_price_recommendation = build_care_price_recommendation(
+            latest_completed_assessment
+        )
     work_services = [
         item for item in order_items_with_service
         if item.service_type.name != AI_GRADING_SERVICE_NAME
@@ -267,15 +436,59 @@ def intake_detail(request, pk):
         )
         valuation.localized_demand = demand_labels.get(demand_level, demand_level)
 
+    before_media = list(
+        asset.media_files.filter(stage=MediaFile.Stage.BEFORE)
+    )
+    after_media = list(
+        asset.media_files.filter(stage=MediaFile.Stage.AFTER)
+    )
+    captured_by_angle = {}
+    for media in before_media:
+        if media.media_type == MediaFile.MediaType.IMAGE and media.capture_angle:
+            captured_by_angle.setdefault(media.capture_angle, media)
+
+    buyback_photo_checklist = []
+    required_buyback_angles = []
+    for angle, label, help_text, required in BUYBACK_PHOTO_REQUIREMENTS:
+        if required:
+            required_buyback_angles.append(angle)
+        buyback_photo_checklist.append(
+            {
+                "angle": angle,
+                "label": _(label),
+                "help_text": _(help_text),
+                "required": required,
+                "media": captured_by_angle.get(angle),
+            }
+        )
+    captured_required_count = sum(
+        1 for angle in required_buyback_angles if angle in captured_by_angle
+    )
+    buyback_photo_complete = (
+        captured_required_count == len(required_buyback_angles)
+    )
+    valuation_ready = (
+        (not has_buyback_service or buyback_photo_complete)
+        and asset.assessments.filter(status="done").exists()
+    )
+
     context = {
         "active_nav": "intake",
         "asset": asset,
-        "before_media": asset.media_files.filter(stage=MediaFile.Stage.BEFORE),
-        "after_media": asset.media_files.filter(stage=MediaFile.Stage.AFTER),
+        "before_media": before_media,
+        "after_media": after_media,
         "assessments": asset.assessments.all()[:5],
         "latest_assessment": latest_assessment,
         "checklist_status": checklist_status,
         "show_ai_grading": show_ai_grading,
+        "show_buyback": show_buyback,
+        "care_price_recommendation": care_price_recommendation,
+        "buyback_photo_checklist": buyback_photo_checklist,
+        "buyback_required_photo_count": len(required_buyback_angles),
+        "buyback_captured_required_count": captured_required_count,
+        "buyback_photo_complete": buyback_photo_complete,
+        "valuation_ready": valuation_ready,
+        "has_buyback_service": has_buyback_service,
         "ai_mode": ai_mode,
         "work_services": work_services,
         "work_progress_stages": work_progress_stages,
