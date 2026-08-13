@@ -12,8 +12,9 @@
     (function () {
         const storageKey = "hug-kerb-theme";
         const savedTheme = localStorage.getItem(storageKey);
-        const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-        const theme = savedTheme || (prefersDark ? "dark" : "light");
+        // ຄ່າເລີ່ມຕົ້ນ = ໂໝດແຈ້ງ (ຂາວ 70% + #1d2b53 30%) ບໍ່ຕາມ OS
+        // ຜູ້ໃຊ້ຍັງສະຫຼັບເປັນໂໝດມືດເອງໄດ້ ແລະລະບົບຈື່ໄວ້ໃນ localStorage
+        const theme = savedTheme || "light";
         document.documentElement.classList.toggle("dark", theme === "dark");
         document.documentElement.dataset.theme = theme;
         // ຕັ້ງສະຖານະ sidebar ກ່ອນ render ເພື່ອບໍ່ໃຫ້ກະພິບ
@@ -84,66 +85,99 @@
     };
 </script>
 <style>
+    /* ═══ ໂທນສີແບຣນ: ສີຂາວ 70% + #1d2b53 30% ═══
+       ຂາວ = ພື້ນໜ້າ, card, input (ສ່ວນຫຼາຍຂອງໜ້າຈໍ)
+       #1d2b53 = ຕົວອັກສອນ, sidebar, ປຸ່ມຫຼັກ, ເສັ້ນຂອບ, accent
+       ສີແດງ/ຂຽວ ເກັບໄວ້ສະເພາະຄວາມໝາຍ (error / success) ເທົ່ານັ້ນ */
     :root {
         color-scheme: light;
-        --color-background: 248 249 255;
-        --color-surface: 248 249 255;
-        --color-surface-deep: 239 244 255;
-        --color-surface-glass: rgba(255, 255, 255, 0.82);
-        --color-surface-container: 229 238 255;
-        --color-surface-container-low: 239 244 255;
+        /* ── ຂາວ 70% ── */
+        --color-background: 255 255 255;
+        --color-surface: 255 255 255;
+        --color-surface-deep: 246 247 250;
+        --color-surface-glass: rgba(255, 255, 255, 0.88);
+        --color-surface-container: 255 255 255;
+        --color-surface-container-low: 250 251 253;
         --color-surface-container-lowest: 255 255 255;
-        --color-surface-container-high: 220 233 255;
-        --color-surface-container-highest: 211 228 254;
-        --color-surface-variant: 211 228 254;
-        --color-on-surface: 11 28 48;
-        --color-on-surface-variant: 66 71 84;
+        --color-surface-container-high: 240 242 248;
+        --color-surface-container-highest: 231 235 244;
+        --color-surface-variant: 231 235 244;
+        /* ── #1d2b53 30% ── */
+        --color-on-surface: 29 43 83;
+        --color-on-surface-variant: 90 102 133;
         --color-on-primary: 255 255 255;
-        --color-ai-cyan: 0 88 190;
-        --color-ai-purple: 139 92 246;
-        --color-secondary-fixed: 0 104 122;
+        --color-ai-cyan: 29 43 83;
+        --color-ai-purple: 44 65 128;
+        --color-secondary-fixed: 29 43 83;
         --color-status-error: 186 26 26;
         --color-status-alert: 186 26 26;
-        --color-outline: 114 119 133;
-        --color-outline-variant: 194 198 214;
-        --glass-card-bg: rgba(255, 255, 255, 0.74);
-        --glass-card-border: rgba(11, 28, 48, 0.12);
-        --grid-dot: rgba(0, 88, 190, 0.10);
-        --data-row-bg: rgba(0, 88, 190, 0.04);
+        --color-outline: 122 133 160;
+        --color-outline-variant: 214 219 232;
+        --glass-card-bg: rgba(255, 255, 255, 0.92);
+        --glass-card-border: rgba(29, 43, 83, 0.12);
+        --grid-dot: rgba(29, 43, 83, 0.07);
+        --data-row-bg: rgba(29, 43, 83, 0.035);
     }
+    /* ໂໝດມືດ: ໃຊ້ #1d2b53 ເປັນສີພື້ນຖານແທນ slate — ຮັກສາແບຣນດຽວກັນທັງສອງໂໝດ */
     .dark {
         color-scheme: dark;
-        --color-background: 11 15 25;
-        --color-surface: 11 15 25;
-        --color-surface-deep: 8 11 19;
-        --color-surface-glass: rgba(11, 15, 25, 0.75);
-        --color-surface-container: 30 41 59;
-        --color-surface-container-low: 19 27 46;
-        --color-surface-container-lowest: 15 23 42;
-        --color-surface-container-high: 42 59 82;
-        --color-surface-container-highest: 61 82 110;
-        --color-surface-variant: 51 65 85;
-        --color-on-surface: 248 250 252;
-        --color-on-surface-variant: 148 163 184;
-        --color-on-primary: 15 23 42;
-        --color-ai-cyan: 56 189 248;
-        --color-ai-purple: 129 140 248;
-        --color-secondary-fixed: 186 230 253;
+        --color-background: 14 20 38;
+        --color-surface: 14 20 38;
+        --color-surface-deep: 10 15 30;
+        --color-surface-glass: rgba(20, 29, 56, 0.78);
+        --color-surface-container: 29 43 83;
+        --color-surface-container-low: 22 33 64;
+        --color-surface-container-lowest: 16 24 47;
+        --color-surface-container-high: 38 55 102;
+        --color-surface-container-highest: 52 73 130;
+        --color-surface-variant: 44 62 112;
+        --color-on-surface: 244 247 253;
+        --color-on-surface-variant: 165 178 208;
+        --color-on-primary: 29 43 83;
+        --color-ai-cyan: 138 172 255;
+        --color-ai-purple: 122 146 235;
+        --color-secondary-fixed: 199 214 255;
         --color-status-error: 248 113 113;
         --color-status-alert: 251 146 60;
-        --color-outline: 100 116 139;
-        --color-outline-variant: 30 41 59;
-        --glass-card-bg: rgba(15, 23, 42, 0.65);
-        --glass-card-border: rgba(255, 255, 255, 0.05);
-        --grid-dot: rgba(56, 189, 248, 0.04);
-        --data-row-bg: rgba(255, 255, 255, 0.015);
+        --color-outline: 116 133 173;
+        --color-outline-variant: 38 55 102;
+        --glass-card-bg: rgba(22, 33, 64, 0.72);
+        --glass-card-border: rgba(255, 255, 255, 0.07);
+        --grid-dot: rgba(138, 172, 255, 0.05);
+        --data-row-bg: rgba(255, 255, 255, 0.02);
     }
+
+    /* Sidebar = ບລັອກ #1d2b53 ຫຼັກ (ສ່ວນໃຫຍ່ຂອງ 30%) — ຍ້ອມດ້ວຍ token ຕໍ່ scope
+       ຈຶ່ງບໍ່ຕ້ອງແກ້ class ໃນ markup ເລີຍ */
+    #sidebar {
+        background: #1d2b53;
+        --color-surface-container: 29 43 83;
+        --color-on-surface: 255 255 255;
+        --color-on-surface-variant: 186 197 224;
+        --color-ai-cyan: 232 238 251;
+        border-right-color: rgba(255, 255, 255, 0.12) !important;
+    }
+    #sidebar .btn-gradient {
+        background: #ffffff;
+        color: #1d2b53;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .28);
+    }
+    :root:not(.dark) #sidebar .border-white\/10,
+    :root:not(.dark) #sidebar .border-white\/5 { border-color: rgba(255, 255, 255, 0.14) !important; }
+    :root:not(.dark) #sidebar .bg-white\/5 { background-color: rgba(255, 255, 255, 0.10) !important; }
+    :root:not(.dark) #sidebar .hover\:bg-white\/5:hover { background-color: rgba(255, 255, 255, 0.10) !important; }
     body { font-family: 'Noto Sans Lao', 'Prompt', sans-serif; }
     .glass-card { background: var(--glass-card-bg); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--glass-card-border); }
+    /* Overlay ເຕັມຈໍ (modal scrim) ຕ້ອງບໍ່ຖືກ margin ຂອງ layout ດັນລົງ.
+       ຕົວ modal ສ່ວນຫຼາຍວາງຢູ່ໃນ .space-y-gutter ຂອງ block content ຈຶ່ງຖືກ
+       ໃສ່ margin-top:24px ຕິດມາ — margin ຍັງມີຜົນກັບ position:fixed
+       ເຮັດໃຫ້ scrim ເລີ່ມຕ່ຳກວ່າຂອບຈໍ ແລ້ວເຫັນເປັນຊ່ອງຫວ່າງເທິງສຸດ.
+       ຕ້ອງໃຊ້ !important ເພາະ selector ຂອງ space-y ມີ specificity ສູງກວ່າ mt-0 */
+    .fixed.inset-0 { margin: 0 !important; }
     .ai-glow-border { border-top: 2px solid rgb(var(--color-ai-purple)); border-left: 2px solid rgb(var(--color-ai-purple)); }
-    .btn-gradient { background: linear-gradient(90deg, rgb(var(--color-ai-cyan)) 0%, rgb(var(--color-ai-purple)) 100%); box-shadow: 0 0 15px 0 rgba(34,211,238,0.15); }
+    .btn-gradient { background: linear-gradient(90deg, rgb(var(--color-ai-cyan)) 0%, rgb(var(--color-ai-purple)) 100%); box-shadow: 0 1px 3px 0 rgba(29,43,83,0.25); }
     .pulse-dot { animation: pulse-glow 2s infinite; }
-    @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(34,211,238,.4);} 70% { box-shadow: 0 0 0 6px rgba(34,211,238,0);} 100% { box-shadow: 0 0 0 0 rgba(34,211,238,0);} }
+    @keyframes pulse-glow { 0% { box-shadow: 0 0 0 0 rgba(29,43,83,.35);} 70% { box-shadow: 0 0 0 6px rgba(29,43,83,0);} 100% { box-shadow: 0 0 0 0 rgba(29,43,83,0);} }
     .progress-fill { background: linear-gradient(90deg, rgb(var(--color-ai-cyan)) 0%, rgb(var(--color-ai-purple)) 100%); transition: height .6s ease, width .6s ease; }
     .soft-grid { background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px); background-size: 26px 26px; }
     .metric-card { min-height: 148px; }
@@ -151,10 +185,10 @@
     .material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
     input, select, textarea { color: rgb(var(--color-on-surface)); }
     :root:not(.dark) .border-white\/10,
-    :root:not(.dark) .border-white\/5 { border-color: rgba(11, 28, 48, 0.12) !important; }
-    :root:not(.dark) .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(11, 28, 48, 0.08) !important; }
-    :root:not(.dark) .bg-white\/5 { background-color: rgba(0, 88, 190, 0.08) !important; }
-    :root:not(.dark) .hover\:bg-white\/5:hover { background-color: rgba(0, 88, 190, 0.08) !important; }
+    :root:not(.dark) .border-white\/5 { border-color: rgba(29, 43, 83, 0.12) !important; }
+    :root:not(.dark) .divide-white\/5 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(29, 43, 83, 0.08) !important; }
+    :root:not(.dark) .bg-white\/5 { background-color: rgba(29, 43, 83, 0.06) !important; }
+    :root:not(.dark) .hover\:bg-white\/5:hover { background-color: rgba(29, 43, 83, 0.06) !important; }
     :root:not(.dark) .text-red-300 { color: rgb(var(--color-status-alert)) !important; }
     :root:not(.dark) .text-cyan-200 { color: rgb(var(--color-ai-cyan)) !important; }
 
@@ -176,7 +210,7 @@
 
 <aside id="sidebar" class="hidden md:flex flex-col w-64 h-screen sticky top-0 bg-surface-container border-r border-white/10 shrink-0 py-6 z-50 overflow-hidden">
     <a href="{% url 'home:index' %}" class="sidebar-brand px-6 mb-8 flex flex-col items-center text-center hover:opacity-85 transition-opacity block">
-        <div class="w-14 h-14 rounded-full overflow-hidden border border-white/10 mb-4 shadow-[0_0_24px_rgba(34,211,238,.16)]">
+        <div class="w-14 h-14 rounded-full overflow-hidden border border-white/10 mb-4 shadow-[0_0_24px_rgba(255,255,255,.14)]">
             <img src="{% static 'images/hug-kerb-logo.jpeg' %}" alt="Hug ເກີບ" class="w-full h-full object-cover">
         </div>
         <h1 class="font-display-lg text-ai-cyan font-bold tracking-tight" style="font-size:24px;line-height:1.1;">Hug ເກີບ AI</h1>
@@ -190,6 +224,10 @@
         <a href="{% url 'pos:create' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'pos' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
             <span class="material-symbols-outlined {% if active_nav == 'pos' %}fill{% endif %}">point_of_sale</span>
             <span class="font-label-caps tracking-widest">{% trans "POS" %}</span>
+        </a>
+        <a href="{% url 'pos:open_orders' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'open_orders' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
+            <span class="material-symbols-outlined {% if active_nav == 'open_orders' %}fill{% endif %}">receipt_long</span>
+            <span class="font-label-caps tracking-widest">{% trans "Open bills" %}</span>
         </a>
         <a href="{% url 'inventory:index' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'inventory' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
             <span class="material-symbols-outlined {% if active_nav == 'inventory' %}fill{% endif %}">inventory_2</span>
@@ -468,7 +506,13 @@
         code = (code || '').trim();
         if (!code) return;
         setGlobalScanStatus(globalI18n.searching + ' ' + code, '');
-        // Redirect directly to search URL
+        // ໜ້າໃດຕັ້ງ window.globalScanHandler ໄວ້ ຈະຮັບຜົນສະແກນເອງ
+        // (ເຊັ່ນ ໜ້າບິນຄ້າງ — ສະແກນແລ້ວກັ່ນຕອງໃນໜ້ານັ້ນ ບໍ່ພາອອກໄປ)
+        if (typeof window.globalScanHandler === 'function') {
+            stopGlobalCameraScan();
+            window.globalScanHandler(code);
+            return;
+        }
         window.location.href = "{% url 'dashboard:search' %}?q=" + encodeURIComponent(code);
     }
 
@@ -544,8 +588,12 @@
         document.addEventListener('keydown', function (e) {
             const modal = document.getElementById('global-scan-modal');
             if (modal && modal.classList.contains('flex')) return;
-            // Ignore if active element is input in pos/create to prevent conflict
-            if (window.location.pathname.includes('/pos/create/')) return;
+            // ໜ້າທີ່ມີຊ່ອງສະແກນ/ແປ້ນຕົວເລກຂອງຕົນເອງ — ຢ່າໃຫ້ wedge ແຍ່ງໄປ
+            // ໂດຍສະເພາະໜ້າຄິດເງິນ: ສະແກນຜິດຈັງຫວະຈະພາອອກຈາກໜ້າກາງຄັນຮັບເງິນ
+            const path = window.location.pathname;
+            if (path.includes('/pos/create/')
+                || path.includes('/checkout/')
+                || path.includes('/handover/')) return;
             
             const now = Date.now();
             if (now - lastTs > 80) buf = '';

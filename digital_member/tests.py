@@ -127,3 +127,47 @@ class LookupTest(TestCase):
             self.url, {"ticket_number": "TK-NOPE", "phone": "02011112222"}
         )
         self.assertContains(resp, "ບໍ່ພົບຂໍ້ມູນ ຫຼື ເບີໂທບໍ່ກົງ")
+
+
+class MemberCardImageTest(TestCase):
+    """ຮູບບັດສະສົມ Stamp ທີ່ສົ່ງໃຫ້ລູກຄ້າທາງ WhatsApp"""
+
+    def setUp(self):
+        self.customer = Customer.objects.create(name="ທ້າວ ທົດສອບ", phone="02077778888")
+        self.card = MemberCard.objects.create(customer=self.customer, stamps_count=3)
+
+    def test_card_image_returns_png_without_login(self):
+        response = self.client.get(
+            reverse("digital_member:member_card_image", args=[self.card.card_number])
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "image/png")
+        self.assertTrue(response.content.startswith(b"\x89PNG"))
+
+    def test_card_image_is_not_cached(self):
+        response = self.client.get(
+            reverse("digital_member:member_card_image", args=[self.card.card_number])
+        )
+        self.assertEqual(response["Cache-Control"], "no-store")
+
+    def test_inactive_card_image_is_hidden(self):
+        self.card.is_active = False
+        self.card.save(update_fields=["is_active"])
+        response = self.client.get(
+            reverse("digital_member:member_card_image", args=[self.card.card_number])
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_unknown_card_number_returns_404(self):
+        response = self.client.get(
+            reverse("digital_member:member_card_image", args=["HK-DOESNOTEXIST"])
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_whatsapp_message_includes_card_image_link(self):
+        from notifications.services import build_stamp_card_message, member_card_image_url
+
+        message = build_stamp_card_message(self.customer, self.card, visit_count=3)
+        self.assertIn(member_card_image_url(self.card), message)
+        self.assertIn("3/10", message)
+        self.assertIn("👟👟👟", message)

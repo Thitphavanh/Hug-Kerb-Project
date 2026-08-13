@@ -47,11 +47,11 @@
                         "on-primary-fixed": "#001a42",
                         "primary-fixed-dim": "#adc6ff",
                         "secondary-container": "#57dffe",
-                        "secondary": "#00687a",
+                        "secondary": "#2c4180",
                         "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
                         "tertiary": "#924700",
                         "outline": "rgb(var(--color-outline) / <alpha-value>)",
-                        "primary": "#0058be",
+                        "primary": "#1d2b53",
                         "on-secondary-fixed-variant": "#004e5c",
                         "on-primary-container": "#fefcff",
                         "tertiary-fixed": "#ffdcc6",
@@ -123,7 +123,7 @@
             --color-outline: 114 119 133;
             --color-on-surface-variant: 66 71 84;
             --color-on-background: 11 28 48;
-            --grid-dot: rgba(0, 88, 190, 0.10);
+            --grid-dot: rgba(29, 43, 83, 0.08);
         }
         .dark {
             --color-surface: 5 20 36;
@@ -141,7 +141,7 @@
             --color-outline: 144 144 150;
             --color-on-surface-variant: 199 198 204;
             --color-on-background: 212 228 250;
-            --grid-dot: rgba(34, 211, 238, 0.12);
+            --grid-dot: rgba(138, 172, 255, 0.10);
         }
         .glass-panel {
             background: rgba(255, 255, 255, 0.85);
@@ -404,7 +404,7 @@
 
             ctx.lineWidth = 3;
             ctx.lineCap = 'round';
-            ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#22d3ee' : '#0058be';
+            ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#8aacff' : '#1d2b53';
         }
         window.addEventListener('resize', resizeCanvas);
         window.addEventListener('load', resizeCanvas);
@@ -486,7 +486,7 @@
 
         // On theme toggle, update canvas drawing color
         const observer = new MutationObserver(() => {
-            ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#22d3ee' : '#0058be';
+            ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#8aacff' : '#1d2b53';
         });
         observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     </script>

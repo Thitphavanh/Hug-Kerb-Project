@@ -250,8 +250,8 @@ class AccountingTestCase(TestCase):
 
         english_kanban = self.client.get(kanban_url)
         self.assertContains(english_kanban, "Kanban Job Tracking")
-        self.assertContains(english_kanban, "Ready for pickup")
-        self.assertContains(english_kanban, "Drag each job to update")
+        self.assertContains(english_kanban, "All work")
+        self.assertContains(english_kanban, "Repair &amp; restoration")
 
         self.client.post(
             reverse("set_language"), {"language": "lo", "next": accounting_url}
@@ -260,13 +260,13 @@ class AccountingTestCase(TestCase):
         self.assertContains(lao_form, "ເພີ່ມລາຍການບັນຊີ")
         self.assertContains(lao_form, "ຊ່ອງທາງຊຳລະ")
         self.assertContains(lao_form, "ບັນທຶກລາຍການ")
-        self.assertContains(lao_form, "ຕິດຕາມວຽກ Kanban")
+        self.assertContains(lao_form, "ຕິດຕາມການເຮັດວຽກ")
         self.assertContains(lao_form, "ບັນຊີລາຍຮັບ–ລາຍຈ່າຍ")
 
         lao_kanban = self.client.get(kanban_url)
-        self.assertContains(lao_kanban, "ກະດານຕິດຕາມວຽກ Kanban")
-        self.assertContains(lao_kanban, "ພ້ອມໃຫ້ລູກຄ້າຮັບ")
-        self.assertContains(lao_kanban, "ລາກແຕ່ລະວຽກ")
+        self.assertContains(lao_kanban, "ກະດານຕິດຕາມການເຮັດວຽກ")
+        self.assertContains(lao_kanban, "ວຽກທັງໝົດ")
+        self.assertContains(lao_kanban, "ສ້ອມແປງ / ບູລະນະ")
 
     def test_accounting_dashboard_switches_all_primary_labels(self):
         CashBook.objects.create(

@@ -160,4 +160,15 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 # ສະໝັກທີ່ developers.facebook.com > WhatsApp > API Setup
 WHATSAPP_ACCESS_TOKEN = os.getenv("WHATSAPP_ACCESS_TOKEN", "")
 WHATSAPP_PHONE_NUMBER_ID = os.getenv("WHATSAPP_PHONE_NUMBER_ID", "")
+
+# ------------------------------------------------------------
+# POS — ໜ້າຄິດເງິນ
+# ------------------------------------------------------------
+# ສະກຸນເງິນຫຼັກ: ຍອດບິນ ແລະ ຍອດຄ້າງຄິດເປັນສະກຸນນີ້ສະເໝີ
+POS_BASE_CURRENCY = os.getenv("POS_BASE_CURRENCY", "LAK")
+
+# ອັດຕາແລກປ່ຽນເລີ່ມຕົ້ນ 1 ໜ່ວຍ → ສະກຸນຫຼັກ.
+# ປະຫວ່າງໄວ້ = ບັງຄັບໃຫ້ພະນັກງານປ້ອນອັດຕາເອງທຸກຄັ້ງທີ່ຮັບເງິນສະກຸນອື່ນ
+# (ອັດຕາຖືກລັອກເກັບໄວ້ໃນແຕ່ລະແຖວ Payment ຈຶ່ງທຽບບັນຊີຄືນໄດ້ສະເໝີ)
+POS_FX_RATES = {}
 STATIC_ROOT = '/Users/hery/My-Project/Hug-Kerb-Project/staticfiles'

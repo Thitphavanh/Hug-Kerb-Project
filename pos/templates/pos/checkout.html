@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+{% load i18n custom_filters %}
+
+{% block title %}{% trans "Checkout" %} {{ order.order_number }} — Hug ເກີບ AI{% endblock %}
+
+{% block content %}
+<style>
+    /* ຕົວເລກເງິນທຸກບ່ອນໃຊ້ຄວາມກວ້າງເທົ່າກັນ — ຕົວເລກຈະບໍ່ເຕັ້ນຕອນປ່ຽນຄ່າ */
+    .tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+    /* ໜ້າຄິດເງິນຫຼຸດ blur/glass ລົງ ໃຊ້ພື້ນທຶບ ຄອນທຣາສສູງ
+       ເພາະໜ້າຮ້ານມີແສງສະທ້ອນ ແລະ ພະນັກງານຕ້ອງອ່ານໄວ */
+    .pay-surface {
+        background: rgb(var(--color-surface-container-lowest));
+        border: 1px solid rgb(var(--color-outline-variant) / .55);
+    }
+
+    /* ປຸ່ມທຸກອັນໃນແຜງຮັບເງິນ ≥48px ຕາມມາດຕະຖານ touch target */
+    .pad-btn {
+        min-height: 56px;
+        border-radius: 12px;
+        border: 1px solid rgb(var(--color-outline-variant) / .7);
+        background: rgb(var(--color-surface-container));
+        color: rgb(var(--color-on-surface));
+        font-size: 1.25rem;
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        cursor: pointer;
+        transition: background-color .15s ease, border-color .15s ease;
+    }
+    .pad-btn:hover { background: rgb(var(--color-surface-container-high)); }
+    .pad-btn:active { background: rgb(var(--color-surface-variant)); }
+    .pad-btn:focus-visible { outline: 2px solid rgb(var(--color-ai-cyan)); outline-offset: 2px; }
+
+    .tender-btn {
+        min-height: 56px;
+        border-radius: 12px;
+        border: 1px solid rgb(var(--color-outline-variant) / .7);
+        background: rgb(var(--color-surface-container));
+        color: rgb(var(--color-on-surface-variant));
+        cursor: pointer;
+        transition: all .15s ease;
+    }
+    .tender-btn[aria-pressed="true"] {
+        background: rgb(var(--color-ai-cyan) / .14);
+        border-color: rgb(var(--color-ai-cyan));
+        color: rgb(var(--color-ai-cyan));
+    }
+    .tender-btn:focus-visible { outline: 2px solid rgb(var(--color-ai-cyan)); outline-offset: 2px; }
+
+    .quick-btn {
+        min-height: 48px;
+        border-radius: 10px;
+        border: 1px dashed rgb(var(--color-outline-variant));
+        background: transparent;
+        color: rgb(var(--color-on-surface-variant));
+        font-variant-numeric: tabular-nums;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .quick-btn:hover { border-style: solid; color: rgb(var(--color-ai-cyan)); border-color: rgb(var(--color-ai-cyan)); }
+
+    @media (prefers-reduced-motion: reduce) {
+        .pad-btn, .tender-btn { transition: none; }
+    }
+</style>
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+        <p class="font-label-caps tracking-widest text-on-surface-variant text-xs">{% trans "Checkout" %}</p>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface tnum">{{ order.order_number }}</h2>
+        <p class="font-body-md text-on-surface-variant mt-1">
+            {% if order.customer %}{{ order.customer.name }} · {{ order.customer.phone }}
+            {% else %}{% trans "Walk-in customer" %}{% endif %}
+        </p>
+    </div>
+    <div class="flex gap-3">
+        <a href="{% url 'pos:open_orders' %}" class="border border-outline-variant text-on-surface-variant rounded-lg px-4 py-2 hover:text-ai-cyan hover:border-ai-cyan transition-colors flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">receipt_long</span>{% trans "Open bills" %}
+        </a>
+        <a href="{% url 'pos:invoice' order.pk %}" class="border border-outline-variant text-on-surface-variant rounded-lg px-4 py-2 hover:text-ai-cyan hover:border-ai-cyan transition-colors flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">description</span>{% trans "Invoice" %}
+        </a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+
+    <!-- ================= ຊ້າຍ: ບິນ — ເຫັນຢູ່ຕະຫຼອດຕອນຈ່າຍເງິນ ================= -->
+    <section class="lg:col-span-7 pay-surface rounded-xl p-5 md:p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Bill" %}</h3>
+            <span class="font-label-caps text-xs tracking-widest px-2 py-1 rounded-full
+                {% if order.status == 'paid' %}bg-emerald-500/15 text-emerald-500
+                {% elif order.status == 'partially_paid' %}bg-amber-500/15 text-amber-500
+                {% else %}bg-surface-variant text-on-surface-variant{% endif %}">
+                {{ order.get_status_display }}
+            </span>
+        </div>
+
+        {% regroup order.items.all by asset as asset_groups %}
+        <div class="space-y-4">
+            {% for group in asset_groups %}
+            <div>
+                {% if group.grouper %}
+                <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <span class="tnum text-xs font-semibold px-2 py-1 rounded-full border border-outline-variant text-on-surface-variant">
+                        {{ group.grouper.ticket_number }}
+                    </span>
+                    <span class="text-xs text-on-surface-variant">
+                        {{ group.grouper.brand }} {{ group.grouper.model_name }}{% if group.grouper.color %} · {{ group.grouper.color }}{% endif %}
+                    </span>
+                    <span class="text-xs px-2 py-0.5 rounded-full
+                        {% if group.grouper.status == 'ready' %}bg-emerald-500/15 text-emerald-500
+                        {% elif group.grouper.status == 'returned' %}bg-surface-variant text-on-surface-variant
+                        {% else %}bg-ai-cyan/10 text-ai-cyan{% endif %}">
+                        {{ group.grouper.get_status_display }}
+                    </span>
+                </div>
+                {% endif %}
+                {% for item in group.list %}
+                {% firstof item.description item.service_type.name "" as item_label %}
+                <div class="flex justify-between gap-3 py-2 border-b border-outline-variant/40 text-sm">
+                    <span class="text-on-surface">{{ item_label }} <span class="text-on-surface-variant">×{{ item.quantity }}</span></span>
+                    <span class="tnum text-on-surface-variant shrink-0">{{ item.subtotal|money }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% empty %}
+            <p class="text-sm text-on-surface-variant py-6 text-center">{% trans "This bill has no service lines yet." %}</p>
+            {% endfor %}
+        </div>
+
+        <div class="mt-5 space-y-1.5 text-sm">
+            <div class="flex justify-between text-on-surface-variant">
+                <span>{% trans "Subtotal" %}</span><span class="tnum">{{ order.subtotal|money }}</span>
+            </div>
+            {% if order.discount %}
+            <div class="flex justify-between text-on-surface-variant">
+                <span>{% trans "Discount" %}</span><span class="tnum">−{{ order.discount|money }}</span>
+            </div>
+            {% endif %}
+            {% if order.vat_rate %}
+            <div class="flex justify-between text-on-surface-variant">
+                <span>VAT {{ order.vat_rate }}%</span><span class="tnum">{{ order.vat_amount|money }}</span>
+            </div>
+            {% endif %}
+            <div class="flex justify-between items-baseline pt-3 mt-2 border-t-2 border-on-surface/70">
+                <span class="font-semibold text-on-surface">{% trans "Total" %} ({{ base_currency }})</span>
+                <span class="tnum font-headline-lg text-headline-lg font-bold text-on-surface">{{ order.effective_total|money }}</span>
+            </div>
+        </div>
+
+        <!-- ledger ຂອງບິນນີ້ — ຮັບມາແລ້ວກີ່ແຖວ ຊ່ອງທາງໃດ -->
+        {% if order.payments.all %}
+        <div class="mt-5 pt-4 border-t border-outline-variant/50">
+            {# msgid ສະເພາະ — ຢ່າໃຊ້ "Received" ຊ້ຳກັບສະຖານະເຄື່ອງຮັບເຂົ້າ #}
+            <p class="font-label-caps text-xs tracking-widest text-on-surface-variant mb-2">{% trans "Payments received" %}</p>
+            <div class="space-y-1.5">
+                {% for p in order.payments.all %}
+                <div class="flex items-center justify-between gap-3 text-sm {% if p.is_voided %}opacity-50 line-through{% endif %}">
+                    <span class="text-on-surface-variant">
+                        {{ p.paid_at|date:"d/m H:i" }} · {{ p.get_method_display }}
+                        {% if p.kind == 'refund' %}<span class="text-status-error">· {% trans "Refund" %}</span>{% endif %}
+                        {% if p.currency != base_currency %}<span class="tnum text-xs">({{ p.amount|money }} {{ p.currency }} @ {{ p.fx_rate|floatformat:"-4" }})</span>{% endif %}
+                    </span>
+                    <span class="flex items-center gap-2 shrink-0">
+                        <span class="tnum {% if p.kind == 'refund' %}text-status-error{% else %}text-emerald-500{% endif %}">
+                            {% if p.kind == 'refund' %}−{% endif %}{{ p.base_amount|money }}
+                        </span>
+                        {% if can_void and not p.is_voided %}
+                        <form method="post" action="{% url 'pos:void_payment' order.pk p.pk %}"
+                              onsubmit="return confirm('{% trans "Void this payment line? This cannot be undone." %}');">
+                            {% csrf_token %}
+                            <button type="submit" class="text-on-surface-variant hover:text-status-error p-1 rounded"
+                                    title="{% trans 'Void payment' %}" aria-label="{% trans 'Void payment' %}">
+                                <span class="material-symbols-outlined text-[18px]">block</span>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="flex justify-between items-baseline pt-3 mt-3 border-t-2 border-on-surface/70">
+                <span class="font-semibold text-on-surface">{% trans "Balance due" %}</span>
+                <span class="tnum font-headline-lg text-headline-lg font-bold {% if balance_due > 0 %}text-status-error{% else %}text-emerald-500{% endif %}">
+                    {{ balance_due|money }}
+                </span>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    <!-- ================= ຂວາ: ຮັບເງິນ ================= -->
+    <section class="lg:col-span-5 pay-surface rounded-xl p-5 md:p-6 lg:sticky lg:top-4">
+        {% if balance_due > 0 %}
+        <form method="post" action="{% url 'pos:take_payment' order.pk %}" id="pay-form" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="idempotency_key" value="{{ idempotency_key }}">
+            <input type="hidden" name="amount" id="field-amount" value="">
+            <input type="hidden" name="tendered" id="field-tendered" value="">
+            <input type="hidden" name="method" id="field-method" value="cash">
+
+            <!-- ຊ່ອງທາງຈ່າຍ: ໄອຄອນ + ຕົວໜັງສືສະເໝີ ບໍ່ໃຊ້ໄອຄອນລ້ວນ -->
+            <div>
+                <p class="font-label-caps text-xs tracking-widest text-on-surface-variant mb-2">{% trans "Payment method" %}</p>
+                <div class="grid grid-cols-3 gap-2" role="group" aria-label="{% trans 'Payment method' %}">
+                    {% for value, label in payment_methods %}
+                    <button type="button" class="tender-btn flex flex-col items-center justify-center gap-1 px-2"
+                            data-method="{{ value }}" aria-pressed="{% if value == 'cash' %}true{% else %}false{% endif %}">
+                        <span class="material-symbols-outlined text-[20px]">{% if value == 'cash' %}payments{% elif value == 'qr' %}qr_code_2{% else %}account_balance{% endif %}</span>
+                        <span class="text-xs font-semibold">{{ label }}</span>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- ສະກຸນເງິນ + ອັດຕາແລກປ່ຽນ (ຂຶ້ນສະເພາະເມື່ອບໍ່ແມ່ນສະກຸນຫຼັກ) -->
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label for="field-currency" class="block text-xs font-semibold text-on-surface-variant mb-1">{% trans "Currency" %}</label>
+                    <select name="currency" id="field-currency"
+                            class="w-full min-h-[48px] rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface px-3">
+                        {% for value, label in currencies %}
+                        <option value="{{ value }}" {% if value == base_currency %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div id="fx-wrap" hidden>
+                    <label for="field-fx" class="block text-xs font-semibold text-on-surface-variant mb-1">
+                        {% trans "Rate to" %} {{ base_currency }}
+                    </label>
+                    <input type="text" inputmode="decimal" name="fx_rate" id="field-fx"
+                           class="tnum w-full min-h-[48px] rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface px-3"
+                           placeholder="0.00">
+                </div>
+            </div>
+
+            <!-- ຈຳນວນເງິນທີ່ຮັບມາ — ຕົວເລກໃຫຍ່ທີ່ສຸດໃນແຜງນີ້ -->
+            <div>
+                <div class="flex items-baseline justify-between mb-1">
+                    <label for="tender-display" class="text-xs font-semibold text-on-surface-variant">{% trans "Amount tendered" %}</label>
+                    <span class="text-xs text-on-surface-variant tnum">
+                        {% trans "Due" %}: <span id="due-display">{{ balance_due|money }}</span> <span id="due-currency">{{ base_currency }}</span>
+                    </span>
+                </div>
+                <output id="tender-display" for="field-tendered"
+                        class="tnum block w-full rounded-xl border border-outline-variant bg-surface-container-lowest
+                               px-4 py-3 text-right text-3xl font-bold text-on-surface"
+                        aria-live="polite">0</output>
+            </div>
+
+            <!-- ປຸ່ມທາງລັດ: ພໍດີ + ໃບເງິນມາດຕະຖານທີ່ ≥ ຍອດຄ້າງ -->
+            <div class="grid grid-cols-3 gap-2">
+                <button type="button" class="quick-btn" data-exact="1">{% trans "Exact" %}</button>
+                {% for value in quick_cash %}
+                <button type="button" class="quick-btn" data-quick="{{ value|floatformat:'0' }}">{{ value|money }}</button>
+                {% endfor %}
+            </div>
+
+            <!-- ແປ້ນຕົວເລກຝັງໃນໜ້າ ບໍ່ໃຊ້ modal ຊ້ອນ -->
+            <div class="grid grid-cols-3 gap-2">
+                {% for key in "789456123" %}<button type="button" class="pad-btn" data-key="{{ key }}">{{ key }}</button>{% endfor %}
+                <button type="button" class="pad-btn" data-key="0">0</button>
+                <button type="button" class="pad-btn" data-key="000">000</button>
+                <button type="button" class="pad-btn" data-clear="1" aria-label="{% trans 'Delete last digit' %}">
+                    <span class="material-symbols-outlined align-middle">backspace</span>
+                </button>
+            </div>
+
+            <!-- ເງິນທອນ — ຄິດໃຫ້ອັດຕະໂນມັດ ພະນັກງານບໍ່ຕ້ອງຄິດໃນຫົວ -->
+            <div id="change-box" class="flex items-baseline justify-between rounded-xl px-4 py-3 border border-emerald-500/60 bg-emerald-500/10" hidden>
+                <span class="text-sm font-semibold text-emerald-500">{% trans "Change due" %}</span>
+                <span id="change-display" class="tnum text-2xl font-bold text-emerald-500" aria-live="polite">0</span>
+            </div>
+
+            <p id="pay-hint" class="text-xs text-on-surface-variant tnum"></p>
+
+            <!-- CTA ຫຼັກອັນດຽວຂອງໜ້ານີ້ -->
+            <button type="submit" id="pay-submit" disabled
+                    class="w-full min-h-[56px] rounded-xl btn-gradient text-on-primary font-bold text-base
+                           disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">point_of_sale</span>
+                <span id="pay-label">{% trans "Take payment" %}</span>
+            </button>
+
+            <div class="flex justify-between text-xs">
+                <a href="{% url 'pos:open_orders' %}" class="text-on-surface-variant hover:text-ai-cyan">{% trans "Park this bill" %}</a>
+                <a href="{% url 'pos:invoice' order.pk %}" class="text-on-surface-variant hover:text-ai-cyan">{% trans "Cancel" %}</a>
+            </div>
+        </form>
+        {% else %}
+        <div class="text-center py-6 space-y-4">
+            <span class="material-symbols-outlined text-emerald-500 text-5xl">task_alt</span>
+            <div>
+                <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Fully paid" %}</h3>
+                <p class="text-sm text-on-surface-variant mt-1">{% trans "Nothing left to collect on this bill." %}</p>
+            </div>
+            <div class="space-y-2">
+                <a href="{% url 'pos:handover' order.pk %}"
+                   class="w-full min-h-[56px] rounded-xl btn-gradient text-on-primary font-bold flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined">local_shipping</span>{% trans "Hand over items" %}
+                </a>
+                <a href="{% url 'pos:invoice' order.pk %}"
+                   class="w-full min-h-[48px] rounded-xl border border-outline-variant text-on-surface flex items-center justify-center gap-2 hover:border-ai-cyan hover:text-ai-cyan transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">print</span>{% trans "Receipt options" %}
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+
+{% if balance_due > 0 %}
+<script>
+(function () {
+    "use strict";
+
+    var BASE_CURRENCY = "{{ base_currency|escapejs }}";
+    var BALANCE_BASE = Number("{{ balance_due|stringformat:'f' }}");
+
+    var form = document.getElementById("pay-form");
+    var display = document.getElementById("tender-display");
+    var changeBox = document.getElementById("change-box");
+    var changeDisplay = document.getElementById("change-display");
+    var dueDisplay = document.getElementById("due-display");
+    var dueCurrency = document.getElementById("due-currency");
+    var hint = document.getElementById("pay-hint");
+    var submit = document.getElementById("pay-submit");
+    var payLabel = document.getElementById("pay-label");
+    var fieldAmount = document.getElementById("field-amount");
+    var fieldTendered = document.getElementById("field-tendered");
+    var fieldMethod = document.getElementById("field-method");
+    var fieldCurrency = document.getElementById("field-currency");
+    var fieldFx = document.getElementById("field-fx");
+    var fxWrap = document.getElementById("fx-wrap");
+
+    var digits = "";
+    var method = "cash";
+
+    function fmt(value) {
+        return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+    }
+
+    function floor2(value) {
+        return Math.floor(value * 100) / 100;
+    }
+
+    function rate() {
+        if (fieldCurrency.value === BASE_CURRENCY) return 1;
+        var parsed = parseFloat(fieldFx.value);
+        return isFinite(parsed) && parsed > 0 ? parsed : 0;
+    }
+
+    /* ຍອດຄ້າງແປງເປັນສະກຸນທີ່ກຳລັງຮັບ — ນີ້ຄືເພດານທີ່ຮັບໄດ້ */
+    function dueInCurrency() {
+        var r = rate();
+        return r > 0 ? floor2(BALANCE_BASE / r) : 0;
+    }
+
+    function tendered() {
+        return digits === "" ? 0 : Number(digits);
+    }
+
+    function render() {
+        var due = dueInCurrency();
+        var given = tendered();
+        /* ຈ່າຍໄດ້ບໍ່ເກີນຍອດຄ້າງ — ສ່ວນເກີນເປັນເງິນທອນ ບໍ່ແມ່ນລາຍຮັບ */
+        var applied = Math.min(given, due);
+        var change = Math.max(given - applied, 0);
+
+        display.textContent = fmt(given);
+        dueDisplay.textContent = fmt(due);
+        dueCurrency.textContent = fieldCurrency.value;
+
+        var showChange = method === "cash" && change > 0;
+        changeBox.hidden = !showChange;
+        changeDisplay.textContent = fmt(change);
+
+        fieldAmount.value = applied > 0 ? applied.toFixed(2) : "";
+        /* tendered ສົ່ງສະເພາະເງິນສົດ — ໂອນ/QR ບໍ່ມີການທອນ */
+        fieldTendered.value = (method === "cash" && given > 0) ? given.toFixed(2) : "";
+
+        if (rate() <= 0) {
+            hint.textContent = "{% trans 'Enter the exchange rate to continue.' %}";
+            submit.disabled = true;
+            return;
+        }
+        if (applied <= 0) {
+            hint.textContent = "";
+            submit.disabled = true;
+            return;
+        }
+        if (method !== "cash" && given > due) {
+            hint.textContent = "{% trans 'Amount is larger than the balance due.' %}";
+            submit.disabled = true;
+            return;
+        }
+
+        var remaining = floor2(due - applied);
+        hint.textContent = remaining > 0
+            ? "{% trans 'Remaining after this payment' %}: " + fmt(remaining) + " " + fieldCurrency.value
+            : "";
+        payLabel.textContent = remaining > 0
+            ? "{% trans 'Take partial payment' %}"
+            : "{% trans 'Take payment' %}";
+        submit.disabled = false;
+    }
+
+    form.addEventListener("click", function (event) {
+        var button = event.target.closest("button");
+        if (!button) return;
+
+        if (button.dataset.key) {
+            digits = (digits + button.dataset.key).replace(/^0+(?=\d)/, "").slice(0, 12);
+            render();
+        } else if (button.dataset.clear) {
+            digits = digits.slice(0, -1);
+            render();
+        } else if (button.dataset.exact) {
+            digits = String(dueInCurrency());
+            render();
+        } else if (button.dataset.quick) {
+            digits = button.dataset.quick;
+            render();
+        } else if (button.dataset.method) {
+            method = button.dataset.method;
+            fieldMethod.value = method;
+            form.querySelectorAll("[data-method]").forEach(function (el) {
+                el.setAttribute("aria-pressed", String(el.dataset.method === method));
+            });
+            render();
+        }
+    });
+
+    /* ຮັບຄີບອດຄຽງຄູ່ກັບແປ້ນຈໍ — ພະນັກງານທີ່ພິມໄວກວ່າຈະບໍ່ຖືກບັງຄັບໃຫ້ຈິ້ມ */
+    document.addEventListener("keydown", function (event) {
+        if (event.target.matches("input, select, textarea")) return;
+        if (event.key >= "0" && event.key <= "9") {
+            digits = (digits + event.key).replace(/^0+(?=\d)/, "").slice(0, 12);
+            render();
+        } else if (event.key === "Backspace") {
+            event.preventDefault();
+            digits = digits.slice(0, -1);
+            render();
+        }
+    });
+
+    fieldCurrency.addEventListener("change", function () {
+        fxWrap.hidden = fieldCurrency.value === BASE_CURRENCY;
+        render();
+    });
+    fieldFx.addEventListener("input", render);
+
+    /* ກັນກົດສົ່ງສອງເທື່ອຢູ່ຝັ່ງໜ້າຈໍ — ຝັ່ງເຊີບເວີກັນອີກຊັ້ນດ້ວຍ idempotency_key */
+    form.addEventListener("submit", function () {
+        submit.disabled = true;
+        payLabel.textContent = "{% trans 'Saving...' %}";
+    });
+
+    render();
+})();
+</script>
+{% endif %}
+{% endblock %}

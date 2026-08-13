@@ -119,6 +119,28 @@ def member_card_view(request, card_number):
     )
 
 
+def member_card_image(request, card_number):
+    """ບັດສະສົມ Stamp ເປັນຮູບ PNG — ໃຊ້ສົ່ງໃຫ້ລູກຄ້າທາງ WhatsApp
+
+    ເປັນ public (ບໍ່ຕ້ອງ login) ຄືກັນກັບໜ້າບັດ ເພາະລູກຄ້າຕ້ອງເປີດເບິ່ງໄດ້
+    ຈາກລິ້ງໃນຂໍ້ຄວາມ — ປົກປ້ອງດ້ວຍ card_number ທີ່ເດົາບໍ່ໄດ້
+    """
+    from django.http import HttpResponse
+
+    from .card_image import compose_member_card
+
+    card = get_object_or_404(
+        MemberCard.objects.select_related("customer"),
+        card_number=card_number,
+        is_active=True,
+    )
+    response = HttpResponse(compose_member_card(card), content_type="image/png")
+    response["Content-Disposition"] = f'inline; filename="{card.card_number}.png"'
+    # ບັດປ່ຽນທຸກຄັ້ງທີ່ໄດ້ Stamp ໃໝ່ — ຫ້າມ cache
+    response["Cache-Control"] = "no-store"
+    return response
+
+
 def logout_portal(request, token):
     """ອອກຈາກລະບົບ (ລຶບ session ສຳລັບໃບບິນນີ້)"""
     asset = get_object_or_404(Asset, public_token=token)

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load i18n custom_filters %}
+
+{% block title %}{% trans "Open bills" %} — Hug ເກີບ AI{% endblock %}
+
+{% block content %}
+<style>
+    .tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .bill-card {
+        display: block;
+        padding: 1rem 1.25rem;
+        border: 1px solid rgb(var(--color-outline-variant) / .6);
+        border-radius: 12px;
+        background: rgb(var(--color-surface-container-lowest));
+        transition: border-color .15s ease, background-color .15s ease;
+    }
+    .bill-card:hover { border-color: rgb(var(--color-ai-cyan)); background: rgb(var(--color-ai-cyan) / .05); }
+    .bill-card:focus-visible { outline: 2px solid rgb(var(--color-ai-cyan)); outline-offset: 2px; }
+    /* ບິນທີ່ເລີຍວັນນັດແລ້ວ — ໝາຍດ້ວຍແຖບຂ້າງ ບໍ່ແມ່ນສີຢ່າງດຽວ */
+    .bill-card.is-late { border-left: 4px solid rgb(var(--color-status-error)); }
+    @media (prefers-reduced-motion: reduce) { .bill-card { transition: none; } }
+</style>
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">{% trans "Open bills" %}</h2>
+        <p class="font-body-md text-on-surface-variant mt-1">
+            {% trans "Bills waiting for payment or collection. Start here when a customer comes to pick up." %}
+        </p>
+    </div>
+    <a href="{% url 'pos:create' %}" class="btn-gradient text-on-primary rounded-lg px-4 py-2 font-bold flex items-center gap-2">
+        <span class="material-symbols-outlined text-sm">add</span>{% trans "Create Order" %}
+    </a>
+</div>
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter">
+    <div class="rounded-xl p-5 border border-outline-variant/60 bg-surface-container-lowest">
+        <p class="font-label-caps text-xs tracking-widest text-on-surface-variant">{% trans "Open bills" %}</p>
+        <p class="tnum text-3xl font-bold text-on-surface mt-1">{{ rows|length }}</p>
+    </div>
+    <div class="rounded-xl p-5 border border-outline-variant/60 bg-surface-container-lowest">
+        <p class="font-label-caps text-xs tracking-widest text-on-surface-variant">{% trans "Total outstanding" %}</p>
+        <p class="tnum text-3xl font-bold {% if total_outstanding > 0 %}text-status-error{% else %}text-emerald-500{% endif %} mt-1">
+            {{ total_outstanding|money }}
+        </p>
+    </div>
+</div>
+
+<form method="get" class="flex gap-2" id="open-orders-search">
+    <label for="q" class="sr-only">{% trans "Search open bills" %}</label>
+    {# ຕັ້ງເປັນ 1 ສະເພາະຕອນມາຈາກການສະແກນ — ບອກ view ໃຫ້ພາໄປໜ້າຄິດເງິນເລີຍຖ້າພົບບິນດຽວ #}
+    <input type="hidden" name="scan" id="scan-flag" value="">
+    <input type="search" name="q" id="q" value="{{ query }}"
+           placeholder="{% trans 'Order number, customer, phone or ticket number' %}"
+           class="flex-1 min-h-[48px] rounded-xl border border-outline-variant bg-surface-container-lowest text-on-surface px-4">
+    <button type="button" onclick="openGlobalScanModal()"
+            class="min-h-[48px] w-[48px] shrink-0 rounded-xl border border-outline-variant text-on-surface-variant
+                   hover:border-ai-cyan hover:text-ai-cyan transition-colors flex items-center justify-center"
+            title="{% trans 'Scan barcode or QR tag' %}" aria-label="{% trans 'Scan barcode or QR tag' %}">
+        <span class="material-symbols-outlined">barcode_scanner</span>
+    </button>
+    <button type="submit" class="min-h-[48px] px-5 rounded-xl border border-outline-variant text-on-surface hover:border-ai-cyan hover:text-ai-cyan transition-colors">
+        {% trans "Search" %}
+    </button>
+</form>
+
+<script>
+(function () {
+    "use strict";
+    var form = document.getElementById("open-orders-search");
+    var field = document.getElementById("q");
+    var flag = document.getElementById("scan-flag");
+
+    /* ຮັບຜົນຈາກໂມດັນສະແກນກາງ (ເຄື່ອງສະແກນ USB + ກ້ອງ) ມາກັ່ນຕອງໃນໜ້ານີ້
+       ແທນທີ່ຈະພາອອກໄປໜ້າຄົ້ນຫາລວມ */
+    window.globalScanHandler = function (code) {
+        field.value = code;
+        flag.value = "1";
+        form.submit();
+    };
+
+    /* ພິມ/ຄົ້ນຫາເອງ ບໍ່ນັບເປັນການສະແກນ — ຈະບໍ່ກະໂດດໄປໜ້າຄິດເງິນ */
+    field.addEventListener("input", function () { flag.value = ""; });
+})();
+</script>
+
+<div class="space-y-3">
+    {% for row in rows %}
+    <a href="{% url 'pos:checkout' row.order.pk %}"
+       class="bill-card {% if row.pickup_date and row.pickup_date < today %}is-late{% endif %}">
+        <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="tnum font-semibold text-on-surface">{{ row.order.order_number }}</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full
+                        {% if row.order.status == 'partially_paid' %}bg-amber-500/15 text-amber-500
+                        {% else %}bg-surface-variant text-on-surface-variant{% endif %}">
+                        {{ row.order.get_status_display }}
+                    </span>
+                    {% if row.ready_count %}
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-500">
+                        {% blocktrans count count=row.ready_count %}{{ count }} ready{% plural %}{{ count }} ready{% endblocktrans %}
+                    </span>
+                    {% endif %}
+                </div>
+                <p class="text-sm text-on-surface-variant mt-1">
+                    {% if row.order.customer %}{{ row.order.customer.name }} · {{ row.order.customer.phone }}
+                    {% else %}{% trans "Walk-in customer" %}{% endif %}
+                </p>
+                <p class="text-xs text-on-surface-variant mt-1 tnum">
+                    {% for asset in row.assets %}{{ asset.ticket_number }}{% if not forloop.last %} · {% endif %}{% empty %}{% trans "No items attached" %}{% endfor %}
+                </p>
+            </div>
+            <div class="text-right shrink-0">
+                <p class="tnum text-xl font-bold {% if row.balance_due > 0 %}text-status-error{% else %}text-emerald-500{% endif %}">
+                    {{ row.balance_due|money }}
+                </p>
+                <p class="text-xs text-on-surface-variant tnum">
+                    {% trans "of" %} {{ row.order.effective_total|money }}
+                </p>
+                {% if row.pickup_date %}
+                <p class="text-xs mt-1 {% if row.pickup_date < today %}text-status-error font-semibold{% else %}text-on-surface-variant{% endif %}">
+                    <span class="material-symbols-outlined text-[14px] align-middle">event</span>
+                    {{ row.pickup_date|date:"d/m/Y" }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+    </a>
+    {% empty %}
+    <div class="text-center py-16 border border-dashed border-outline-variant rounded-xl">
+        <span class="material-symbols-outlined text-on-surface-variant text-4xl">receipt_long</span>
+        <p class="font-headline-md text-headline-md text-on-surface mt-3">
+            {% if query %}{% trans "No open bills match that search." %}{% else %}{% trans "No open bills right now." %}{% endif %}
+        </p>
+        <p class="text-sm text-on-surface-variant mt-1">
+            {% if query %}{% trans "Try the order number, phone, or ticket number." %}
+            {% else %}{% trans "Every bill has been paid and collected." %}{% endif %}
+        </p>
+        <a href="{% url 'pos:create' %}" class="inline-flex items-center gap-2 mt-4 btn-gradient text-on-primary rounded-lg px-4 py-2 font-bold">
+            <span class="material-symbols-outlined text-sm">add</span>{% trans "Create Order" %}
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

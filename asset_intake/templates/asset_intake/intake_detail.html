@@ -7,7 +7,7 @@
 {% block content %}
 <style>
     .glow-accent {
-        box-shadow: 0 0 15px 0 rgba(34, 211, 238, 0.15);
+        box-shadow: 0 0 15px 0 rgba(29, 43, 83, 0.18);
     }
 </style>
 
@@ -605,7 +605,7 @@
                     <span class="material-symbols-outlined text-emerald-500 text-3xl">pin_drop</span>
                     <div>
                         <p class="font-data-mono text-2xl font-bold text-emerald-600 dark:text-emerald-400">{{ asset.storage_slot.code }}</p>
-                        <p class="text-xs text-on-surface-variant">{% trans "Zone" %} {{ asset.storage_slot.zone }} · {% trans "Cabinet" %} {{ asset.storage_slot.cabinet }} · {% trans "Slot" %} {{ asset.storage_slot.position }}</p>
+                        <p class="text-xs text-on-surface-variant">{{ asset.storage_slot.zone_label }} · {% trans "Shelf" %} {{ asset.storage_slot.cabinet }} · {% trans "Slot" %} {{ asset.storage_slot.position }}</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -633,21 +633,58 @@
             {% endif %}
         </div>
 
-        <!-- Administrative Status Overwrite Form (Optional/Administrative) -->
-        <form method="post" class="glass-card rounded-xl p-5 border border-white/5">
-            {% csrf_token %}
-            <label class="font-label-caps text-label-caps text-on-surface-variant mb-2 block text-xs">{% trans "Update status manually" %}</label>
-            <div class="flex flex-col sm:flex-row gap-2">
-                <select name="status" class="rounded-lg border border-white/10 bg-surface-container px-3 py-2 text-sm text-on-surface flex-1 min-w-0 focus:outline-none focus:border-ai-cyan">
-                    {% for val, label in status_choices %}
-                        <option value="{{ val }}" {% if val == asset.status %}selected{% endif %}>{{ label }}</option>
+        <!-- ວຽກບໍລິການຂອງຄູ່ນີ້ — ຊັກ / ສ້ອມແປງ ແຍກແຖວ ຍ້າຍສະຖານະເປັນອິດສະຫຼະ -->
+        <div class="glass-card rounded-xl p-5 border border-white/5">
+            <div class="flex items-center justify-between mb-3">
+                <h3 class="font-body-md font-semibold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[20px] text-ai-cyan">checklist</span>
+                    {% trans "Service jobs for this pair" %}
+                </h3>
+                <a href="{% url 'asset_intake:kanban' %}" class="text-xs font-semibold text-ai-cyan hover:underline">{% trans "Open board" %}</a>
+            </div>
+
+            {% for job in asset.services.all %}
+            <form method="post" action="{% url 'asset_intake:service_update' %}" class="flex items-center gap-2 py-2 {% if not forloop.last %}border-b border-white/5{% endif %}">
+                {% csrf_token %}
+                <input type="hidden" name="service_id" value="{{ job.pk }}">
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                <span class="material-symbols-outlined text-[18px] shrink-0 {% if job.status == 'done' %}text-emerald-500{% elif job.status == 'in_progress' %}text-ai-cyan{% else %}text-on-surface-variant{% endif %}">
+                    {% if job.work_type == 'wash' %}local_laundry_service{% elif job.work_type == 'repair' %}handyman{% elif job.work_type == 'assess' %}fact_check{% else %}category{% endif %}
+                </span>
+
+                <div class="min-w-0 flex-1">
+                    <p class="text-sm font-semibold text-on-surface truncate">{{ job.label }}</p>
+                    {% if job.assigned_to %}
+                    <p class="text-[11px] text-on-surface-variant truncate">{{ job.assigned_to.get_full_name|default:job.assigned_to.username }}</p>
+                    {% endif %}
+                </div>
+
+                <select name="status" onchange="this.form.submit()"
+                        class="rounded-lg border border-white/10 bg-surface-container px-2 py-1.5 text-xs text-on-surface shrink-0 focus:outline-none focus:border-ai-cyan cursor-pointer">
+                    {% for val, label in service_status_choices %}
+                    <option value="{{ val }}" {% if val == job.status %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
-                <button class="bg-ai-cyan text-surface-deep px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap shrink-0 transition-transform hover:scale-105 active:scale-95">
-                    {% trans "Save" %}
-                </button>
-            </div>
+                <noscript><button class="text-xs font-bold text-ai-cyan px-2">{% trans "Save" %}</button></noscript>
+            </form>
+            {% empty %}
+            <p class="text-sm text-on-surface-variant">{% trans "No service jobs yet — they are created when an order is opened in the POS." %}</p>
+            {% endfor %}
+        </div>
+
+        <!-- ສົ່ງມອບແລ້ວ — admin ກົດເມື່ອຮັບເງິນຈາກລູກຄ້າແລ້ວ (ຈຸດຈົບຂອງວຽກ) -->
+        {% if asset.status != 'returned' %}
+        <form method="post" class="glass-card rounded-xl p-5 border border-white/5">
+            {% csrf_token %}
+            <p class="text-xs text-on-surface-variant mb-3">{% trans "Press this once the customer has paid and collected the pair. This notifies the customer and frees the storage slot." %}</p>
+            <button type="submit" name="status" value="returned"
+                    class="w-full justify-center px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-colors inline-flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">task_alt</span>
+                {% trans "Mark as delivered" %}
+            </button>
         </form>
+        {% endif %}
     </div>
 </div>
 

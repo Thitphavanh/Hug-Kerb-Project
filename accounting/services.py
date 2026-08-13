@@ -65,7 +65,8 @@ def totals_by_currency(start_date=None, end_date=None, payment_method=None):
         for currency in CURRENCIES
     }
     manual = confirmed_cashbook()
-    payments = Payment.objects.all()
+    # ແຖວທີ່ຖືກ void ບໍ່ນັບເປັນລາຍຮັບ — ຄືບໍ່ເຄີຍເກີດຂຶ້ນ
+    payments = Payment.objects.live()
     expenses = Expense.objects.all()
 
     if start_date:
@@ -92,8 +93,13 @@ def totals_by_currency(start_date=None, end_date=None, payment_method=None):
     for row in manual.values("currency", "transaction_type").annotate(total=Sum("amount")):
         bucket = "income" if row["transaction_type"] == "IN" else "expense"
         result[row["currency"]][bucket] += row["total"] or ZERO
-    for row in payments.values("currency").annotate(total=Sum("amount")):
-        result[row["currency"]]["income"] += row["total"] or ZERO
+    # ຮັບເງິນ = ລາຍຮັບ, ຄືນເງິນ = ຫັກອອກຈາກລາຍຮັບ (ບໍ່ແມ່ນລາຍຈ່າຍ)
+    for row in payments.values("currency", "kind").annotate(total=Sum("amount")):
+        total = row["total"] or ZERO
+        if row["kind"] == Payment.Kind.REFUND:
+            result[row["currency"]]["income"] -= total
+        else:
+            result[row["currency"]]["income"] += total
     for row in expenses.values("currency").annotate(total=Sum("amount")):
         result[row["currency"]]["expense"] += row["total"] or ZERO
 
@@ -113,7 +119,7 @@ def unified_transactions(
 ):
     """Merge editable ledger entries with read-only POS income and expenses."""
     manual = CashBook.objects.select_related("category", "created_by")
-    payments = Payment.objects.select_related("order", "order__customer")
+    payments = Payment.objects.live().select_related("order", "order__customer")
     expenses = Expense.objects.all()
 
     if start_date:
@@ -134,10 +140,12 @@ def unified_transactions(
         expenses = expenses.filter(currency=currency)
     if transaction_type == "IN":
         manual = manual.filter(transaction_type="IN")
+        payments = payments.filter(kind=Payment.Kind.PAYMENT)
         expenses = expenses.none()
     elif transaction_type == "OUT":
         manual = manual.filter(transaction_type="OUT")
-        payments = payments.none()
+        # ຄືນເງິນເປັນເງິນອອກ ຈຶ່ງຍັງຕ້ອງສະແດງໃນລາຍການ "ລາຍຈ່າຍ"
+        payments = payments.filter(kind=Payment.Kind.REFUND)
     if category_id:
         manual = manual.filter(category_id=category_id)
         payments = payments.none()
@@ -181,14 +189,19 @@ def unified_transactions(
     for item in payments:
         local_paid_at = timezone.localtime(item.paid_at)
         customer = item.order.customer.name if item.order.customer else _("Walk-in customer")
+        is_refund = item.kind == Payment.Kind.REFUND
         rows.append(
             {
                 "sort_at": local_paid_at,
                 "date": local_paid_at.date(),
                 "time": local_paid_at.time(),
-                "type": "IN",
-                "type_label": _("Income"),
-                "description": _("Payment for %(order)s — %(customer)s") % {
+                "type": "OUT" if is_refund else "IN",
+                "type_label": _("Refund") if is_refund else _("Income"),
+                "description": (
+                    _("Refund for %(order)s — %(customer)s")
+                    if is_refund
+                    else _("Payment for %(order)s — %(customer)s")
+                ) % {
                     "order": item.order.order_number,
                     "customer": customer,
                 },

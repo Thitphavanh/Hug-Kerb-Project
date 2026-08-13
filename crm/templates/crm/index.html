@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n static %}
 
 {% block title %}{% trans "CRM — Hug ເກີບ AI" %}{% endblock %}
 
 {% block content %}
 <style>
     .table-row-hover:hover { background-color: rgba(255, 255, 255, 0.05); }
-    .glow-accent { box-shadow: 0 0 15px 0 rgba(34, 211, 238, 0.15); }
+    .glow-accent { box-shadow: 0 0 15px 0 rgba(29, 43, 83, 0.18); }
 </style>
 
 <!-- Page Header -->
@@ -50,6 +50,7 @@
                         <tr class="border-b border-white/10 bg-surface-container-high text-on-surface-variant font-label-caps text-label-caps uppercase tracking-wider">
                             <th class="py-3 px-4 font-semibold">{% trans "Customer Name" %}</th>
                             <th class="py-3 px-4 font-semibold">&nbsp;&nbsp;{% trans "Phone Number" %}</th>
+                            <th class="py-3 px-4 font-semibold">{% trans "Stamps" %}</th>
                             <th class="py-3 px-4 font-semibold">{% trans "Points" %}</th>
                             <th class="py-3 px-4 font-semibold">{% trans "Membership Tier" %}</th>
                             <th class="py-3 px-4 font-semibold">{% trans "Last Service Date" %}</th>
@@ -65,6 +66,12 @@
                                 <span class="font-medium text-on-surface">{{ customer.name }}</span>
                             </td>
                             <td class="py-3 px-4 font-data-mono text-on-surface-variant">&nbsp;&nbsp;{{ customer.phone }}</td>
+                            <td class="py-3 px-4 font-data-mono font-bold text-ai-purple">
+                                <span class="px-2 py-0.5 rounded bg-ai-purple/10 border border-ai-purple/20 text-xs flex items-center gap-1 w-fit">
+                                    <span class="material-symbols-outlined text-[14px]">approval</span>
+                                    {{ customer.member_card.current_stamps|default:"0" }}/10
+                                </span>
+                            </td>
                             <td class="py-3 px-4 font-data-mono text-ai-cyan">{{ customer.member_card.points_balance|default:"0" }}</td>
                             <td class="py-3 px-4">
                                 {% if customer.member_card %}
@@ -85,7 +92,7 @@
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="5" class="py-8 px-4 text-center text-on-surface-variant">
+                            <td colspan="6" class="py-8 px-4 text-center text-on-surface-variant">
                                 {% trans "No customer data" %}
                             </td>
                         </tr>
@@ -98,8 +105,106 @@
 
     <!-- Right Column (Details & Card Preview - 4 Cols) -->
     <div class="col-span-12 lg:col-span-4 flex flex-col gap-gutter">
+        <!-- Stamp Loyalty Card Widget -->
+        <div class="glass-card rounded-xl p-5 border-t-2 border-t-ai-purple/80 relative overflow-hidden">
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-body-md font-semibold text-on-surface flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[22px] text-ai-purple">workspace_premium</span>
+                    {% trans "Stamp Loyalty Card" %} (10 Stamps)
+                </h3>
+                <span class="px-2.5 py-1 rounded-full text-xs font-bold font-data-mono {% if selected_member.rewards_available > 0 %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse{% else %}bg-ai-purple/20 text-ai-purple border border-ai-purple/30{% endif %}">
+                    {{ selected_member.current_stamps|default:"0" }} / 10 Stamps
+                </span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-white/5 rounded-full h-2 overflow-hidden mb-3 border border-white/10">
+                <div class="bg-gradient-to-r from-ai-cyan to-ai-purple h-full rounded-full transition-all duration-500" style="width: {{ selected_member.stamps_progress_percent|default:'0' }}%"></div>
+            </div>
+
+            <div class="flex justify-between items-center text-[11px] text-on-surface-variant mb-4">
+                <span>{% trans "Accumulated Total" %}: <strong class="text-on-surface">{{ selected_member.stamps_count|default:"0" }}</strong></span>
+                <span>{% trans "Rewards Unlocked" %}: <strong class="text-ai-cyan">{{ selected_member.rewards_earned|default:"0" }}</strong></span>
+            </div>
+
+            <!-- Reward Alert Banner -->
+            {% if selected_member.rewards_available > 0 %}
+            <div class="mb-4 p-3 rounded-lg bg-gradient-to-r from-emerald-950/80 to-teal-900/80 border border-emerald-400/50 text-emerald-200 text-xs font-semibold flex items-center justify-between shadow-lg shadow-emerald-950/50 animate-pulse">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[22px] text-emerald-400">card_membership</span>
+                    <div>
+                        <p class="font-bold">🎉 🎉 ຄົບ 10 Stamp ແລ້ວ!</p>
+                        <p class="text-[11px] text-emerald-300">ໄດ້ຮັບສິດສ່ວນຫຼຸດພິເສດ {{ selected_member.rewards_available }} ສິດ!</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- 10 Stamp Slots Grid — ວົງມົນ, ດວງທີ່ປະທັບແລ້ວໃຊ້ໂລໂກ້ຮ້ານ -->
+            <div class="grid grid-cols-5 gap-2.5 mb-4">
+                {% for slot in selected_member.stamp_slots %}
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-full aspect-square rounded-full border-2 overflow-hidden flex items-center justify-center transition-all duration-300 {% if slot.is_reward_slot %}{% if slot.is_stamped %}bg-gradient-to-br from-yellow-400/40 to-amber-500/50 border-yellow-400 text-yellow-600 dark:text-yellow-300 shadow-lg shadow-yellow-500/20 scale-105{% else %}bg-yellow-500/10 border-yellow-500/30 text-yellow-600/70 dark:text-yellow-500/60{% endif %}{% else %}{% if slot.is_stamped %}border-primary/60 shadow-md{% else %}border-dashed border-outline-variant bg-surface-container/60 text-on-surface-variant/50{% endif %}{% endif %}">
+                        {% if slot.is_reward_slot %}
+                            <span class="material-symbols-outlined text-[20px]">{% if slot.is_stamped %}workspace_premium{% else %}redeem{% endif %}</span>
+                        {% elif slot.is_stamped %}
+                            <img src="{% static 'images/hug-kerb-logo.jpeg' %}"
+                                 alt="{% trans 'Stamp collected' %}"
+                                 class="w-full h-full object-cover">
+                        {% else %}
+                            <span class="font-data-mono text-xs font-semibold">{{ slot.number }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="text-[9px] font-medium {% if slot.is_reward_slot %}uppercase tracking-wider font-bold text-yellow-600 dark:text-yellow-400{% elif slot.is_stamped %}text-primary{% else %}text-on-surface-variant/60{% endif %}">
+                        {% if slot.is_reward_slot %}Gift{% else %}#{{ slot.number }}{% endif %}
+                    </span>
+                </div>
+                {% empty %}
+                <div class="col-span-5 text-center text-xs text-on-surface-variant py-4">
+                    {% trans "Select a customer to view stamp card" %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Action Buttons -->
+            {% if selected_customer %}
+            <!-- ຈຳນວນຄັ້ງທີ່ມາໃຊ້ບໍລິການຈິງ (ບິນທີ່ຊຳລະແລ້ວ) ທຽບກັບ Stamp ທີ່ປະທັບໄວ້ -->
+            <div class="flex items-center justify-between rounded-lg bg-surface-container/60 border border-white/10 px-3 py-2 mb-3 text-xs">
+                <span class="text-on-surface-variant">{% trans "Visits so far" %}</span>
+                <span class="font-data-mono font-bold text-on-surface">
+                    {{ visit_count }} {% trans "times" %}
+                    {% if stamps_missing %}
+                    <span class="ml-1 text-amber-600 dark:text-amber-400">({% trans "missing" %} {{ stamps_missing }})</span>
+                    {% endif %}
+                </span>
+            </div>
+
+            <div class="flex gap-2 border-t border-white/10 pt-3">
+                <!-- ກວດ Stamp = ເປີດ modal ເບິ່ງລາຍລະອຽດ (ອ່ານຢ່າງດຽວ)
+                     Stamp ປະທັບອັດຕະໂນມັດຕອນຮັບເງິນຢູ່ໜ້າໃບບິນແລ້ວ — 1 ບິນ = 1 ດວງ -->
+                <button type="button" onclick="openStampReview()"
+                        class="flex-1 w-full py-2 px-3 btn-gradient text-on-primary font-bold rounded-lg transition-all text-xs flex items-center justify-center gap-1.5 shadow-md">
+                    <span class="material-symbols-outlined text-[16px]">fact_check</span>
+                    {% trans "Review Stamp" %}
+                    {% if stamps_missing %}
+                    <span class="ml-0.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-amber-400 text-[10px] font-bold text-slate-900">{{ stamps_missing }}</span>
+                    {% endif %}
+                </button>
+
+                <form method="post" action="{% url 'crm:redeem_discount' selected_customer.pk %}" class="flex-1">
+                    {% csrf_token %}
+                    <button type="submit" {% if not selected_member.rewards_available %}disabled{% endif %} class="w-full py-2 px-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-all text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20">
+                        <span class="material-symbols-outlined text-[16px]">card_membership</span>
+                        ນຳໃຊ້ສ່ວນຫຼຸດ
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
         <!-- Digital Member Card Preview -->
         <div class="glass-card rounded-xl p-6 ai-accent-border relative overflow-hidden group">
+
             <!-- Abstract Background Decoration -->
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-ai-purple/10 rounded-full blur-3xl group-hover:bg-ai-purple/20 transition-all duration-500"></div>
             <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-ai-cyan/10 rounded-full blur-2xl group-hover:bg-ai-cyan/20 transition-all duration-500"></div>
@@ -298,7 +403,190 @@
     </div>
 </div>
 
+{% if selected_customer %}
+<!-- ═══ Modal ກວດ Stamp — ອ່ານລາຍລະອຽດບັດສະສົມຂອງລູກຄ້າ ═══ -->
+<div id="stampReviewModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm items-center justify-center p-4"
+     role="dialog" aria-modal="true" aria-labelledby="stampReviewTitle" onclick="if (event.target === this) closeStampReview()">
+    <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl">
+
+        <div class="px-6 py-4 border-b border-outline-variant/20 flex justify-between items-center sticky top-0 bg-surface-container-lowest z-10">
+            <div class="min-w-0">
+                <h3 id="stampReviewTitle" class="font-headline-sm text-on-surface font-bold truncate">{% trans "Stamp card" %} — {{ selected_customer.name }}</h3>
+                <p class="text-xs text-on-surface-variant font-data-mono">{{ selected_customer.phone }}</p>
+            </div>
+            <button type="button" onclick="closeStampReview()" aria-label="{% trans 'Close' %}"
+                    class="text-on-surface-variant hover:text-on-surface shrink-0">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <div class="p-6 space-y-5">
+            <!-- ═══ ບັດສະມາຊິກ — #1d2b53 80% / ຂາວ 20%, ໂຕໜັງສືຂາວ ═══ -->
+            <div class="rounded-2xl overflow-hidden shadow-xl" style="background:#1d2b53;">
+                <!-- ຫົວບັດ: ໂລໂກ້ + ຊື່ຮ້ານ + ລະດັບສະມາຊິກ -->
+                <div class="flex items-center gap-3 px-5 pt-5 pb-4">
+                    <img src="{% static 'images/hug-kerb-logo.jpeg' %}" alt="Hug ເກີບ"
+                         class="w-12 h-12 rounded-full object-cover shrink-0 ring-2 ring-white/25">
+                    <div class="min-w-0">
+                        <p class="text-white font-bold leading-tight tracking-wide">HUG ເກີບ</p>
+                        <p class="text-[10px] uppercase tracking-[0.18em] text-white/55">Shoe Spa · Member</p>
+                    </div>
+                    <span class="ml-auto shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/15 text-white border border-white/25">
+                        {{ selected_member.get_tier_display }}
+                    </span>
+                </div>
+
+                <!-- ຂໍ້ມູນສະມາຊິກ -->
+                <div class="px-5 pb-4 grid grid-cols-2 gap-x-4 gap-y-3">
+                    <div class="col-span-2 min-w-0">
+                        <p class="text-[9px] uppercase tracking-[0.15em] text-white/45">{% trans "Member name" %}</p>
+                        <p class="text-white text-lg font-bold truncate">{{ selected_customer.name }}</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[9px] uppercase tracking-[0.15em] text-white/45">{% trans "Member ID" %}</p>
+                        <p class="text-white font-data-mono text-sm truncate">{{ selected_member.card_number }}</p>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[9px] uppercase tracking-[0.15em] text-white/45">{% trans "Phone" %}</p>
+                        <p class="text-white font-data-mono text-sm truncate">{{ selected_customer.phone|default:"—" }}</p>
+                    </div>
+                </div>
+
+                <!-- ແຖບ Stamp ຫຍໍ້ໃນບັດ -->
+                <div class="px-5 pb-4">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[9px] uppercase tracking-[0.15em] text-white/45">Stamp</span>
+                        <span class="text-white font-data-mono text-xs font-bold">{{ selected_member.current_stamps }}/10</span>
+                    </div>
+                    <div class="flex gap-1">
+                        {% for slot in selected_member.stamp_slots %}
+                        {% if not slot.is_reward_slot %}
+                        <span class="flex-1 h-1.5 rounded-full {% if slot.is_stamped %}bg-white{% else %}bg-white/20{% endif %}"></span>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- ຕີນບັດ: ແຖບຂາວ (ສ່ວນ 20%) -->
+                <div class="px-5 py-2.5 flex items-center justify-between" style="background:rgba(255,255,255,.95);color:#1d2b53;">
+                    <span class="text-[10px] font-bold tracking-wide">WWW.HUGKERB.LA</span>
+                    <span class="text-[10px] font-data-mono">{{ selected_member.issued_at|date:"m/Y" }}</span>
+                </div>
+            </div>
+
+            <!-- ດາວໂຫຼດບັດເປັນຮູບ — ໄວ້ແນບສົ່ງເອງ ຫຼື ພິມ -->
+            <a href="{% url 'digital_member:member_card_image' selected_member.card_number %}"
+               target="_blank" rel="noopener" download="{{ selected_member.card_number }}.png"
+               class="flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg border border-outline-variant text-on-surface hover:border-primary hover:text-primary transition-colors text-xs font-bold">
+                <span class="material-symbols-outlined text-[16px]">download</span>
+                {% trans "Download card image" %}
+            </a>
+
+            <!-- ຕົວເລກສະຫຼຸບ -->
+            <div class="grid grid-cols-4 gap-2 text-center">
+                <div class="rounded-xl bg-surface-container p-3">
+                    <p class="text-lg font-bold font-data-mono text-primary">{{ selected_member.current_stamps }}<span class="text-xs text-on-surface-variant">/10</span></p>
+                    <p class="text-[10px] text-on-surface-variant mt-0.5">{% trans "Current" %}</p>
+                </div>
+                <div class="rounded-xl bg-surface-container p-3">
+                    <p class="text-lg font-bold font-data-mono text-on-surface">{{ visit_count }}</p>
+                    <p class="text-[10px] text-on-surface-variant mt-0.5">{% trans "Visits" %}</p>
+                </div>
+                <div class="rounded-xl bg-surface-container p-3">
+                    <p class="text-lg font-bold font-data-mono text-on-surface">{{ selected_member.stamps_count }}</p>
+                    <p class="text-[10px] text-on-surface-variant mt-0.5">{% trans "Total" %}</p>
+                </div>
+                <div class="rounded-xl bg-surface-container p-3">
+                    <p class="text-lg font-bold font-data-mono text-emerald-600 dark:text-emerald-400">{{ selected_member.rewards_available }}</p>
+                    <p class="text-[10px] text-on-surface-variant mt-0.5">{% trans "Rewards" %}</p>
+                </div>
+            </div>
+
+            <!-- ດວງ Stamp ຂະໜາດໃຫຍ່ -->
+            <div class="grid grid-cols-5 gap-3">
+                {% for slot in selected_member.stamp_slots %}
+                <div class="flex flex-col items-center gap-1">
+                    <div class="w-full aspect-square rounded-full border-2 overflow-hidden flex items-center justify-center {% if slot.is_reward_slot %}{% if slot.is_stamped %}bg-gradient-to-br from-yellow-400/40 to-amber-500/50 border-yellow-400 text-yellow-600 dark:text-yellow-300{% else %}bg-yellow-500/10 border-yellow-500/30 text-yellow-600/70{% endif %}{% else %}{% if slot.is_stamped %}border-primary/60{% else %}border-dashed border-outline-variant bg-surface-container/60 text-on-surface-variant/50{% endif %}{% endif %}">
+                        {% if slot.is_reward_slot %}
+                            <span class="material-symbols-outlined text-[24px]">{% if slot.is_stamped %}workspace_premium{% else %}redeem{% endif %}</span>
+                        {% elif slot.is_stamped %}
+                            <img src="{% static 'images/hug-kerb-logo.jpeg' %}" alt="{% trans 'Stamp collected' %}" class="w-full h-full object-cover">
+                        {% else %}
+                            <span class="font-data-mono text-sm font-semibold">{{ slot.number }}</span>
+                        {% endif %}
+                    </div>
+                    <span class="text-[10px] font-medium {% if slot.is_reward_slot %}font-bold uppercase text-yellow-600 dark:text-yellow-400{% elif slot.is_stamped %}text-primary{% else %}text-on-surface-variant/60{% endif %}">
+                        {% if slot.is_reward_slot %}Gift{% else %}#{{ slot.number }}{% endif %}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- ເຕືອນເມື່ອ Stamp ບໍ່ກົງກັບຈຳນວນຄັ້ງທີ່ມາໃຊ້ບໍລິການ -->
+            {% if stamps_missing %}
+            <div class="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+                <p class="text-sm font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-[18px]">warning</span>
+                    {% blocktrans %}Stamps are {{ stamps_missing }} behind the visit count{% endblocktrans %}
+                </p>
+                <p class="text-xs text-on-surface-variant mt-1">{% trans "Normally each paid bill stamps the card automatically. Use this only to correct older visits." %}</p>
+                <form method="post" action="{% url 'crm:add_stamp' selected_customer.pk %}" class="mt-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="count" value="{{ stamps_missing }}">
+                    <input type="hidden" name="note" value="{% trans 'Review Stamp from CRM' %}">
+                    <button type="submit" class="w-full py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold text-xs transition-colors">
+                        {% blocktrans %}Stamp the missing {{ stamps_missing }}{% endblocktrans %}
+                    </button>
+                </form>
+            </div>
+            {% else %}
+            <p class="text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">check_circle</span>
+                {% trans "Stamps match the visit count" %}
+            </p>
+            {% endif %}
+
+            <!-- ປະຫວັດ Stamp -->
+            <div>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2">{% trans "Stamp history" %}</h4>
+                <div class="divide-y divide-outline-variant/20 rounded-xl border border-outline-variant/20 overflow-hidden">
+                    {% for tx in stamp_transactions %}
+                    <div class="flex items-center justify-between px-3 py-2 text-xs">
+                        <div class="min-w-0">
+                            <p class="font-semibold text-on-surface truncate">{{ tx.note|default:tx.get_action_display }}</p>
+                            <p class="text-[11px] text-on-surface-variant font-data-mono">{{ tx.created_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                        <span class="font-data-mono font-bold shrink-0 ml-2 {% if tx.action == 'ADD' %}text-emerald-600 dark:text-emerald-400{% else %}text-amber-600 dark:text-amber-400{% endif %}">
+                            {% if tx.action == 'ADD' %}+{% else %}−{% endif %}{{ tx.count }}
+                        </span>
+                    </div>
+                    {% empty %}
+                    <p class="px-3 py-4 text-xs text-on-surface-variant text-center">{% trans "No stamp activity yet." %}</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <script>
+    function openStampReview() {
+        const el = document.getElementById('stampReviewModal');
+        if (!el) return;
+        el.classList.remove('hidden');
+        el.classList.add('flex');
+    }
+    function closeStampReview() {
+        const el = document.getElementById('stampReviewModal');
+        if (!el) return;
+        el.classList.add('hidden');
+        el.classList.remove('flex');
+    }
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeStampReview();
+    });
+
     function openModal() {
         document.getElementById('addCustomerModal').classList.remove('hidden');
     }

@@ -9,75 +9,104 @@
         <div>
             <p class="text-xs font-bold uppercase tracking-widest text-ai-cyan">{% trans "Live workflow" %}</p>
             <h1 class="mt-1 text-2xl font-bold font-heading text-on-surface">{% trans "Kanban Job Tracking" %}</h1>
-            <p class="mt-1 text-sm text-on-surface-variant">{% trans "Drag each job to update its service status." %}</p>
+            <p class="mt-1 text-sm text-on-surface-variant">{% trans "One card = one service. A pair booked for both washing and repair appears in both lanes." %}</p>
         </div>
     </div>
 
-    <!-- Kanban Board Container -->
-    <div class="flex-1 flex space-x-4 overflow-x-auto pb-4 items-start" id="kanban-board">
-        
-        {% for stage in stages %}
-        <div class="flex-none w-80 bg-surface-container-low rounded-2xl p-4 flex flex-col h-full max-h-full kanban-column border border-outline-variant/30" data-status="{{ stage.id }}" ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
-            
-            <div class="flex items-center justify-between mb-4">
-                <div class="flex items-baseline gap-2">
-                    <h3 class="font-bold text-on-surface">{{ stage.name }}</h3>
-                    {% if stage.hint %}
-                    <span class="text-xs text-on-surface-variant">{{ stage.hint }}</span>
-                    {% endif %}
+    <!-- ຕົວກັ່ນຕອງແຖວວຽກ — ຊ່າງແຕ່ລະຄົນເບິ່ງສະເພາະວຽກຕົນໄດ້ -->
+    <div class="flex flex-wrap items-center gap-2">
+        <a href="{% url 'asset_intake:kanban' %}"
+           class="px-3 py-1.5 rounded-full text-xs font-bold border transition-colors {% if not active_work_type %}bg-primary text-on-primary border-primary{% else %}border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary{% endif %}">
+            {% trans "All work" %}
+        </a>
+        {% for wt in work_types %}
+        <a href="?work_type={{ wt.id }}"
+           class="px-3 py-1.5 rounded-full text-xs font-bold border transition-colors {% if active_work_type == wt.id %}bg-primary text-on-primary border-primary{% else %}border-outline-variant text-on-surface-variant hover:border-primary hover:text-primary{% endif %}">
+            {{ wt.name }}
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- ກະດານ: ແຖວ = ປະເພດວຽກ (swimlane), ຖັນ = ສະຖານະ -->
+    {% trans "No notes provided." as no_notes %}
+    {% for lane in lanes %}
+    <section class="space-y-3">
+        <h2 class="flex items-center gap-2 text-sm font-bold text-on-surface">
+            <span class="material-symbols-outlined text-primary text-[20px]">
+                {% if lane.id == 'wash' %}local_laundry_service{% elif lane.id == 'repair' %}handyman{% elif lane.id == 'assess' %}fact_check{% else %}category{% endif %}
+            </span>
+            {{ lane.name }}
+            <span class="text-xs font-normal text-on-surface-variant">({{ lane.total }})</span>
+        </h2>
+
+        <div class="grid gap-4 md:grid-cols-3">
+            {% for column in lane.columns %}
+            <div class="bg-surface-container-low rounded-2xl p-4 flex flex-col kanban-column border border-outline-variant/30"
+                 data-status="{{ column.id }}" data-lane="{{ lane.id }}"
+                 ondragover="allowDrop(event)" ondrop="drop(event)" ondragleave="dragLeave(event)">
+
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-bold text-on-surface text-sm">{{ column.name }}</h3>
+                    <span class="bg-surface-container-high text-on-surface-variant text-xs font-semibold px-2 py-1 rounded-full count-badge">0</span>
                 </div>
-                <span class="bg-surface-container-high text-on-surface-variant text-xs font-semibold px-2 py-1 rounded-full count-badge">
-                    0
-                </span>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto space-y-3 min-h-[100px] kanban-items rounded-xl transition-colors duration-200" id="stage-{{ stage.id }}">
-                {% for asset in assets %}
-                    {% if asset.status == stage.id %}
-                    <div class="bg-surface rounded-xl p-4 shadow-sm border border-outline-variant cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary transition-all duration-200 kanban-card group" draggable="true" ondragstart="drag(event)" id="asset-{{ asset.pk }}" data-id="{{ asset.pk }}">
+
+                <div class="flex-1 space-y-3 min-h-[90px] kanban-items rounded-xl transition-colors duration-200">
+                    {% for service in column.items %}
+                    <div class="bg-surface rounded-xl p-4 shadow-sm border border-outline-variant cursor-grab active:cursor-grabbing hover:shadow-md hover:border-primary transition-all duration-200 kanban-card group"
+                         draggable="true" ondragstart="drag(event)"
+                         id="service-{{ service.pk }}" data-id="{{ service.pk }}">
+
                         <div class="flex justify-between items-start mb-2">
                             <span class="flex items-center gap-1.5 min-w-0">
-                                <span class="text-xs font-mono bg-primary-container text-on-primary-container px-2 py-0.5 rounded truncate">{{ asset.ticket_number }}</span>
-                                {% if asset.storage_slot %}
+                                <span class="text-xs font-mono bg-primary-container text-on-primary-container px-2 py-0.5 rounded truncate">{{ service.asset.ticket_number }}</span>
+                                {% if service.asset.storage_slot %}
                                 <span class="text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/40 px-1.5 py-0.5 rounded inline-flex items-center gap-0.5 shrink-0" title="{% trans 'Storage location' %}">
-                                    <span class="material-symbols-outlined text-[12px] leading-none">pin_drop</span>{{ asset.storage_slot.code }}
+                                    <span class="material-symbols-outlined text-[12px] leading-none">pin_drop</span>{{ service.asset.storage_slot.code }}
                                 </span>
                                 {% endif %}
                             </span>
-                            <!-- QR Tag Print Button -->
-                            <a href="{% url 'asset_intake:ticket_view' asset.pk %}" target="_blank" class="text-on-surface-variant hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="{% trans 'Print tag' %}">
+                            <a href="{% url 'asset_intake:ticket_view' service.asset.pk %}" target="_blank" class="text-on-surface-variant hover:text-primary transition-colors opacity-0 group-hover:opacity-100" title="{% trans 'Print tag' %}">
                                 <span class="material-symbols-outlined text-sm">qr_code_2</span>
                             </a>
                         </div>
-                        <h4 class="font-semibold text-on-surface text-sm mb-1">{{ asset.brand }} {{ asset.model_name }}</h4>
-                        {% trans "No notes provided." as no_notes %}
-                        <p class="text-xs text-on-surface-variant line-clamp-2 mb-2">{{ asset.condition_note|default:no_notes }}</p>
-                        {% if asset.assigned_to %}
+
+                        <!-- ຊື່ວຽກ = ຫົວຂໍ້ຫຼັກຂອງ card (ບໍ່ແມ່ນຊື່ເກີບ) -->
+                        <p class="text-sm font-bold text-primary mb-0.5">{{ service.label }}</p>
+                        <h4 class="font-semibold text-on-surface text-sm mb-1">{{ service.asset.brand }} {{ service.asset.model_name }}</h4>
+                        <p class="text-xs text-on-surface-variant line-clamp-2 mb-2">{{ service.asset.condition_note|default:no_notes }}</p>
+
+                        {% if service.assigned_to %}
                         <p class="text-xs text-ai-cyan flex items-center gap-1 mb-3">
                             <span class="material-symbols-outlined text-[14px]">engineering</span>
-                            {{ asset.assigned_to.get_full_name|default:asset.assigned_to.username }}
+                            {{ service.assigned_to.get_full_name|default:service.assigned_to.username }}
                         </p>
                         {% endif %}
-                        
+
                         <div class="flex items-center justify-between mt-auto">
                             <div class="flex items-center space-x-2">
                                 <div class="w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container text-xs font-bold shadow-sm">
-                                    {{ asset.customer.name|make_list|first|upper }}
+                                    {{ service.asset.customer.name|make_list|first|upper }}
                                 </div>
-                                <span class="text-xs font-medium text-on-surface-variant truncate max-w-[100px]">{{ asset.customer.name }}</span>
+                                <span class="text-xs font-medium text-on-surface-variant truncate max-w-[100px]">{{ service.asset.customer.name }}</span>
                             </div>
-                            <a href="{% url 'asset_intake:detail' asset.pk %}" class="text-primary text-xs font-medium hover:underline flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <a href="{% url 'asset_intake:detail' service.asset.pk %}" class="text-primary text-xs font-medium hover:underline flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 {% trans "View" %} <span class="material-symbols-outlined text-[14px] ml-1">arrow_forward</span>
                             </a>
                         </div>
                     </div>
-                    {% endif %}
-                {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-        
+    </section>
+    {% empty %}
+    <div class="glass-card rounded-2xl p-10 text-center space-y-3">
+        <span class="material-symbols-outlined text-5xl text-on-surface-variant">checklist</span>
+        <h2 class="text-lg font-bold text-on-surface">{% trans "No open work right now" %}</h2>
+        <p class="text-sm text-on-surface-variant">{% trans "Service jobs appear here as soon as an order is created in the POS." %}</p>
     </div>
+    {% endfor %}
 </div>
 
 {% trans "Failed to update status." as failed_update_message %}
@@ -130,14 +159,18 @@
 
         const targetColumn = ev.target.closest('.kanban-column');
         if (targetColumn) {
+            // ຫ້າມລາກຂ້າມແຖວວຽກ — ວຽກຊັກຍ້າຍໄປແຖວສ້ອມແປງບໍ່ໄດ້
+            const sourceLane = draggedElement.closest('.kanban-column').getAttribute("data-lane");
+            if (sourceLane !== targetColumn.getAttribute("data-lane")) return;
+
             const targetContainer = targetColumn.querySelector('.kanban-items');
             targetContainer.appendChild(draggedElement);
-            
-            const assetId = draggedElement.getAttribute("data-id");
+
+            const serviceId = draggedElement.getAttribute("data-id");
             const newStatus = targetColumn.getAttribute("data-status");
-            
+
             updateCounts();
-            saveStatus(assetId, newStatus);
+            saveStatus(serviceId, newStatus);
         }
     }
     
@@ -197,7 +230,7 @@
     const channelNames = { telegram: "Telegram", whatsapp: "WhatsApp" };
 
     // AJAX Call to save status
-    function saveStatus(assetId, status) {
+    function saveStatus(serviceId, status) {
         fetch("{% url 'asset_intake:kanban_update' %}", {
             method: 'POST',
             headers: {
@@ -205,7 +238,7 @@
                 'X-CSRFToken': '{{ csrf_token }}'
             },
             body: JSON.stringify({
-                asset_id: assetId,
+                service_id: serviceId,
                 status: status
             })
         })

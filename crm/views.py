@@ -6,7 +6,8 @@ from django.utils.translation import gettext as _
 
 from asset_intake.models import Asset
 from ai_mart_grading.models import Assessment
-from digital_member.models import MemberCard, PointTransaction
+from digital_member.models import MemberCard, PointTransaction, StampTransaction
+from pos.models import Order
 
 from .models import Customer
 
@@ -93,13 +94,34 @@ def index(request):
         else PointTransaction.objects.none()
     )
 
+    stamp_transactions = (
+        StampTransaction.objects.select_related("card").filter(card=selected_member)[:6]
+        if selected_member
+        else StampTransaction.objects.none()
+    )
+
+    # ຈຳນວນຄັ້ງທີ່ລູກຄ້າມາໃຊ້ບໍລິການຈິງ = ບິນທີ່ຊຳລະແລ້ວ
+    # ໃຊ້ທຽບກັບ Stamp ທີ່ສະສົມໄວ້ ເພື່ອກວດວ່າປະທັບຄົບ ຫຼື ຍັງ
+    visit_count = (
+        Order.objects.filter(
+            customer=selected_customer, status=Order.Status.PAID
+        ).count()
+        if selected_customer
+        else 0
+    )
+
     context = {
         "active_nav": "crm",
         "customers": customers,
         "selected_customer": selected_customer,
         "selected_member": selected_member,
+        "visit_count": visit_count,
+        "stamps_missing": max(
+            0, visit_count - (selected_member.stamps_count if selected_member else 0)
+        ),
         "selected_history": selected_history,
         "point_transactions": point_transactions,
+        "stamp_transactions": stamp_transactions,
         "customer_count": Customer.objects.count(),
         "member_count": MemberCard.objects.filter(is_active=True).count(),
         "recent_assets": Asset.objects.select_related("customer")[:6],
@@ -143,3 +165,93 @@ def delete_customer(request, pk):
     if request.method == "POST":
         customer.delete()
     return redirect("crm:index")
+
+
+@login_required
+def add_stamp(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    if request.method == "POST":
+        card, _created = MemberCard.objects.get_or_create(customer=customer)
+        try:
+            count = int(request.POST.get("count", 1))
+        except (ValueError, TypeError):
+            count = 1
+        note = request.POST.get("note", "ເພີ່ມ Stamp ຈາກ CRM").strip()
+
+        # ກັນການປະທັບ 0 ຫຼື ຕິດລົບ (ເຊັ່ນ Review Stamp ຕອນ Stamp ຄົບຢູ່ແລ້ວ)
+        if count < 1:
+            messages.info(request, _("Stamps already match the visit count."))
+            return redirect(f"/crm/?customer={customer.pk}")
+
+        card.stamps_count += count
+        card.save()
+
+        StampTransaction.objects.create(
+            card=card,
+            action=StampTransaction.Action.ADD,
+            count=count,
+            note=note,
+        )
+
+        if card.current_stamps == 10 or (card.stamps_count % 10 == 0 and card.stamps_count > 0):
+            messages.success(
+                request,
+                _("🎉 ຍິນດີດ້ວຍ! ລູກຄ້າສະສົມ Stamp ຄົບ 10 ເທື່ອແລ້ວ! ໄດ້ຮັບສິດສ່ວນຫຼຸດພິເສດ."),
+            )
+        else:
+            messages.success(
+                request,
+                _("ເພີ່ມ %(count)d Stamp ສຳເລັດ! (ສະສົມໄດ້ %(stamps)d/10)") % {
+                    "count": count,
+                    "stamps": card.current_stamps,
+                },
+            )
+    return redirect(f"/crm/?customer={customer.pk}")
+
+
+@login_required
+def redeem_discount(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    if request.method == "POST":
+        card, _created = MemberCard.objects.get_or_create(customer=customer)
+        if card.rewards_available > 0:
+            card.stamps_redeemed += 1
+            card.save()
+
+            StampTransaction.objects.create(
+                card=card,
+                action=StampTransaction.Action.REDEEM,
+                count=1,
+                note="ນຳໃຊ້ສ່ວນຫຼຸດ 10 Stamp",
+            )
+            messages.success(
+                request,
+                _("🎁 ນຳໃຊ້ສ່ວນຫຼຸດ 10 Stamp ສຳເລັດແລ້ວ!"),
+            )
+        else:
+            messages.error(
+                request,
+                _("ລູກຄ້າຍັງສະສົມ Stamp ບໍ່ທັນຄົບ 10 ເທື່ອ ຫຼື ໃຊ້ສິດສ່ວນຫຼຸດໄປແລ້ວ."),
+            )
+    return redirect(f"/crm/?customer={customer.pk}")
+
+
+@login_required
+def reset_stamps(request, pk):
+    customer = get_object_or_404(Customer, pk=pk)
+    if request.method == "POST":
+        card, _created = MemberCard.objects.get_or_create(customer=customer)
+        old_count = card.stamps_count
+        card.stamps_count = 0
+        card.stamps_redeemed = 0
+        card.save()
+
+        StampTransaction.objects.create(
+            card=card,
+            action=StampTransaction.Action.RESET,
+            count=old_count,
+            note="ເລີ່ມຕົ້ນສະສົມ Stamp ໃໝ່",
+        )
+        messages.success(request, _("ເລີ່ມຕົ້ນສະສົມ Stamp ໃໝ່ ສຳເລັດແລ້ວ."))
+    return redirect(f"/crm/?customer={customer.pk}")
+

@@ -1,17 +1,34 @@
-import re
+import uuid
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.template.loader import render_to_string
 from django.urls import reverse
-from django.utils.translation import gettext
+from django.utils import timezone
+from django.utils.translation import gettext, gettext as _
 
 from inventory.models import StockMovement, Supply
+from staff.decorators import role_required
+from staff.models import StaffProfile, get_role
 
-from .models import Order, OrderItem, Payment, ServiceType, generate_order_number
+from .models import (
+    BASE_CURRENCY,
+    CURRENCY_CHOICES,
+    Order,
+    OrderItem,
+    Payment,
+    ServiceType,
+    generate_order_number,
+)
+from .scanning import open_order_for_scan, resolve_scan_code
+from .services import hand_over_asset, record_payment, void_payment
+
+manager_required = role_required(StaffProfile.Role.MANAGER)
 
 
 @login_required
@@ -42,20 +59,21 @@ def storage_map_data(request):
     """JSON storage map ສຳລັບ modal ເລືອກບ່ອນເກັບໃນໜ້າສ້າງອໍເດີ (POS)
     ໂຄງສ້າງດຽວກັບ asset_intake:storage ແຕ່ເປັນ read-only (ຍັງບໍ່ມີ Asset ຈິງຕອນນີ້)
     """
-    from asset_intake.models import StorageSlot
+    from asset_intake.models import StorageSlot, build_zone_rows
 
     slots = StorageSlot.objects.filter(is_active=True).select_related(
         "asset", "asset__customer"
     )
 
-    zones = {}
     total = free = 0
     for slot in slots:
-        occupant = getattr(slot, "asset", None)
         total += 1
-        if occupant is None:
+        if getattr(slot, "asset", None) is None:
             free += 1
-        zones.setdefault(slot.zone, {}).setdefault(slot.cabinet, []).append({
+
+    def to_item(slot):
+        occupant = getattr(slot, "asset", None)
+        return {
             "id": slot.pk,
             "code": slot.code,
             "free": occupant is None,
@@ -64,17 +82,9 @@ def storage_map_data(request):
             "brand_model": (
                 f"{occupant.brand} {occupant.model_name}".strip() if occupant else ""
             ),
-        })
-
-    zone_list = [
-        {
-            "name": zone,
-            "cabinets": [
-                {"number": cab, "slots": items} for cab, items in cabinets.items()
-            ],
         }
-        for zone, cabinets in zones.items()
-    ]
+
+    zone_list = build_zone_rows(slots, to_item)
 
     return JsonResponse({
         "zones": zone_list,
@@ -90,41 +100,11 @@ def scan_lookup(request):
     ຮັບ ?code= ເປັນ: ເລກໃບຮັບເຄື່ອງ TK-..., ເລກອໍເດີ ORD...,
     ຫຼື URL ຈາກ QR ໃນລະບົບ (/t/<token>/ ຂອງ portal, /<pk>/ ຂອງປ້າຍແທັກ)
     """
-    from asset_intake.models import Asset
-
     code = request.GET.get("code", "").strip()
     if not code:
         return JsonResponse({"found": False, "error": "empty"}, status=400)
 
-    asset = None
-    order = None
-
-    if code.lower().startswith(("http://", "https://")):
-        # QR ໜ້າ portal ລູກຄ້າ: .../t/<token>/
-        m = re.search(r"/t/([A-Za-z0-9_-]+)/?", code)
-        if m:
-            asset = Asset.objects.select_related("customer").filter(
-                public_token=m.group(1)
-            ).first()
-        else:
-            # QR ປ້າຍແທັກຫ້ອຍເກີບ: ເປັນ URL ໜ້າລາຍລະອຽດ ລົງທ້າຍດ້ວຍ /<pk>/
-            m = re.search(r"/(\d+)/?(?:[?#].*)?$", code)
-            if m:
-                asset = Asset.objects.select_related("customer").filter(
-                    pk=int(m.group(1))
-                ).first()
-    elif code.upper().startswith("ORD"):
-        order = Order.objects.select_related("customer").filter(
-            order_number__iexact=code
-        ).first()
-    else:
-        asset = Asset.objects.select_related("customer").filter(
-            ticket_number__iexact=code
-        ).first()
-        if asset is None:
-            asset = Asset.objects.select_related("customer").filter(
-                public_token=code
-            ).first()
+    asset, order = resolve_scan_code(code)
 
     if order is not None:
         # ດຶງເຄື່ອງໂຕທຳອິດຂອງອໍເດີມານຳ ເພື່ອຕື່ມຟອມລາຍການ
@@ -486,7 +466,377 @@ def invoice_view(request, pk):
         Order.objects.select_related("customer").prefetch_related("items", "payments"),
         pk=pk,
     )
-    return render(request, "pos/invoice.html", {"order": order})
+    # ຊຳລະແລ້ວ → ກຽມລິ້ງ WhatsApp ກາດ Stamp ໄວ້ໃຫ້ພະນັກງານກົດສົ່ງ
+    stamp_context = {}
+    if order.status == Order.Status.PAID and order.customer_id:
+        from django.conf import settings
+
+        from digital_member.models import MemberCard
+        from notifications.services import build_stamp_wa_link, member_card_image_url
+
+        card, _created = MemberCard.objects.get_or_create(customer=order.customer)
+        visit_count = Order.objects.filter(
+            customer=order.customer, status=Order.Status.PAID
+        ).count()
+        stamp_context = {
+            "member_card": card,
+            "visit_count": visit_count,
+            "stamp_wa_link": build_stamp_wa_link(order.customer, card, visit_count),
+            "stamp_card_image_url": member_card_image_url(card),
+            # ຕັ້ງ Cloud API ຄົບບໍ່ → ຕັດສິນວ່າຈະສົ່ງຮູບເອງ ຫຼື ໃຫ້ພະນັກງານກົດສົ່ງ
+            "whatsapp_api_ready": bool(
+                settings.WHATSAPP_ACCESS_TOKEN and settings.WHATSAPP_PHONE_NUMBER_ID
+            ),
+        }
+
+    return render(request, "pos/invoice.html", {"order": order, **stamp_context})
+
+
+def _load_order_for_money(pk):
+    """ໂຫຼດບິນພ້ອມທຸກຢ່າງທີ່ໜ້າຄິດເງິນຕ້ອງໃຊ້ — ກັນ N+1 ຕອນຄິດຍອດຄ້າງ"""
+    return get_object_or_404(
+        Order.objects.select_related("customer").prefetch_related(
+            "items__service_type",
+            "items__asset",
+            "payments__received_by",
+        ),
+        pk=pk,
+    )
+
+
+def _quick_cash_options(balance, limit=2):
+    """ປຸ່ມທາງລັດເງິນສົດ — ຄ່າທີ່ລູກຄ້າຍື່ນມາແທ້ໆ
+
+    ຜະສົມສອງແນວຄິດ: ປັດຂຶ້ນຫຼັກ 10k/50k/100k (ລູກຄ້ານັບເງິນເອງ)
+    ກັບ ໃບເງິນມາດຕະຖານທີ່ໃຫຍ່ກວ່າຍອດຄ້າງ (ຍື່ນໃບດຽວ).
+    ຕັດຄ່າທີ່ = ຍອດຄ້າງອອກ ເພາະປຸ່ມ "ພໍດີ" ຮັບໜ້າທີ່ນັ້ນຢູ່ແລ້ວ.
+    """
+    if balance <= 0:
+        return []
+
+    def ceil_to(step):
+        step = Decimal(step)
+        return (balance / step).to_integral_value(rounding="ROUND_CEILING") * step
+
+    candidates = {ceil_to(10000), ceil_to(50000), ceil_to(100000)}
+    candidates.update(
+        Decimal(n) for n in (20000, 50000, 100000, 200000, 500000, 1000000)
+    )
+    # ຮັບປະກັນວ່າມີຢ່າງໜ້ອຍ 1 ຄ່າ ເຖິງແມ່ນຍອດຄ້າງຈະໃຫຍ່ກວ່າໃບເງິນທຸກໃບ
+    candidates.add((balance // 100000 + 1) * 100000)
+    return sorted(c for c in candidates if c > balance)[:limit]
+
+
+@login_required
+def checkout_view(request, pk):
+    """ໜ້າຄິດເງິນ — ຊ້າຍ: ບິນ (ເຫັນຕະຫຼອດ) / ຂວາ: ຮັບເງິນ"""
+    order = _load_order_for_money(pk)
+    balance = order.balance_due
+
+    return render(
+        request,
+        "pos/checkout.html",
+        {
+            "active_nav": "pos",
+            "order": order,
+            "balance_due": balance,
+            "amount_paid": order.amount_paid,
+            "quick_cash": _quick_cash_options(balance),
+            "payment_methods": Payment.Method.choices,
+            "currencies": CURRENCY_CHOICES,
+            "base_currency": BASE_CURRENCY,
+            # ລະຫັດກັນບັນທຶກຊ້ຳ — ສ້າງໃໝ່ທຸກຄັ້ງທີ່ໂຫຼດໜ້າ, ສົ່ງໄປກັບຟອມ
+            "idempotency_key": uuid.uuid4(),
+            "assets": order.assets(),
+            "can_void": get_role(request.user) == StaffProfile.Role.MANAGER,
+        },
+    )
+
+
+@login_required
+def take_payment(request, pk):
+    """ບັນທຶກການຮັບເງິນ 1 ແຖວ (ຮັບໄດ້ຫຼາຍແຖວຕໍ່ 1 ບິນ = split tender)"""
+    order = _load_order_for_money(pk)
+    if request.method != "POST":
+        return redirect("pos:checkout", pk=order.pk)
+
+    key = request.POST.get("idempotency_key", "").strip()
+    try:
+        key = uuid.UUID(key) if key else None
+    except ValueError:
+        key = None
+
+    try:
+        payment, created = record_payment(
+            order=order,
+            amount=request.POST.get("amount", "").strip(),
+            method=request.POST.get("method", Payment.Method.CASH),
+            currency=request.POST.get("currency", BASE_CURRENCY),
+            tendered=request.POST.get("tendered", "").strip() or None,
+            fx_rate=request.POST.get("fx_rate", "").strip() or None,
+            user=request.user,
+            idempotency_key=key,
+            note=request.POST.get("note", "").strip()[:200],
+        )
+    except ValidationError as exc:
+        for message in exc.messages:
+            messages.error(request, message)
+        return redirect("pos:checkout", pk=order.pk)
+
+    if not created:
+        messages.info(request, _("This payment was already recorded."))
+        return redirect("pos:checkout", pk=order.pk)
+
+    order.refresh_from_db()
+    if payment.change_amount > 0:
+        messages.success(
+            request,
+            _("Payment recorded. Change due: %(change)s %(currency)s")
+            % {"change": payment.change_amount, "currency": payment.currency},
+        )
+    else:
+        messages.success(request, _("Payment recorded."))
+
+    if order.is_settled:
+        return redirect("pos:invoice", pk=order.pk)
+    return redirect("pos:checkout", pk=order.pk)
+
+
+@manager_required
+def void_payment_view(request, pk, payment_pk):
+    """ຍົກເລີກແຖວການຊຳລະ — ສະເພາະຜູ້ຈັດການ (void ≠ ຄືນເງິນ)"""
+    order = get_object_or_404(Order, pk=pk)
+    payment = get_object_or_404(Payment, pk=payment_pk, order=order)
+
+    if request.method != "POST":
+        return redirect("pos:checkout", pk=order.pk)
+
+    void_payment(
+        payment=payment,
+        user=request.user,
+        reason=request.POST.get("reason", "").strip()[:200],
+    )
+    messages.success(request, _("Payment voided."))
+    return redirect("pos:checkout", pk=order.pk)
+
+
+@login_required
+def send_stamp_card(request, pk):
+    """ສົ່ງ *ຮູບ* ບັດສະສົມ Stamp ໃຫ້ລູກຄ້າໂດຍກົງຜ່ານ WhatsApp Cloud API
+
+    ຖ້າຍັງບໍ່ໄດ້ຕັ້ງ Cloud API ຈະບອກໃຫ້ພະນັກງານໃຊ້ປຸ່ມສົ່ງເອງແທນ
+    """
+    order = get_object_or_404(Order.objects.select_related("customer"), pk=pk)
+    if request.method != "POST":
+        return redirect("pos:invoice", pk=order.pk)
+
+    if not order.customer_id:
+        messages.error(request, _("This bill has no customer attached."))
+        return redirect("pos:invoice", pk=order.pk)
+
+    from digital_member.models import MemberCard
+    from notifications.services import notify_stamp_card
+
+    card, _created = MemberCard.objects.get_or_create(customer=order.customer)
+    visit_count = Order.objects.filter(
+        customer=order.customer, status=Order.Status.PAID
+    ).count()
+
+    ok, error = notify_stamp_card(order.customer, card, visit_count)
+    if ok:
+        messages.success(request, _("Stamp card image sent on WhatsApp."))
+    else:
+        messages.error(
+            request,
+            _("Could not send automatically (%(error)s) — use the manual button.")
+            % {"error": error},
+        )
+    return redirect("pos:invoice", pk=order.pk)
+
+
+@login_required
+def mark_order_paid(request, pk):
+    """ປຸ່ມດ່ວນ "ຮັບເງິນສົດເຕັມຍອດ" ຈາກໃບບິນ
+
+    ຍັງເກັບໄວ້ເພື່ອຄວາມໄວໜ້າຮ້ານ ແຕ່ດຽວນີ້ບັນທຶກລົງ ledger ຈິງຜ່ານ
+    record_payment() ບໍ່ແມ່ນປ່ຽນ status ລອຍໆຄືເກົ່າ
+    """
+    order = _load_order_for_money(pk)
+    if request.method != "POST":
+        return redirect("pos:invoice", pk=order.pk)
+
+    balance = order.balance_due
+    if balance <= 0:
+        messages.info(request, _("This order is already fully paid."))
+        return redirect("pos:invoice", pk=order.pk)
+
+    try:
+        record_payment(
+            order=order,
+            amount=balance,
+            method=Payment.Method.CASH,
+            currency=BASE_CURRENCY,
+            user=request.user,
+            note=gettext("Quick full payment from invoice"),
+        )
+    except ValidationError as exc:
+        for message in exc.messages:
+            messages.error(request, message)
+        return redirect("pos:invoice", pk=order.pk)
+
+    order.refresh_from_db()
+    if order.customer_id:
+        from digital_member.models import MemberCard
+
+        card = MemberCard.objects.filter(customer=order.customer).first()
+        if card is not None:
+            messages.success(
+                request,
+                _("Payment recorded — 1 stamp added (%(stamps)s/10).")
+                % {"stamps": card.current_stamps},
+            )
+            return redirect("pos:invoice", pk=order.pk)
+
+    messages.success(request, _("Payment recorded."))
+    return redirect("pos:invoice", pk=order.pk)
+
+
+@login_required
+def open_orders(request):
+    """ໜ້າ "ບິນຄ້າງ" — ປະຕູທາງເຂົ້າຕອນລູກຄ້າມາຮັບເກີບ
+
+    ຮຽງຕາມວັນນັດຮັບເຄື່ອງທີ່ໃກ້ທີ່ສຸດກ່ອນ ແລ້ວຄ່ອຍຕາມວັນເປີດບິນ
+    """
+    query = request.GET.get("q", "").strip()
+
+    # ສະແກນປ້າຍເກີບ/QR → ຖ້າຖອດລະຫັດໄດ້ບິນດຽວ ພາໄປໜ້າຄິດເງິນເລີຍ
+    # ບໍ່ໃຫ້ພະນັກງານຕ້ອງກົດຊ້ຳອີກຄັ້ງ ຕອນລູກຄ້າຢືນລໍຢູ່ໜ້າເຄົາເຕີ
+    if query and request.GET.get("scan") == "1":
+        scanned_order = open_order_for_scan(query)
+        if scanned_order is not None:
+            return redirect("pos:checkout", pk=scanned_order.pk)
+
+        # ຖອດລະຫັດໄດ້ ແຕ່ບິນປິດໄປແລ້ວ → ບອກໃຫ້ຮູ້ ຢ່າໃຫ້ໜ້າຫວ່າງລອຍໆ
+        asset, order = resolve_scan_code(query)
+        if asset is not None or order is not None:
+            label = asset.ticket_number if asset else order.order_number
+            messages.info(
+                request,
+                _("%(label)s has no open bill — it is already paid and collected.")
+                % {"label": label},
+            )
+            query = label
+        else:
+            messages.error(
+                request,
+                _("Nothing matched the scanned code: %(code)s") % {"code": query},
+            )
+
+    orders = (
+        Order.objects.filter(status__in=Order.OPEN_STATUSES)
+        .select_related("customer")
+        .prefetch_related("items__asset", "payments")
+    )
+
+    if query:
+        orders = orders.filter(
+            Q(order_number__icontains=query)
+            | Q(customer__name__icontains=query)
+            | Q(customer__phone__icontains=query)
+            | Q(items__asset__ticket_number__icontains=query)
+        ).distinct()
+
+    rows = []
+    for order in orders:
+        assets = order.assets()
+        rows.append({
+            "order": order,
+            "assets": assets,
+            "balance_due": order.balance_due,
+            "amount_paid": order.amount_paid,
+            "ready_count": sum(1 for a in assets if a.status == "ready"),
+            "pickup_date": min(
+                (a.pickup_date for a in assets if a.pickup_date), default=None
+            ),
+        })
+
+    # ບິນທີ່ນັດຮັບກ່ອນຢູ່ເທິງສຸດ; ບິນທີ່ບໍ່ມີວັນນັດໄປທ້າຍສຸດ
+    rows.sort(key=lambda r: (r["pickup_date"] is None, r["pickup_date"]
+                             or r["order"].created_at.date()))
+
+    return render(
+        request,
+        "pos/open_orders.html",
+        {
+            "active_nav": "open_orders",
+            "rows": rows,
+            "query": query,
+            "today": timezone.localdate(),
+            "total_outstanding": sum(
+                (r["balance_due"] for r in rows), start=Decimal("0")
+            ),
+        },
+    )
+
+
+@login_required
+def handover_view(request, pk):
+    """ໜ້າສົ່ງມອບເຄື່ອງ — ຕິກເປັນຄູ່ໆ, ຖືກລັອກໄວ້ຈົນກວ່າຍອດຄ້າງເປັນ 0"""
+    order = _load_order_for_money(pk)
+    assets = order.assets()
+    balance = order.balance_due
+
+    if request.method == "POST":
+        if balance > 0:
+            messages.error(
+                request,
+                _("Cannot hand over: %(balance)s is still due on this order.")
+                % {"balance": balance},
+            )
+            return redirect("pos:handover", pk=order.pk)
+
+        received_to = request.POST.get("received_to", "").strip()
+        selected = set(request.POST.getlist("asset_ids"))
+        if not selected:
+            messages.error(request, _("Select at least one item to hand over."))
+            return redirect("pos:handover", pk=order.pk)
+
+        handed = 0
+        for asset in assets:
+            if str(asset.pk) not in selected:
+                continue
+            try:
+                hand_over_asset(
+                    order=order,
+                    asset=asset,
+                    user=request.user,
+                    received_to=received_to,
+                )
+                handed += 1
+            except ValidationError as exc:
+                for message in exc.messages:
+                    messages.error(request, message)
+
+        if handed:
+            messages.success(
+                request,
+                _("%(count)s item(s) handed over.") % {"count": handed},
+            )
+        return redirect("pos:handover", pk=order.pk)
+
+    return render(
+        request,
+        "pos/handover.html",
+        {
+            "active_nav": "pos",
+            "order": order,
+            "assets": assets,
+            "balance_due": balance,
+            "all_returned": bool(assets) and all(
+                a.status == "returned" for a in assets
+            ),
+        },
+    )
 
 
 @login_required

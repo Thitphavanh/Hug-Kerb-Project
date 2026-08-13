@@ -16,7 +16,8 @@ class DashboardSmokeTest(TestCase):
         self.asset = Asset.objects.create(
             customer=self.customer, brand="Nike", model_name="Air Force 1", size="42"
         )
-        self.order = Order.objects.create(customer=self.customer)
+        self.order = Order.objects.create(customer=self.customer, vat_rate=0)
+
         OrderItem.objects.create(
             order=self.order, description="ຊັກເກີບ", quantity=2, unit_price=150
         )

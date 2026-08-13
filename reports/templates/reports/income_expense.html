@@ -25,13 +25,13 @@
         box-shadow: 0 0 15px rgba(87, 223, 254, 0.4);
     }
     .dark .ai-gradient-text {
-        background: linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%);
+        background: linear-gradient(135deg, #8aacff 0%, #4a63a8 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
     .ai-gradient-text {
-        background: linear-gradient(135deg, #0058be 0%, #00687a 100%);
+        background: linear-gradient(135deg, #1d2b53 0%, #2c4180 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -221,7 +221,7 @@
         const ctx = document.getElementById('cashflowChart').getContext('2d');
         
         const isDark = document.documentElement.classList.contains("dark");
-        const primaryColor = isDark ? '#22d3ee' : '#0058be';
+        const primaryColor = isDark ? '#8aacff' : '#1d2b53';
         const expenseColor = isDark ? '#ffb786' : '#924700';
         const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(194, 198, 214, 0.2)';
         const tickColor = isDark ? '#c7c6cc' : '#727785';

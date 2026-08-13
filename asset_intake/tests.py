@@ -1,4 +1,8 @@
 import tempfile
+from io import StringIO
+from unittest.mock import patch
+
+from django.core.management import call_command
 
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -10,7 +14,7 @@ from crm.models import Customer
 from media_backup.models import MediaFile
 from pos.models import ServiceType
 
-from .models import Asset
+from .models import Asset, AssetService
 from .views import build_care_price_recommendation
 
 
@@ -344,3 +348,283 @@ class CarePriceRecommendationTest(TestCase):
 
         self.assertEqual(result["service"], self.premium)
         self.assertEqual(result["price"], 275000)
+
+
+class AssetServiceWorkflowTest(TestCase):
+    """ຄອບຄຸມ 3 ກໍລະນີຈິງ: ມາຊັກຢ່າງດຽວ / ມາສ້ອມຢ່າງດຽວ / ເຮັດທັງ 2"""
+
+    def setUp(self):
+        self.customer = Customer.objects.create(name="ທົດສອບ", phone="02033334444")
+        self.wash = ServiceType.objects.create(
+            name="Deep Clean",
+            category=ServiceType.Category.PRIMARY,
+            work_type=ServiceType.WorkType.WASH,
+            price=150000,
+        )
+        self.repair = ServiceType.objects.create(
+            name="Sole Restoration",
+            category=ServiceType.Category.ADD_ON,
+            work_type=ServiceType.WorkType.REPAIR,
+            price=300000,
+        )
+
+    def _asset(self):
+        return Asset.objects.create(customer=self.customer, brand="Nike")
+
+    def test_wash_only_pair_never_enters_repair_state(self):
+        asset = self._asset()
+        service = AssetService.objects.create(asset=asset, service_type=self.wash)
+
+        service.status = AssetService.Status.IN_PROGRESS
+        service.save()
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, Asset.Status.CLEANING)
+
+        service.status = AssetService.Status.DONE
+        service.save()
+        asset.refresh_from_db()
+        # ຊັກແລ້ວ = ພ້ອມຮັບເລີຍ ບໍ່ຕ້ອງຜ່ານ "ກຳລັງສ້ອມແປງ"
+        self.assertEqual(asset.status, Asset.Status.READY)
+
+    def test_repair_only_pair_never_enters_cleaning_state(self):
+        asset = self._asset()
+        service = AssetService.objects.create(asset=asset, service_type=self.repair)
+
+        service.status = AssetService.Status.IN_PROGRESS
+        service.save()
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, Asset.Status.REPAIRING)
+
+        service.status = AssetService.Status.DONE
+        service.save()
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, Asset.Status.READY)
+
+    def test_pair_with_both_services_is_ready_only_after_both_are_done(self):
+        asset = self._asset()
+        wash = AssetService.objects.create(asset=asset, service_type=self.wash)
+        repair = AssetService.objects.create(asset=asset, service_type=self.repair)
+
+        wash.status = AssetService.Status.DONE
+        wash.save()
+        asset.refresh_from_db()
+        # ຊັກແລ້ວ ແຕ່ຍັງເຫຼືອສ້ອມ → ຍັງບໍ່ພ້ອມຮັບ
+        self.assertNotEqual(asset.status, Asset.Status.READY)
+
+        repair.status = AssetService.Status.DONE
+        repair.save()
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, Asset.Status.READY)
+
+    def test_repair_in_progress_wins_over_wash_for_pair_status(self):
+        asset = self._asset()
+        AssetService.objects.create(
+            asset=asset,
+            service_type=self.wash,
+            status=AssetService.Status.IN_PROGRESS,
+        )
+        repair = AssetService.objects.create(
+            asset=asset,
+            service_type=self.repair,
+            status=AssetService.Status.IN_PROGRESS,
+        )
+        repair.save()
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, Asset.Status.REPAIRING)
+
+    def test_skipped_service_does_not_block_ready(self):
+        asset = self._asset()
+        wash = AssetService.objects.create(asset=asset, service_type=self.wash)
+        repair = AssetService.objects.create(asset=asset, service_type=self.repair)
+
+        wash.status = AssetService.Status.DONE
+        wash.save()
+        repair.status = AssetService.Status.SKIPPED
+        repair.save()
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, Asset.Status.READY)
+
+    def test_delivered_pair_is_not_reopened_by_rollup(self):
+        asset = self._asset()
+        service = AssetService.objects.create(asset=asset, service_type=self.wash)
+        asset.status = Asset.Status.RETURNED
+        asset.save()
+
+        service.status = AssetService.Status.IN_PROGRESS
+        service.save()
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, Asset.Status.RETURNED)
+
+    def test_timestamps_recorded_per_service(self):
+        asset = self._asset()
+        service = AssetService.objects.create(asset=asset, service_type=self.wash)
+        self.assertIsNone(service.started_at)
+
+        service.status = AssetService.Status.IN_PROGRESS
+        service.save()
+        self.assertIsNotNone(service.started_at)
+        self.assertIsNone(service.finished_at)
+
+        service.status = AssetService.Status.DONE
+        service.save()
+        self.assertIsNotNone(service.finished_at)
+
+    def test_order_item_creates_matching_asset_service(self):
+        from pos.models import Order, OrderItem
+
+        asset = self._asset()
+        order = Order.objects.create(customer=self.customer)
+        OrderItem.objects.create(
+            order=order, service_type=self.repair, asset=asset, unit_price=300000
+        )
+
+        service = AssetService.objects.get(asset=asset, service_type=self.repair)
+        self.assertEqual(service.work_type, ServiceType.WorkType.REPAIR)
+        self.assertEqual(service.name, "Sole Restoration")
+        self.assertEqual(service.status, AssetService.Status.PENDING)
+
+
+class KanbanBoardTest(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("staff", password="pw12345678")
+        self.client.force_login(self.user)
+        self.customer = Customer.objects.create(name="ທົດສອບ", phone="02055556666")
+        self.wash = ServiceType.objects.create(
+            name="Deep Clean",
+            work_type=ServiceType.WorkType.WASH,
+            price=150000,
+        )
+        self.repair = ServiceType.objects.create(
+            name="Sole Restoration",
+            work_type=ServiceType.WorkType.REPAIR,
+            price=300000,
+        )
+
+    def test_board_splits_services_into_work_type_lanes(self):
+        asset = Asset.objects.create(customer=self.customer, brand="Nike")
+        AssetService.objects.create(asset=asset, service_type=self.wash)
+        AssetService.objects.create(asset=asset, service_type=self.repair)
+
+        response = self.client.get(reverse("asset_intake:kanban"))
+        lane_ids = [lane["id"] for lane in response.context["lanes"]]
+        self.assertEqual(sorted(lane_ids), ["repair", "wash"])
+        # ຄູ່ດຽວ ແຕ່ອອກເປັນ 2 card ຄົນລະແຖວ
+        cards = [
+            item
+            for lane in response.context["lanes"]
+            for column in lane["columns"]
+            for item in column["items"]
+        ]
+        self.assertEqual(len(cards), 2)
+
+    def test_work_type_filter_shows_only_that_lane(self):
+        asset = Asset.objects.create(customer=self.customer, brand="Nike")
+        AssetService.objects.create(asset=asset, service_type=self.wash)
+        AssetService.objects.create(asset=asset, service_type=self.repair)
+
+        response = self.client.get(reverse("asset_intake:kanban"), {"work_type": "wash"})
+        lane_ids = [lane["id"] for lane in response.context["lanes"]]
+        self.assertEqual(lane_ids, ["wash"])
+
+    def test_drag_updates_service_and_rolls_up_pair_status(self):
+        asset = Asset.objects.create(customer=self.customer, brand="Nike")
+        service = AssetService.objects.create(asset=asset, service_type=self.repair)
+
+        response = self.client.post(
+            reverse("asset_intake:kanban_update"),
+            data={"service_id": service.pk, "status": "in_progress"},
+            content_type="application/json",
+        )
+        self.assertTrue(response.json()["success"])
+        service.refresh_from_db()
+        asset.refresh_from_db()
+        self.assertEqual(service.status, AssetService.Status.IN_PROGRESS)
+        self.assertEqual(asset.status, Asset.Status.REPAIRING)
+
+    def test_delivered_pairs_are_hidden_from_board(self):
+        asset = Asset.objects.create(customer=self.customer, brand="Nike")
+        AssetService.objects.create(asset=asset, service_type=self.wash)
+        asset.status = Asset.Status.RETURNED
+        asset.save()
+
+        response = self.client.get(reverse("asset_intake:kanban"))
+        self.assertEqual(response.context["lanes"], [])
+
+
+class AssetStatusConsistencyTest(TestCase):
+    """ກັນບໍ່ໃຫ້ Asset.status ຫຼົງອອກຈາກສະຖານະວຽກອີກ"""
+
+    def setUp(self):
+        self.customer = Customer.objects.create(name="ທົດສອບ", phone="02012345678")
+        self.wash = ServiceType.objects.create(
+            name="Deep Clean", work_type=ServiceType.WorkType.WASH, price=150000
+        )
+        self.assess = ServiceType.objects.create(
+            name="AI Report", work_type=ServiceType.WorkType.ASSESS, price=0
+        )
+
+    def test_resync_fixes_legacy_status_without_matching_work(self):
+        """ຄູ່ເກົ່າທີ່ເປັນ 'ກຳລັງຊັກ' ແຕ່ມີແຕ່ວຽກປະເມີນທີ່ຍັງລໍຖ້າ → ຕ້ອງກັບເປັນ 'ຮັບເຂົ້າ'"""
+        asset = Asset.objects.create(customer=self.customer, brand="Nike")
+        AssetService.objects.create(asset=asset, service_type=self.assess)
+        # ຈຳລອງຂໍ້ມູນເກົ່າ: ຕັ້ງກົງໆ ບໍ່ຜ່ານ rollup
+        Asset.objects.filter(pk=asset.pk).update(status=Asset.Status.CLEANING)
+
+        call_command("resync_asset_status", stdout=StringIO())
+
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, Asset.Status.RECEIVED)
+
+    def test_resync_is_idempotent(self):
+        asset = Asset.objects.create(customer=self.customer, brand="Nike")
+        AssetService.objects.create(
+            asset=asset,
+            service_type=self.wash,
+            status=AssetService.Status.IN_PROGRESS,
+        )
+        call_command("resync_asset_status", stdout=StringIO())
+        asset.refresh_from_db()
+        first = asset.status
+
+        call_command("resync_asset_status", stdout=StringIO())
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, first)
+
+    def test_resync_does_not_notify_customer(self):
+        """ການແກ້ຂໍ້ມູນຍ້ອນຫຼັງ ບໍ່ຄວນສົ່ງຂໍ້ຄວາມລົບກວນລູກຄ້າ"""
+        asset = Asset.objects.create(customer=self.customer, brand="Nike")
+        AssetService.objects.create(asset=asset, service_type=self.assess)
+        Asset.objects.filter(pk=asset.pk).update(status=Asset.Status.CLEANING)
+
+        with patch("notifications.services.notify_status_change") as notify:
+            call_command("resync_asset_status", stdout=StringIO())
+
+        notify.assert_not_called()
+
+    def test_resync_leaves_delivered_pairs_alone(self):
+        asset = Asset.objects.create(customer=self.customer, brand="Nike")
+        AssetService.objects.create(asset=asset, service_type=self.wash)
+        Asset.objects.filter(pk=asset.pk).update(status=Asset.Status.RETURNED)
+
+        call_command("resync_asset_status", stdout=StringIO())
+
+        asset.refresh_from_db()
+        self.assertEqual(asset.status, Asset.Status.RETURNED)
+
+
+class TicketNumberCollisionTest(TestCase):
+    """ເລກໃບຮັບເຄື່ອງຕ້ອງບໍ່ຊ້ຳ ເມື່ອຮັບເກີບຫຼາຍຄູ່ພ້ອມກັນ (POS ຫຼາຍລາຍການ)"""
+
+    def test_bulk_intake_in_same_second_does_not_collide(self):
+        customer = Customer.objects.create(name="ທົດສອບ", phone="02099998888")
+        assets = [
+            Asset.objects.create(customer=customer, brand="Nike") for _ in range(60)
+        ]
+        numbers = {a.ticket_number for a in assets}
+        self.assertEqual(len(numbers), 60)
+
+    def test_ticket_number_fits_the_column(self):
+        from .models import generate_ticket_number
+
+        max_length = Asset._meta.get_field("ticket_number").max_length
+        self.assertLessEqual(len(generate_ticket_number()), max_length)

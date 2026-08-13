@@ -20,13 +20,13 @@
         border: 1px solid rgba(255, 255, 255, 0.3);
     }
     .ai-gradient-text {
-        background: linear-gradient(135deg, #0058be 0%, #00687a 100%);
+        background: linear-gradient(135deg, #1d2b53 0%, #2c4180 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
     .ai-border-glow {
-        box-shadow: 0 0 15px rgba(0, 88, 190, 0.15);
+        box-shadow: 0 0 15px rgba(29, 43, 83, 0.08);
         border: 1px solid #d8e2ff;
     }
     .dark .glass-panel {
@@ -34,13 +34,13 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .dark .ai-gradient-text {
-        background: linear-gradient(135deg, #22d3ee 0%, #a78bfa 100%);
+        background: linear-gradient(135deg, #8aacff 0%, #4a63a8 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
     }
     .dark .ai-border-glow {
-        box-shadow: 0 0 15px rgba(34, 211, 238, 0.15);
+        box-shadow: 0 0 15px rgba(29, 43, 83, 0.18);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
 </style>
@@ -407,7 +407,7 @@
         canvas.height = container.offsetHeight;
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
-        ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#22d3ee' : '#0058be';
+        ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#8aacff' : '#1d2b53';
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
@@ -476,7 +476,7 @@
 
     // On theme toggle, update canvas drawing color
     const observer = new MutationObserver(() => {
-        ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#22d3ee' : '#0058be';
+        ctx.strokeStyle = document.documentElement.classList.contains("dark") ? '#8aacff' : '#1d2b53';
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 </script>

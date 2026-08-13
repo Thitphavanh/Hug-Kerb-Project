@@ -49,21 +49,21 @@
         -webkit-appearance: none;
         cursor: pointer;
         padding: 0.7rem 2.75rem 0.7rem 0.9rem;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%230058be' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%231d2b53' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
         background-position: right 0.8rem center;
         background-size: 1.15rem;
     }
     .theme-select:hover,
     .theme-input:hover {
-        border-color: rgb(0 88 190 / 0.65);
+        border-color: rgb(29 43 83 / 0.65);
         background-color: rgb(var(--color-surface-container-low));
     }
     .theme-select:focus,
     .theme-input:focus {
         outline: none;
-        border-color: #0058be;
-        box-shadow: 0 0 0 3px rgb(0 88 190 / 0.14);
+        border-color: #1d2b53;
+        box-shadow: 0 0 0 3px rgb(29 43 83 / 0.14);
     }
     .theme-select option,
     .theme-select optgroup {
@@ -88,7 +88,7 @@
     }
     .dark .theme-select {
         color-scheme: dark;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2322d3ee' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%238aacff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     }
 </style>
 
@@ -478,19 +478,25 @@
         document.getElementById('storage-map-kpi').textContent =
             `${data.free} {% trans "free" %} / ${data.total} {% trans "total" %}`;
 
+        // ຮຽງເປັນຊັ້ນວາງຄືຜັງຈິງໜ້າຮ້ານ — ຈຳນວນຊ່ອງຕໍ່ຊັ້ນຕາມ zone.per_row
         const zonesHtml = data.zones.map((zone) => `
             <section class="space-y-2">
-                <h3 class="flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
-                    <span class="material-symbols-outlined text-[16px] text-primary">shelves</span>
-                    {% trans "Zone" %} ${zone.name}
+                <h3 class="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
+                    <span class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-primary">shelves</span>
+                        ${zone.label}
+                    </span>
+                    <span class="font-data-mono normal-case tracking-normal text-emerald-600 dark:text-emerald-400">
+                        ${zone.free} {% trans "free" %}
+                    </span>
                 </h3>
-                <div class="grid gap-3 md:grid-cols-2">
-                    ${zone.cabinets.map((cabinet) => `
-                        <div class="rounded-xl border border-outline-variant/30 bg-surface p-3">
-                            <p class="text-[11px] font-bold text-on-surface-variant mb-2">{% trans "Cabinet" %} ${zone.name}${cabinet.number}</p>
-                            <div class="grid grid-cols-4 gap-1.5">
-                                ${cabinet.slots.map((slot) => renderStorageSlotCell(slot, idx, currentValue, takenByOthers)).join('')}
+                <div class="rounded-xl border border-outline-variant/30 bg-surface p-3 space-y-2 overflow-x-auto">
+                    ${zone.rows.map((row) => `
+                        <div>
+                            <div class="grid gap-1.5" style="grid-template-columns:repeat(${zone.per_row},minmax(0,1fr))">
+                                ${row.slots.map((slot) => renderStorageSlotCell(slot, idx, currentValue, takenByOthers)).join('')}
                             </div>
+                            <div class="h-1 mt-1 rounded-sm bg-outline-variant/40"></div>
                         </div>
                     `).join('')}
                 </div>

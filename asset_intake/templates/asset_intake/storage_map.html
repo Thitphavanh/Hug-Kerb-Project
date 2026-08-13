@@ -64,11 +64,11 @@
             </div>
             <div class="flex items-center gap-4 text-xs text-on-surface-variant">
                 <span class="flex items-center gap-1.5">
-                    <span class="w-3.5 h-3.5 rounded bg-emerald-500/20 border border-emerald-500 inline-block"></span>
+                    <span class="w-3.5 h-3.5 rounded-sm inline-block" style="background:#f6f2e8;border:1px solid #10b981;box-shadow:inset 0 -2px 0 rgb(16 185 129 / .3)"></span>
                     {% trans "Free" %}
                 </span>
                 <span class="flex items-center gap-1.5">
-                    <span class="w-3.5 h-3.5 rounded bg-red-500/20 border border-red-500 inline-block"></span>
+                    <span class="w-3.5 h-3.5 rounded-sm inline-block" style="background:#7f1d2e;border:1px solid #ef4444"></span>
                     {% trans "Occupied" %}
                 </span>
             </div>
@@ -86,61 +86,241 @@
     </div>
     {% endif %}
 
-    <!-- Zones -->
+    <!-- Zones — ຜັງຊັ້ນວາງຈິງໜ້າຮ້ານ (ຝານ້ຳເງິນ + ຊັ້ນວາງສີຄີມ) -->
+    <div class="shelf-zones">
     {% for zone in zones %}
-    <section class="space-y-3">
-        <h2 class="flex items-center gap-2 text-lg font-bold text-on-surface">
-            <span class="material-symbols-outlined text-ai-cyan">shelves</span>
-            {% trans "Zone" %} {{ zone.name }}
-        </h2>
-        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {% for cabinet in zone.cabinets %}
-            <div class="glass-card rounded-2xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-sm font-bold text-on-surface-variant tracking-wide">{% trans "Cabinet" %} {{ zone.name }}{{ cabinet.number }}</h3>
+    <section class="shelf-wall" aria-label="{{ zone.label }}">
+
+        <!-- ຄິ້ວເທິງ: ປ້າຍໂຊນ + ຈຳນວນຊ່ອງ -->
+        <header class="shelf-wall__fascia">
+            <span class="shelf-wall__plate">{{ zone.label|upper }}</span>
+            <span class="shelf-wall__tally">
+                <span class="shelf-wall__tally-free">{{ zone.free }}</span>
+                <span class="shelf-wall__tally-sep">/</span>
+                <span>{{ zone.total }}</span>
+                <span class="shelf-wall__tally-word">{% trans "free" %}</span>
+            </span>
+        </header>
+
+        <!-- ຕົວຝາ: ຊັ້ນວາງແຕ່ລະຊັ້ນ ຮຽງແຕ່ເທິງລົງລຸ່ມ ຄືໜ້າຮ້ານຈິງ -->
+        <div class="shelf-wall__body">
+            <div class="shelf-wall__rack" style="--per-row: {{ zone.per_row }};">
+                {% for row in zone.rows %}
+                <div class="shelf-row">
+                    <div class="shelf-row__slots">
+                        {% for item in row.slots %}
+                            {% if item.asset %}
+                            <!-- ເຕັມ → ເປີດວຽກຂອງຄູ່ນັ້ນ -->
+                            <a href="{% url 'asset_intake:detail' item.asset.pk %}"
+                               class="slot-cell slot-cell--taken"
+                               data-search="{{ item.asset.ticket_number|lower }} {{ item.asset.customer.name|lower }} {{ item.asset.brand|lower }} {{ item.asset.public_token|lower }} {{ item.slot.code|lower }}"
+                               title="{{ item.slot.code }} · {{ item.asset.ticket_number }} · {{ item.asset.brand }} {{ item.asset.model_name }} · {{ item.asset.customer.name }}">
+                                <span class="material-symbols-outlined slot-cell__icon" aria-hidden="true">steps</span>
+                                <span class="slot-cell__code">{{ item.slot.code }}</span>
+                                <span class="slot-cell__meta">{{ item.asset.ticket_number|slice:"-6:" }}</span>
+                                <span class="sr-only">{% trans "Occupied" %}</span>
+                            </a>
+                            {% elif assign_asset %}
+                            <!-- ຫວ່າງ + ໂໝດເລືອກ → ກົດເພື່ອມອບບ່ອນ -->
+                            <form method="post" action="{% url 'asset_intake:storage_assign' %}" class="contents">
+                                {% csrf_token %}
+                                <input type="hidden" name="asset_id" value="{{ assign_asset.pk }}">
+                                <input type="hidden" name="slot_id" value="{{ item.slot.pk }}">
+                                <button type="submit"
+                                        class="slot-cell slot-cell--free slot-cell--pickable"
+                                        data-search="{{ item.slot.code|lower }}"
+                                        title="{% trans 'Store here' %}: {{ item.slot.code }}">
+                                    <span class="material-symbols-outlined slot-cell__icon" aria-hidden="true">add_circle</span>
+                                    <span class="slot-cell__code">{{ item.slot.code }}</span>
+                                    <span class="sr-only">{% trans "Free" %} — {% trans "Store here" %}</span>
+                                </button>
+                            </form>
+                            {% else %}
+                            <!-- ຫວ່າງ -->
+                            <div class="slot-cell slot-cell--free"
+                                 data-search="{{ item.slot.code|lower }}"
+                                 title="{% trans 'Free' %}: {{ item.slot.code }}">
+                                <span class="slot-cell__code">{{ item.slot.code }}</span>
+                                <span class="sr-only">{% trans "Free" %}</span>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <!-- ໜ້າໄມ້ຊັ້ນວາງ -->
+                    <div class="shelf-row__plank" aria-hidden="true"></div>
                 </div>
-                <div class="grid grid-cols-4 gap-2">
-                    {% for item in cabinet.slots %}
-                        {% if item.asset %}
-                        <!-- ເຕັມ (ແດງ) → ເປີດວຽກຂອງຄູ່ນັ້ນ -->
-                        <a href="{% url 'asset_intake:detail' item.asset.pk %}"
-                           class="slot-cell group relative aspect-square rounded-lg border border-red-500/60 bg-red-500/15 hover:bg-red-500/25 hover:border-red-500 transition-colors flex flex-col items-center justify-center cursor-pointer"
-                           data-search="{{ item.asset.ticket_number|lower }} {{ item.asset.customer.name|lower }} {{ item.asset.brand|lower }} {{ item.asset.public_token|lower }} {{ item.slot.code|lower }}"
-                           title="{{ item.asset.ticket_number }} · {{ item.asset.brand }} {{ item.asset.model_name }} · {{ item.asset.customer.name }}">
-                            <span class="material-symbols-outlined text-red-500 text-[18px] leading-none">steps</span>
-                            <span class="font-data-mono text-[10px] font-semibold text-red-500 mt-0.5">{{ item.slot.code }}</span>
-                            <span class="font-data-mono text-[9px] text-on-surface-variant truncate max-w-full px-1">{{ item.asset.ticket_number|slice:"-6:" }}</span>
-                        </a>
-                        {% elif assign_asset %}
-                        <!-- ຫວ່າງ (ຂຽວ) + ໂໝດເລືອກ → ກົດເພື່ອມອບບ່ອນ -->
-                        <form method="post" action="{% url 'asset_intake:storage_assign' %}" class="contents">
-                            {% csrf_token %}
-                            <input type="hidden" name="asset_id" value="{{ assign_asset.pk }}">
-                            <input type="hidden" name="slot_id" value="{{ item.slot.pk }}">
-                            <button type="submit"
-                                    class="slot-cell aspect-square rounded-lg border border-emerald-500/60 bg-emerald-500/15 hover:bg-emerald-500/30 hover:border-emerald-500 hover:scale-105 transition-all flex flex-col items-center justify-center cursor-pointer"
-                                    data-search="{{ item.slot.code|lower }}"
-                                    title="{% trans 'Store here' %}: {{ item.slot.code }}">
-                                <span class="material-symbols-outlined text-emerald-500 text-[18px] leading-none">add_circle</span>
-                                <span class="font-data-mono text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mt-0.5">{{ item.slot.code }}</span>
-                            </button>
-                        </form>
-                        {% else %}
-                        <!-- ຫວ່າງ (ຂຽວ) -->
-                        <div class="slot-cell aspect-square rounded-lg border border-emerald-500/40 bg-emerald-500/10 flex flex-col items-center justify-center"
-                             data-search="{{ item.slot.code|lower }}"
-                             title="{% trans 'Free' %}: {{ item.slot.code }}">
-                            <span class="font-data-mono text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">{{ item.slot.code }}</span>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
     </section>
     {% endfor %}
+    </div>
 </div>
+
+<style>
+    /* ═══ ຜັງຊັ້ນວາງ — ອິງສີຈິງໜ້າຮ້ານ: ຝານ້ຳເງິນເຂັ້ມ + ຊັ້ນວາງສີຄີມ ═══ */
+
+    /* ຈໍແຄບ: ຊ້ອນລົງເປັນຖັນດຽວ / ຈໍກວ້າງ: ຮຽງ 3 ໂຊນຄຽງກັນ
+       ໃຊ້ 1400px ເພາະຕ່ຳກວ່ານີ້ ຊ່ອງຂອງໂຊນ B (6 ຊ່ອງ/ຊັ້ນ) ຈະແຄບກວ່າ 44px */
+    .shelf-zones { display: grid; gap: 1.5rem; align-items: start; }
+    @media (min-width: 1400px) {
+        .shelf-zones { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        /* ໃນ grid ໃຫ້ card ເຕັມຊ່ອງຂອງມັນ — ຄວາມກວ້າງຄຸມໂດຍ grid ແທນ fit-content */
+        .shelf-zones > .shelf-wall { width: 100%; }
+        .shelf-zones > .shelf-wall .shelf-wall__rack { width: 100%; }
+    }
+
+    .shelf-wall {
+        --wall: #1d2b53;
+        --wall-deep: #16224a;
+        --plank: #f6f2e8;
+        --plank-edge: #ded7c6;
+        --ink: #131c38;
+        border-radius: 1rem;
+        overflow: hidden;
+        /* ກວ້າງພໍດີກັບຊັ້ນວາງ — ບໍ່ຢຶດເຕັມແຖວຈົນເຫຼືອບ່ອນຫວ່າງດ້ານຂວາ */
+        width: fit-content;
+        max-width: 100%;
+        background: linear-gradient(180deg, var(--wall) 0%, var(--wall-deep) 100%);
+        box-shadow: 0 1px 3px rgb(0 0 0 / .3), inset 0 1px 0 rgb(255 255 255 / .06);
+    }
+
+    /* ຄິ້ວເທິງຝາ — ບ່ອນຕິດປ້າຍໂຊນ */
+    .shelf-wall__fascia {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .875rem 1.125rem;
+        border-bottom: 1px solid rgb(255 255 255 / .1);
+    }
+    .shelf-wall__plate {
+        background: var(--plank);
+        color: var(--ink);
+        font-weight: 800;
+        font-size: .8125rem;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        padding: .375rem .875rem;
+        border-radius: .375rem;
+        box-shadow: 0 1px 2px rgb(0 0 0 / .35);
+    }
+    .shelf-wall__tally {
+        display: inline-flex;
+        align-items: baseline;
+        gap: .25rem;
+        font-size: .8125rem;
+        font-variant-numeric: tabular-nums;
+        color: rgb(255 255 255 / .65);
+    }
+    .shelf-wall__tally-free { font-weight: 700; color: #6ee7b7; }
+    .shelf-wall__tally-sep { color: rgb(255 255 255 / .35); }
+    .shelf-wall__tally-word { margin-left: .125rem; }
+
+    /* ຮອງຮັບຈໍນ້ອຍ: ເລື່ອນສະເພາະໃນຝາ — ບໍ່ໃຫ້ໜ້າເວັບເລື່ອນທາງນອນ */
+    .shelf-wall__body { overflow-x: auto; padding: 1.125rem; }
+    /* ກວ້າງຕາມຈຳນວນຊ່ອງຕໍ່ຊັ້ນ — ຊັ້ນວາງແຄບ (V) ບໍ່ຖືກຢຶດເຕັມໜ້າຈໍ */
+    .shelf-wall__rack {
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+        width: calc(var(--per-row) * 8.5rem);
+        max-width: 100%;
+    }
+
+    .shelf-row { display: flex; flex-direction: column; }
+    .shelf-row__slots {
+        display: grid;
+        grid-template-columns: repeat(var(--per-row), minmax(0, 1fr));
+        gap: .375rem;
+        align-items: end;
+    }
+    /* ໜ້າໄມ້ຊັ້ນວາງ — ແຜ່ນຄີມທີ່ຊ່ອງວາງຢູ່ເທິງ */
+    .shelf-row__plank {
+        height: 7px;
+        margin-top: .25rem;
+        border-radius: 2px;
+        background: linear-gradient(180deg, var(--plank) 0%, var(--plank-edge) 100%);
+        box-shadow: 0 3px 6px rgb(0 0 0 / .35);
+    }
+
+    /* ── ຊ່ອງເກັບ ── */
+    .slot-cell {
+        /* ຈຳເປັນ: ກັກ .sr-only (position:absolute) ໄວ້ໃນຊ່ອງ
+           ບໍ່ດັ່ງນັ້ນມັນຈະອີງໃສ່ເອກະສານ ແລ້ວດັນຄວາມສູງໜ້າເກີນ 100vh (ເກີດຊ່ອງຫວ່າງດ້ານລຸ່ມ) */
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .0625rem;
+        min-height: 44px;          /* touch target */
+        padding: .375rem .25rem;
+        border-radius: .375rem .375rem .125rem .125rem;
+        border: 1px solid transparent;
+        transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+    .slot-cell__code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: .6875rem;
+        font-weight: 700;
+        letter-spacing: .02em;
+        line-height: 1.1;
+    }
+    .slot-cell__icon { font-size: 16px; line-height: 1; }
+    .slot-cell__meta {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: .5625rem;
+        line-height: 1.1;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ຫວ່າງ = ໜ້າຕາຄືຊັ້ນວາງເປົ່າຈິງ (ຄີມ) + ຂອບຂຽວບອກສະຖານະ */
+    .slot-cell--free {
+        background: var(--plank);
+        border-color: rgb(16 185 129 / .55);
+        box-shadow: inset 0 -2px 0 rgb(16 185 129 / .3);
+    }
+    .slot-cell--free .slot-cell__code { color: var(--ink); }
+    .slot-cell--free .slot-cell__icon { color: #047857; }
+
+    .slot-cell--pickable { cursor: pointer; }
+    .slot-cell--pickable:hover { background: #d1fae5; border-color: #059669; }
+    .slot-cell--pickable:active { background: #a7f3d0; }
+
+    /* ເຕັມ = ແດງ + ໄອຄອນເກີບ (ບໍ່ໃຊ້ສີຢ່າງດຽວບອກຄວາມໝາຍ) */
+    .slot-cell--taken {
+        cursor: pointer;
+        background: #7f1d2e;
+        border-color: #ef4444;
+        box-shadow: inset 0 -2px 0 rgb(239 68 68 / .55);
+    }
+    .slot-cell--taken .slot-cell__code { color: #fff; }
+    .slot-cell--taken .slot-cell__icon { color: #fca5a5; }
+    .slot-cell--taken .slot-cell__meta { color: rgb(255 255 255 / .6); }
+    .slot-cell--taken:hover { background: #991b32; border-color: #f87171; }
+
+    .slot-cell:focus-visible {
+        outline: 3px solid rgb(var(--color-ai-cyan));
+        outline-offset: 2px;
+    }
+
+    /* ສະຖານະຄົ້ນຫາ (ຄຸມໂດຍ JS ດ້ານລຸ່ມ) */
+    .slot-cell.is-dimmed { opacity: .25; }
+    .slot-cell.is-hit {
+        box-shadow: 0 0 0 3px rgb(var(--color-ai-cyan)), 0 6px 18px rgb(0 0 0 / .45);
+        transform: scale(1.08);
+        z-index: 10;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .slot-cell { transition: none; }
+        .slot-cell.is-hit { transform: none; }
+    }
+</style>
 
 <script>
     // ຄົ້ນຫາ: highlight ຊ່ອງທີ່ກົງ, ຫຼຸດຄວາມເດັ່ນຊ່ອງອື່ນ
@@ -152,9 +332,8 @@
             document.querySelectorAll(".slot-cell").forEach(function (cell) {
                 const hay = cell.getAttribute("data-search") || "";
                 const match = q && hay.includes(q);
-                cell.classList.toggle("opacity-25", Boolean(q) && !match);
-                cell.classList.toggle("ring-2", match);
-                cell.classList.toggle("ring-ai-cyan", match);
+                cell.classList.toggle("is-dimmed", Boolean(q) && !match);
+                cell.classList.toggle("is-hit", Boolean(match));
             });
         });
         input.addEventListener("keydown", function (e) {
@@ -182,7 +361,7 @@
         const cells = document.querySelectorAll(".slot-cell");
         let hit = null;
         cells.forEach(function (c) {
-            c.classList.remove("ring-2", "ring-ai-cyan", "scale-110", "z-10", "opacity-25");
+            c.classList.remove("is-hit", "is-dimmed");
             const hay = c.getAttribute("data-search") || "";
             if (!hit && candidates.some(function (x) { return x.length >= 5 && hay.includes(x); })) {
                 hit = c;
@@ -191,8 +370,8 @@
 
         const status = document.getElementById("storage-scan-status");
         if (hit) {
-            cells.forEach(function (c) { if (c !== hit) c.classList.add("opacity-25"); });
-            hit.classList.add("ring-2", "ring-ai-cyan", "scale-110", "z-10");
+            cells.forEach(function (c) { if (c !== hit) c.classList.add("is-dimmed"); });
+            hit.classList.add("is-hit");
             hit.scrollIntoView({ behavior: "smooth", block: "center" });
             status.textContent = "{% trans 'Found:' %} " + (hit.getAttribute("title") || "");
             status.className = "text-xs font-semibold min-h-[1rem] text-ai-cyan";

@@ -3,12 +3,12 @@ from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _, gettext_noop
 
 from ai_mart_grading.models import Assessment, ChecklistItem
@@ -17,7 +17,7 @@ from media_backup.models import MediaFile
 from notifications.services import build_wa_link
 
 from .forms import IntakeForm
-from .models import Asset, StorageSlot
+from .models import Asset, AssetService, StorageSlot, build_zone_rows
 from .utils import absolute_url, qr_data_uri
 
 
@@ -498,6 +498,12 @@ def intake_detail(request, pk):
             (value, status_labels.get(value, label))
             for value, label in Asset.Status.choices
         ],
+        "service_status_choices": [
+            (AssetService.Status.PENDING, _("Waiting")),
+            (AssetService.Status.IN_PROGRESS, _("In progress")),
+            (AssetService.Status.DONE, _("Done")),
+            (AssetService.Status.SKIPPED, _("Skipped")),
+        ],
         "wa_link": build_wa_link(asset),
         "portal_url": absolute_url(asset.get_portal_url(), request),
         "technicians": get_user_model()
@@ -605,28 +611,77 @@ def social_image(request, pk):
 
 @login_required
 def kanban_board(request):
-    # ວຽກຄ້າງທັງໝົດ + ວຽກທີ່ສົ່ງມອບພາຍໃນ 7 ວັນຫຼ້າສຸດ (ຖັນ Completed ບໍ່ຮົກ)
-    week_ago = timezone.now() - timedelta(days=7)
-    assets = Asset.objects.select_related(
-        "customer", "assigned_to", "storage_slot"
-    ).filter(~Q(status=Asset.Status.RETURNED) | Q(updated_at__gte=week_ago))
+    """ກະດານຕິດຕາມການເຮັດວຽກ — card ໜຶ່ງ = ວຽກບໍລິການໜຶ່ງອັນ (ບໍ່ແມ່ນຄູ່ເກີບ)
+
+    ຄູ່ທີ່ມາຊັກຢ່າງດຽວຈະມີ card ດຽວໃນແຖວ "ຊັກ",
+    ຄູ່ທີ່ເຮັດທັງຊັກ ແລະ ສ້ອມ ຈະມີ 2 card ຢູ່ຄົນລະແຖວ ຍ້າຍເປັນອິດສະຫຼະຕໍ່ກັນ.
+    ສະຖານະຂອງຄູ່ເກີບຄິດໄລ່ມາຈາກ card ເຫຼົ່ານີ້ (ເບິ່ງ Asset.compute_status)
+    """
+    from pos.models import ServiceType
 
     stages = [
-        {"id": "received", "name": _("Intake")},
-        {"id": "cleaning", "name": _("Cleaning")},
-        {"id": "repairing", "name": _("Repairing")},
-        {"id": "ready", "name": _("Ready for pickup")},
-        {"id": "returned", "name": _("Completed"), "hint": _("Last 7 days")},
+        {"id": AssetService.Status.PENDING, "name": _("Waiting")},
+        {"id": AssetService.Status.IN_PROGRESS, "name": _("In progress")},
+        {"id": AssetService.Status.DONE, "name": _("Done")},
     ]
-    
+
+    # ບໍ່ເອົາຄູ່ທີ່ສົ່ງມອບແລ້ວ ແລະວຽກທີ່ຖືກຂ້າມ
+    services = (
+        AssetService.objects.select_related(
+            "asset", "asset__customer", "asset__storage_slot", "assigned_to"
+        )
+        .exclude(asset__status=Asset.Status.RETURNED)
+        .exclude(status=AssetService.Status.SKIPPED)
+    )
+
+    # ຕົວກັ່ນຕອງແຖວວຽກ — ຊ່າງຊັກເບິ່ງແຕ່ວຽກຊັກໄດ້
+    work_types = [
+        {"id": value, "name": label} for value, label in ServiceType.WorkType.choices
+    ]
+    active_work_type = request.GET.get("work_type", "")
+    if active_work_type not in ServiceType.WorkType.values:
+        active_work_type = ""
+
+    # ຈັດເປັນ swimlane (ແຖວ = ປະເພດວຽກ) × ຖັນ (ສະຖານະ)
+    grouped = {}
+    for service in services:
+        if active_work_type and service.work_type != active_work_type:
+            continue
+        grouped.setdefault(service.work_type, {}).setdefault(service.status, []).append(
+            service
+        )
+
+    lanes = []
+    for work_type in work_types:
+        by_status = grouped.get(work_type["id"])
+        if not by_status:
+            continue
+        lanes.append(
+            {
+                "id": work_type["id"],
+                "name": work_type["name"],
+                "total": sum(len(items) for items in by_status.values()),
+                "columns": [
+                    {
+                        "id": stage["id"],
+                        "name": stage["name"],
+                        "items": by_status.get(stage["id"], []),
+                    }
+                    for stage in stages
+                ],
+            }
+        )
+
     return render(
         request,
         "asset_intake/kanban_board.html",
         {
             "active_nav": "kanban",
-            "assets": assets,
             "stages": stages,
-        }
+            "lanes": lanes,
+            "work_types": work_types,
+            "active_work_type": active_work_type,
+        },
     )
 
 
@@ -637,13 +692,19 @@ def kanban_update_status(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
-            asset_id = data.get("asset_id")
+            service_id = data.get("service_id")
             new_status = data.get("status")
-            
-            asset = Asset.objects.select_related("customer").get(pk=asset_id)
-            if new_status in [choice[0] for choice in Asset.Status.choices]:
-                asset.status = new_status
-                asset.save(update_fields=["status", "updated_at"])
+
+            service = AssetService.objects.select_related(
+                "asset", "asset__customer"
+            ).get(pk=service_id)
+            asset = service.asset
+            if new_status in AssetService.Status.values:
+                service.status = new_status
+                # ບັນທຶກວຽກ → ໂມເດລຈະ rollup ສະຖານະຄູ່ເກີບໃຫ້ເອງ
+                # (ແລະ Asset.save ຈະແຈ້ງເຕືອນລູກຄ້າ ຖ້າສະຖານະຄູ່ປ່ຽນຈິງ)
+                service.save(update_fields=["status"])
+                asset.refresh_from_db()
                 # ຜົນການແຈ້ງເຕືອນທີ່ຫາກໍສົ່ງ (Telegram/WhatsApp) — ໃຫ້ໜ້າ board ໂຊ toast
                 from notifications.models import NotificationLog
 
@@ -670,6 +731,29 @@ def kanban_update_status(request):
 
 
 @login_required
+def service_update(request):
+    """ປ່ຽນສະຖານະວຽກບໍລິການໜຶ່ງອັນ ຈາກໜ້າລາຍລະອຽດເກີບ (POST: service_id, status)"""
+    if request.method != "POST":
+        return redirect("asset_intake:kanban")
+
+    service = get_object_or_404(AssetService, pk=request.POST.get("service_id"))
+    new_status = request.POST.get("status")
+    if new_status in AssetService.Status.values:
+        service.status = new_status
+        service.save(update_fields=["status"])
+        messages.success(
+            request, _("Updated:") + f" {service.label} → {service.get_status_display()}"
+        )
+
+    next_url = request.POST.get("next")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+    ):
+        return redirect(next_url)
+    return redirect("asset_intake:detail", pk=service.asset_id)
+
+
+@login_required
 def storage_map(request):
     """ຜັງບ່ອນເກັບເກີບ — ຄືຜັງບ່ອນນັ່ງໂຮງໜັງ (ຂຽວ=ຫວ່າງ, ແດງ=ເຕັມ)
     ໂໝດເລືອກບ່ອນ: ?assign=<asset_pk> → ກົດຊ່ອງຫວ່າງເພື່ອມອບບ່ອນເກັບໃຫ້ asset ນັ້ນ"""
@@ -687,26 +771,16 @@ def storage_map(request):
         "asset", "asset__customer"
     )
 
-    zones = {}
     total = occupied = 0
     for slot in slots:
-        occupant = slot.asset if hasattr(slot, "asset") else None
         total += 1
-        if occupant:
+        if hasattr(slot, "asset"):
             occupied += 1
-        zones.setdefault(slot.zone, {}).setdefault(slot.cabinet, []).append(
-            {"slot": slot, "asset": occupant}
-        )
 
-    zone_list = [
-        {
-            "name": zone,
-            "cabinets": [
-                {"number": cab, "slots": items} for cab, items in cabinets.items()
-            ],
-        }
-        for zone, cabinets in zones.items()
-    ]
+    zone_list = build_zone_rows(
+        slots,
+        lambda slot: {"slot": slot, "asset": getattr(slot, "asset", None)},
+    )
 
     return render(
         request,
