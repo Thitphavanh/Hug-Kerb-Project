@@ -28,6 +28,47 @@ class Supply(models.Model):
         return self.quantity_on_hand <= self.reorder_level
 
 
+class ServiceSupply(models.Model):
+    """ສູດການໃຊ້ອຸປະກອນຂອງແຕ່ລະບໍລິການ (Scope 2.1 — ຕັດສະຕັອກອັດຕະໂນມັດ)
+
+    ເຊັ່ນ "ຊັກສະອາດເລິກ 1 ຄູ່" ໃຊ້ ນ້ຳຢາ 2 ຂວດ + ແປງ 1 ອັນ.
+    ຮ້ານຕັ້ງສູດນີ້ເທື່ອດຽວ ແລ້ວລະບົບຫັກສະຕັອກໃຫ້ເອງທຸກຄັ້ງທີ່ບິນຊຳລະຄົບ.
+    """
+
+    service_type = models.ForeignKey(
+        "pos.ServiceType",
+        on_delete=models.CASCADE,
+        related_name="supply_usages",
+        verbose_name="ບໍລິການ",
+    )
+    supply = models.ForeignKey(
+        Supply,
+        on_delete=models.CASCADE,
+        related_name="service_usages",
+        verbose_name="ອຸປະກອນ",
+    )
+    quantity_per_unit = models.PositiveIntegerField(
+        "ຈຳນວນທີ່ໃຊ້ຕໍ່ 1 ລາຍການ",
+        default=1,
+        help_text="ໃຊ້ເທົ່າໃດຕໍ່ບໍລິການ 1 ຄັ້ງ — ຈະຄູນດ້ວຍຈຳນວນໃນບິນ",
+    )
+
+    class Meta:
+        ordering = ["service_type__name", "supply__name"]
+        # ບໍລິການໜຶ່ງບໍ່ຄວນມີແຖວອຸປະກອນຊ້ຳ ບໍ່ດັ່ງນັ້ນຈະຫັກສອງເທື່ອ
+        constraints = [
+            models.UniqueConstraint(
+                fields=["service_type", "supply"],
+                name="unique_supply_per_service",
+            )
+        ]
+        verbose_name = "ອຸປະກອນທີ່ບໍລິການໃຊ້"
+        verbose_name_plural = "ອຸປະກອນທີ່ບໍລິການໃຊ້"
+
+    def __str__(self):
+        return f"{self.service_type.name} → {self.supply.name} × {self.quantity_per_unit}"
+
+
 class StockMovement(models.Model):
     """ການເຄື່ອນໄຫວສະຕັອກ — ຮັບເຂົ້າ/ເບີກອອກ/ປັບຍອດ"""
 

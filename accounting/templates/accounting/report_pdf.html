@@ -1,0 +1,58 @@
+{% load humanize i18n %}
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<title>{% trans "Financial report" %} {{ start_date }} – {{ end_date }}</title>
+<style>
+    /* ຝັງ font ລາວເຂົ້າ PDF — ບໍ່ມີແລ້ວໂຕໜັງສືລາວຈະເປັນສີ່ຫຼ່ຽມດຳ */
+    @font-face { font-family: "NotoSansLao"; src: url("{{ pdf_font_regular }}"); }
+    @font-face { font-family: "NotoSansLao"; font-weight: bold; src: url("{{ pdf_font_bold }}"); }
+    * { font-family: "NotoSansLao"; }
+    @page { size: A4; margin: 16mm 12mm; }
+    body { font-size: 12px; color: #1e293b; margin: 0; }
+    .brand-line { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #0f172a; padding-bottom: 10px; }
+    .brand-line img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+    h1 { font-size: 18px; margin: 0; }
+    .muted { color: #64748b; font-size: 11px; margin: 2px 0 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; }
+    th { background: #0891b2; color: #fff; text-align: center; }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.mid { text-align: center; }
+    tr:nth-child(even) td { background: #f8fafc; }
+    .empty { text-align: center; color: #94a3b8; padding: 24px; }
+</style>
+</head>
+<body>
+    <div class="brand-line">
+        <img src="{{ pdf_logo }}" alt="">
+        <div>
+            <h1>Hug ເກີບ AI — {% trans "Financial report" %}</h1>
+            <p class="muted">
+                {{ start_date|date:"d/m/Y" }} – {{ end_date|date:"d/m/Y" }} ·
+                {% if grouping == 'yearly' %}{% trans "Yearly" %}{% elif grouping == 'monthly' %}{% trans "Monthly" %}{% else %}{% trans "Daily" %}{% endif %}
+            </p>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>{% for header in headers %}<th>{{ header }}</th>{% endfor %}</tr>
+        </thead>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{% if grouping == 'yearly' %}{{ row.0|date:"Y" }}{% elif grouping == 'monthly' %}{{ row.0|date:"m/Y" }}{% else %}{{ row.0|date:"d/m/Y" }}{% endif %}</td>
+                <td class="mid">{{ row.1 }}</td>
+                <td class="num">{{ row.2|floatformat:2|intcomma }}</td>
+                <td class="num">{{ row.3|floatformat:2|intcomma }}</td>
+                <td class="num">{{ row.4|floatformat:2|intcomma }}</td>
+            </tr>
+            {% empty %}
+            <tr><td class="empty" colspan="{{ headers|length }}">{% trans "No data for this period." %}</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

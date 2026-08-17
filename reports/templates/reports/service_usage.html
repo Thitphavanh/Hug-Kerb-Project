@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load i18n humanize %}
+
+{% block title %}{% trans "Service usage" %} — Hug ເກີບ AI{% endblock %}
+
+{% block content %}
+<style>
+    .glass-card {
+        background: var(--glass-card-bg, rgba(255, 255, 255, 0.7));
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-card-border, rgba(255, 255, 255, 0.3));
+    }
+    .dark .glass-card {
+        --glass-card-bg: rgba(30, 41, 59, 0.55);
+        --glass-card-border: rgba(255, 255, 255, 0.08);
+    }
+    .usage-bar { height: 8px; border-radius: 999px; background: rgb(var(--color-surface-container-high)); overflow: hidden; }
+    .usage-bar > i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, rgb(var(--color-ai-cyan)), rgb(var(--color-ai-purple))); }
+</style>
+
+<!-- ຫົວຂໍ້ + ຕົວເລືອກໄລຍະ -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-xl gap-md w-full">
+    <div>
+        <h1 class="font-display-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-xs font-bold">{% trans "Service usage" %}</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">{% trans "Which services the shop actually sells, and how often AI is used" %}</p>
+    </div>
+    <div class="flex flex-wrap gap-xs">
+        {% for key, meta in periods.items %}
+        <a href="?period={{ key }}"
+           class="px-4 py-2 rounded-lg text-body-sm font-medium transition-colors {% if period == key %}bg-primary text-on-primary{% else %}glass-card text-on-surface-variant hover:text-on-surface{% endif %}">
+            {{ meta.0 }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- ຕົວເລກລວມ -->
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-md mb-xl">
+    <div class="glass-card rounded-xl p-5">
+        <p class="text-body-sm text-on-surface-variant mb-1">{% trans "Services delivered" %}</p>
+        <p class="font-data-mono text-headline-md font-bold text-on-surface">{{ total_services_used|intcomma }}</p>
+    </div>
+    <div class="glass-card rounded-xl p-5">
+        <p class="text-body-sm text-on-surface-variant mb-1">{% trans "Service revenue" %}</p>
+        <p class="font-data-mono text-headline-md font-bold text-ai-cyan">{{ total_service_revenue|floatformat:0|intcomma }}</p>
+    </div>
+    <div class="glass-card rounded-xl p-5">
+        <p class="text-body-sm text-on-surface-variant mb-1">{% trans "AI assessments" %}</p>
+        <p class="font-data-mono text-headline-md font-bold text-on-surface">{{ assessment_count|intcomma }}</p>
+    </div>
+    <div class="glass-card rounded-xl p-5">
+        <p class="text-body-sm text-on-surface-variant mb-1">{% trans "AI price valuations" %}</p>
+        <p class="font-data-mono text-headline-md font-bold text-on-surface">{{ valuation_count|intcomma }}</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+
+    <!-- ບໍລິການຍອດນິຍົມ -->
+    <div class="lg:col-span-2 glass-card rounded-xl p-6">
+        <h2 class="font-display-md text-title-lg font-bold text-on-surface mb-1">{% trans "Most used services" %}</h2>
+        <p class="text-body-sm text-on-surface-variant mb-5">{% blocktrans %}Ranked by how many were delivered in the last {{ period_label }}{% endblocktrans %}</p>
+
+        {% if service_rows %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-body-sm">
+                <thead>
+                    <tr class="text-on-surface-variant border-b border-outline-variant">
+                        <th class="text-left font-label-caps tracking-wider py-3 pr-4">{% trans "Service" %}</th>
+                        <th class="text-right font-label-caps tracking-wider py-3 px-4 whitespace-nowrap">{% trans "Times" %}</th>
+                        <th class="text-right font-label-caps tracking-wider py-3 px-4 whitespace-nowrap">{% trans "Bills" %}</th>
+                        <th class="text-right font-label-caps tracking-wider py-3 pl-4 whitespace-nowrap">{% trans "Revenue" %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in service_rows %}
+                    <tr class="border-b border-outline-variant/40 last:border-0">
+                        <td class="py-3 pr-4">
+                            <p class="text-on-surface font-medium">{{ row.service_type__name }}</p>
+                            <div class="usage-bar mt-2 max-w-[220px]"><i style="width: {{ row.share_percent }}%"></i></div>
+                        </td>
+                        <td class="py-3 px-4 text-right font-data-mono font-bold text-on-surface">{{ row.times_used|intcomma }}</td>
+                        <td class="py-3 px-4 text-right font-data-mono text-on-surface-variant">{{ row.orders_count|intcomma }}</td>
+                        <td class="py-3 pl-4 text-right font-data-mono text-ai-cyan">{{ row.revenue|floatformat:0|intcomma }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-on-surface-variant text-center py-8">{% trans "No services were delivered in this period yet." %}</p>
+        {% endif %}
+    </div>
+
+    <!-- ສະຖິຕິ AI -->
+    <div class="glass-card rounded-xl p-6">
+        <h2 class="font-display-md text-title-lg font-bold text-on-surface mb-1">{% trans "AI activity" %}</h2>
+        <p class="text-body-sm text-on-surface-variant mb-5">{% trans "Condition grades the AI returned" %}</p>
+
+        {% if grade_rows %}
+        <div class="space-y-3 mb-6">
+            {% for row in grade_rows %}
+            <div class="flex items-center justify-between gap-3">
+                <span class="flex items-center gap-3">
+                    <span class="w-9 h-9 rounded-lg bg-primary-container text-on-primary-container font-data-mono font-bold flex items-center justify-center">{{ row.overall_grade }}</span>
+                    <span class="text-body-sm text-on-surface-variant">{% trans "Grade" %} {{ row.overall_grade }}</span>
+                </span>
+                <span class="font-data-mono font-bold text-on-surface">{{ row.count|intcomma }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-on-surface-variant text-body-sm py-4">{% trans "No graded assessments in this period." %}</p>
+        {% endif %}
+
+        <div class="border-t border-outline-variant pt-4 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-body-sm text-on-surface-variant">{% trans "Price valuations" %}</span>
+                <span class="font-data-mono font-bold text-on-surface">{{ valuation_count|intcomma }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-body-sm text-on-surface-variant">{% trans "Promo posts generated" %}</span>
+                <span class="font-data-mono font-bold text-on-surface">{{ promo_count|intcomma }}</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

@@ -148,9 +148,13 @@ def record_payment(
 
     locked.sync_status()
 
-    # ປະທັບ Stamp ຕອນຂ້າມເສັ້ນເປັນ "ຊຳລະຄົບ" ຄັ້ງທຳອິດເທົ່ານັ້ນ
+    # ຕອນຂ້າມເສັ້ນເປັນ "ຊຳລະຄົບ" ຄັ້ງທຳອິດເທົ່ານັ້ນ — ຈຸດນີ້ຄຸມ idempotency ໃຫ້ທັງສາມຢ່າງ
     if not was_settled_before and locked.settled_at is not None:
+        from inventory.services import consume_supplies_for_order
+
         award_visit_stamp(locked)
+        award_points(locked)
+        consume_supplies_for_order(locked)
 
     order.refresh_from_db()
     return payment, True
@@ -198,28 +202,38 @@ def award_visit_stamp(order):
     return card
 
 
-@transaction.atomic
-def hand_over_asset(*, order, asset, user=None, received_to=""):
-    """ສົ່ງມອບເກີບ 1 ຄູ່ຄືນລູກຄ້າ — ຖືກ gate ດ້ວຍຍອດຄ້າງຊຳລະ
+def award_points(order):
+    """ສະສົມຄະແນນຕາມຍອດທີ່ຈ່າຍຈິງ (Scope 2.2)
 
-    ນີ້ຄືຈຸດຕັດອັນດຽວລະຫວ່າງເສັ້ນທາງ "ເງິນ" ກັບເສັ້ນທາງ "ເຄື່ອງ"
+    ໃຊ້ຍອດທີ່ລັອກໄວ້ (effective_total) ບໍ່ແມ່ນລາຄາປັດຈຸບັນ — ແກ້ລາຄາພາຍຫຼັງ
+    ຈຶ່ງບໍ່ໄປປ່ຽນຄະແນນທີ່ລູກຄ້າໄດ້ຮັບແລ້ວ.
+    ເອີ້ນສະເພາະຕອນຂ້າມເສັ້ນເປັນ PAID ຄັ້ງທຳອິດ — ຜູ້ເອີ້ນເປັນຜູ້ຄຸມ idempotency
     """
-    from asset_intake.models import Asset
+    if not order.customer_id:
+        return None
 
-    locked = (
-        Order.objects.select_for_update()
-        .prefetch_related("items", "payments")
-        .get(pk=order.pk)
+    kip_per_point = getattr(settings, "LOYALTY_KIP_PER_POINT", 0)
+    if kip_per_point <= 0:
+        return None
+
+    points = int(order.effective_total // kip_per_point)
+    if points <= 0:
+        return None
+
+    from digital_member.models import MemberCard, PointTransaction
+
+    card, _created = MemberCard.objects.get_or_create(customer=order.customer)
+    return PointTransaction.objects.create(
+        card=card,
+        points=points,
+        reason=f"ຊຳລະບິນ {order.order_number}",
+        order=order,
     )
 
-    if locked.balance_due > ZERO:
-        raise ValidationError(
-            _("Cannot hand over: %(balance)s is still due on this order.")
-            % {"balance": locked.balance_due}
-        )
 
-    if asset.pk not in {a.pk for a in locked.assets()}:
-        raise ValidationError(_("This item does not belong to this order."))
+def _mark_returned(asset, user, received_to):
+    """ປະທັບ "ສົ່ງມອບແລ້ວ" ໃສ່ຄູ່ເກີບ — ຢ່າເອີ້ນໂດຍກົງ ໃຫ້ຜ່ານ gate ຂ້າງລຸ່ມສະເໝີ"""
+    from asset_intake.models import Asset
 
     if asset.status == Asset.Status.RETURNED:
         return asset
@@ -241,3 +255,59 @@ def hand_over_asset(*, order, asset, user=None, received_to=""):
         ]
     )
     return asset
+
+
+def orders_for_asset(asset):
+    """ບິນທຸກໃບທີ່ມີເກີບຄູ່ນີ້ຢູ່ນຳ (ບໍ່ນັບບິນທີ່ຍົກເລີກ) — ໃໝ່ສຸດກ່ອນ"""
+    return list(
+        Order.objects.filter(items__asset=asset)
+        .exclude(status=Order.Status.CANCELLED)
+        .distinct()
+        .prefetch_related("items", "payments")
+    )
+
+
+@transaction.atomic
+def hand_over_asset(*, order, asset, user=None, received_to=""):
+    """ສົ່ງມອບເກີບ 1 ຄູ່ຄືນລູກຄ້າ — ຖືກ gate ດ້ວຍຍອດຄ້າງຊຳລະ
+
+    ນີ້ຄືຈຸດຕັດອັນດຽວລະຫວ່າງເສັ້ນທາງ "ເງິນ" ກັບເສັ້ນທາງ "ເຄື່ອງ"
+    """
+    locked = (
+        Order.objects.select_for_update()
+        .prefetch_related("items", "payments")
+        .get(pk=order.pk)
+    )
+
+    if locked.balance_due > ZERO:
+        raise ValidationError(
+            _("Cannot hand over: %(balance)s is still due on this order.")
+            % {"balance": locked.balance_due}
+        )
+
+    if asset.pk not in {a.pk for a in locked.assets()}:
+        raise ValidationError(_("This item does not belong to this order."))
+
+    return _mark_returned(asset, user, received_to)
+
+
+@transaction.atomic
+def hand_over_asset_from_intake(*, asset, user=None, received_to=""):
+    """ສົ່ງມອບຈາກໜ້າລາຍລະອຽດເກີບ — ໃຊ້ gate ດຽວກັບໜ້າ POS
+
+    ໜ້ານີ້ບໍ່ຮູ້ຈັກບິນ ຈຶ່ງຫາໃຫ້ເອງ: **ທຸກ** ບິນທີ່ມີຄູ່ນີ້ຢູ່ນຳຕ້ອງຊຳລະຄົບກ່ອນ
+    (ຄູ່ດຽວອາດຢູ່ຫຼາຍບິນ ເຊັ່ນ ຊັກບິນນຶ່ງ ແລ້ວມາສ້ອມເພີ່ມອີກບິນ).
+    ຄູ່ທີ່ບໍ່ມີບິນເລີຍ (ຮັບເຂົ້າຜ່ານໜ້າ intake ໂດຍກົງ) ສົ່ງມອບໄດ້ ແຕ່ຍັງບັນທຶກ custody
+    """
+    orders = orders_for_asset(asset)
+    unpaid = [o for o in orders if o.balance_due > ZERO]
+    if unpaid:
+        raise ValidationError(
+            _("Cannot hand over: %(balance)s is still due on bill %(order)s.")
+            % {
+                "balance": unpaid[0].balance_due,
+                "order": ", ".join(o.order_number for o in unpaid),
+            }
+        )
+
+    return _mark_returned(asset, user, received_to)

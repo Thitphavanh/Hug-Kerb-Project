@@ -11,7 +11,11 @@ urlpatterns = [
     path("transactions/<int:pk>/delete/", views.transaction_delete, name="transaction_delete"),
     path("categories/<int:pk>/", views.category_detail, name="category_detail"),
     path("report/", views.report, name="report"),
-    path("report/export/", views.export_csv, name="export_csv"),
+    path("report/export/", views.export_report, name="export_report"),
+    # ຊື່ເກົ່າ — ລິ້ງ/ບຸກມາກທີ່ບັນທຶກໄວ້ແລ້ວຍັງໃຊ້ໄດ້
+    path("report/export/csv/", views.export_report, name="export_csv"),
+    path("export/daily/", views.export_daily_transactions, name="export_daily_transactions"),
+    path("payment-method-report/", views.payment_method_report, name="payment_method_report"),
     path("cash-handover/", views.cash_handover, name="cash_handover"),
     path("monthly-summary-financial/", views.monthly_summary_financial, name="monthly_summary_financial"),
     path("yearly-summary-financial/", views.yearly_summary_financial, name="yearly_summary_financial"),

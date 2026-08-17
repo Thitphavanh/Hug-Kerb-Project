@@ -1,5 +1,6 @@
+import re
 from collections import defaultdict
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 
 from django.db.models import Q, Sum
@@ -14,6 +15,15 @@ from .models import CashBook
 
 CURRENCIES = ("LAK", "THB", "USD")
 ZERO = Decimal("0")
+
+# ໃບແຈ້ງຍອດແຍກຕາມ "ກະເປົ໋າ" ທີ່ເງິນຢູ່ ບໍ່ແມ່ນຕາມຊ່ອງທາງດິບ:
+# ສະແກນ QR ເງິນເຂົ້າບັນຊີທະນາຄານ ຈຶ່ງນັບຮ່ວມກັບເງິນໂອນ.
+PAYMENT_GROUPS = {
+    "cash": (CashBook.PaymentMethod.CASH,),
+    "bank": (CashBook.PaymentMethod.TRANSFER, CashBook.PaymentMethod.QR),
+    "other": (CashBook.PaymentMethod.OTHER,),
+}
+STATEMENT_GROUPS = ("cash", "bank", "other")
 
 
 def _payment_method_label(value):
@@ -48,6 +58,17 @@ def confirmed_cashbook():
     return CashBook.objects.filter(status=CashBook.Status.CONFIRMED)
 
 
+def exclude_internal_transfers(queryset):
+    """ຕັດການຍ້າຍເງິນລະຫວ່າງກະເປົ໋າຂອງຮ້ານເອງອອກ (ເຊັ່ນ ເງິນສົດ → ບັນຊີທະນາຄານ)
+
+    ນີ້ຄື gate ອັນດຽວທີ່ທຸກລາຍງານກຳໄລ-ຂາດທຶນຕ້ອງຜ່ານ. ຖ້າບໍ່ຕັດ ເງິນກ້ອນດຽວ
+    ຈະຖືກນັບເປັນລາຍຈ່າຍຕອນອອກຈາກກຳປັ່ນ ແລະ ນັບເປັນລາຍຮັບຕອນເຂົ້າບັນຊີ
+    ເຮັດໃຫ້ທັງລາຍຮັບ ແລະ ລາຍຈ່າຍ ບວມຂຶ້ນທັງສອງຝັ່ງ.
+    ໃບແຈ້ງຍອດ (statement) ບໍ່ໃຊ້ helper ນີ້ — ຢູ່ນັ້ນເງິນຍ້າຍຈິງ ຈຶ່ງຕ້ອງເຫັນ.
+    """
+    return queryset.exclude(category__is_internal_transfer=True)
+
+
 def _aware_bounds(start_date=None, end_date=None):
     start_dt = None
     end_dt = None
@@ -64,8 +85,9 @@ def totals_by_currency(start_date=None, end_date=None, payment_method=None):
         currency: {"income": ZERO, "expense": ZERO, "balance": ZERO}
         for currency in CURRENCIES
     }
-    manual = confirmed_cashbook()
     # ແຖວທີ່ຖືກ void ບໍ່ນັບເປັນລາຍຮັບ — ຄືບໍ່ເຄີຍເກີດຂຶ້ນ
+    # ແລະ ການຍ້າຍເງິນເຂົ້າບັນຊີຕົນເອງບໍ່ແມ່ນລາຍຮັບ/ລາຍຈ່າຍ
+    manual = exclude_internal_transfers(confirmed_cashbook())
     payments = Payment.objects.live()
     expenses = Expense.objects.all()
 
@@ -183,6 +205,8 @@ def unified_transactions(
                 "source_label": _("Manual"),
                 "status": item.status,
                 "status_label": _status_label(item.status),
+                "internal": item.category.is_internal_transfer,
+                "raw_method": item.payment_method,
                 "object": item,
             }
         )
@@ -215,6 +239,8 @@ def unified_transactions(
                 "source_label": "POS",
                 "status": "confirmed",
                 "status_label": _("Confirmed"),
+                "internal": False,
+                "raw_method": item.method,
                 "object": item,
             }
         )
@@ -237,6 +263,8 @@ def unified_transactions(
                 "source_label": _("POS expense"),
                 "status": "confirmed",
                 "status_label": _("Confirmed"),
+                "internal": False,
+                "raw_method": CashBook.PaymentMethod.CASH,
                 "object": item,
             }
         )
@@ -244,11 +272,123 @@ def unified_transactions(
     return rows[:limit] if limit else rows
 
 
+def payment_group(raw_method):
+    """ຈັດຊ່ອງທາງຊຳລະເຂົ້າ "ກະເປົ໋າ" ທີ່ເງິນໄປນອນຢູ່ຈິງ"""
+    for group, methods in PAYMENT_GROUPS.items():
+        if raw_method in methods:
+            return group
+    return "other"
+
+
+def payment_group_label(group):
+    return {
+        "cash": _("Cash"),
+        "bank": _("Bank account"),
+        "other": _("Other channels"),
+    }.get(group, group)
+
+
+def statement_rows(start_date, end_date, currency, group=None):
+    """ແຖວສຳລັບໃບແຈ້ງຍອດ ຮຽງເກົ່າ → ໃໝ່
+
+    ຕ່າງຈາກລາຍງານກຳໄລ-ຂາດທຶນຢູ່ຈຸດດຽວ: ບໍ່ຕັດການຍ້າຍເງິນພາຍໃນອອກ ເພາະ
+    ໃນໃບແຈ້ງຍອດ ເງິນຍ້າຍອອກຈາກກຳປັ່ນຈິງ ແລະ ເຂົ້າບັນຊີຈິງ ຕ້ອງເຫັນທັງສອງຝັ່ງ.
+    """
+    rows = [
+        row
+        for row in unified_transactions(start_date, end_date, currency=currency)
+        if row["status"] == "confirmed"
+        and (group is None or payment_group(row["raw_method"]) == group)
+    ]
+    rows.sort(key=lambda row: row["sort_at"])
+    return rows
+
+
+def statement_opening_balance(start_date, currency, group):
+    """ຍອດຍົກມາ — ຜົນລວມທຸກລາຍການກ່ອນວັນທີເລີ່ມງວດ"""
+    if not start_date or group is None:
+        return ZERO
+    balance = ZERO
+    for row in statement_rows(None, start_date - timedelta(days=1), currency, group):
+        balance += row["amount"] if row["type"] == "IN" else -row["amount"]
+    return balance
+
+
+def totals_by_payment_group(rows):
+    """{'IN': {'cash': …, 'bank': …, 'other': …}, 'OUT': {…}} ຈາກແຖວທີ່ສົ່ງມາ"""
+    totals = {
+        "IN": {group: ZERO for group in STATEMENT_GROUPS},
+        "OUT": {group: ZERO for group in STATEMENT_GROUPS},
+    }
+    for row in rows:
+        totals[row["type"]][payment_group(row["raw_method"])] += row["amount"]
+    return totals
+
+
+def normalize_category_key(name):
+    """ຫຍໍ້ຊື່ໝວດທີ່ໝາຍຄວາມຄືກັນໃຫ້ເປັນ key ດຽວ
+
+    ໝວດທີ່ມີປ້າຍພາສາອັງກິດໃນວົງເລັບທ້າຍຊື່ ຈະຖືກລວມຕາມປ້າຍນັ້ນ ເຮັດໃຫ້
+    ການສະກົດຕ່າງກັນເລັກນ້ອຍບໍ່ແຍກເປັນສອງແຖວໃນລາຍງານ.
+    """
+    text = str(name or "").strip()
+    if not text:
+        return "∅"
+    match = re.search(r"\(([^)]+)\)\s*$", text)
+    return (match.group(1) if match else text).strip().lower()
+
+
+def group_by_category(rows, transaction_type, currency, default_other=None):
+    """ລວມຍອດຕາມໝວດ → [{'description', 'amount'}] ຮຽງຈາກຫຼາຍໄປໜ້ອຍ"""
+    default_other = default_other or _("Other")
+    merged = {}
+    order = []
+    for row in rows:
+        if (
+            row["type"] != transaction_type
+            or row["currency"] != currency
+            or row["status"] != "confirmed"
+        ):
+            continue
+        name = row["category"] or default_other
+        key = normalize_category_key(name)
+        if key not in merged:
+            merged[key] = {"description": name, "amount": ZERO}
+            order.append(key)
+        merged[key]["amount"] += row["amount"]
+    result = [merged[key] for key in order]
+    result.sort(key=lambda item: -item["amount"])
+    return result
+
+
+def group_by_category_and_payment(rows, default_other=None):
+    """ຄືກັບ group_by_category ແຕ່ແຍກຍອດແຕ່ລະໝວດອອກເປັນ ເງິນສົດ / ບັນຊີ / ອື່ນໆ"""
+    default_other = default_other or _("Other")
+    merged = {}
+    order = []
+    for row in rows:
+        name = row["category"] or default_other
+        key = normalize_category_key(name)
+        if key not in merged:
+            merged[key] = {"description": name} | {
+                group: ZERO for group in STATEMENT_GROUPS
+            }
+            order.append(key)
+        merged[key][payment_group(row["raw_method"])] += row["amount"]
+    result = []
+    for key in order:
+        item = merged[key]
+        item["amount"] = sum(item[group] for group in STATEMENT_GROUPS)
+        result.append(item)
+    result.sort(key=lambda item: -item["amount"])
+    return result
+
+
 def grouped_report(start_date, end_date, grouping="daily"):
     rows = unified_transactions(start_date, end_date)
     grouped = defaultdict(lambda: {"income": ZERO, "expense": ZERO})
     for row in rows:
-        if row["status"] != "confirmed":
+        if row["status"] != "confirmed" or row.get("internal"):
             continue
         date = row["date"]
         if grouping == "monthly":

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -31,7 +31,8 @@ class AccountingTestCase(TestCase):
     def test_dashboard_requires_login(self):
         response = self.client.get(reverse("accounting:dashboard"))
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/admin/login/", response.url)
+        # ໜ້າ login ຂອງຮ້ານ ບໍ່ແມ່ນຂອງ admin — ພະນັກງານຮ້ານບໍ່ມີສິດ admin
+        self.assertIn(reverse("login"), response.url)
 
     def test_totals_merge_pos_and_manual_without_mixing_currencies(self):
         order = Order.objects.create(status=Order.Status.PAID, created_by=self.user)
@@ -380,3 +381,219 @@ class AccountingTestCase(TestCase):
         self.assertContains(yearly, "summary-primary-action")
         self.assertContains(yearly, "summary-preview-stage")
         self.assertContains(yearly, "Yearly Summary Financial")
+
+    def _seed_statement_month(self):
+        """ໜຶ່ງເດືອນທີ່ມີ ລາຍຮັບສົດ, ລາຍຈ່າຍໂອນ ແລະ ການຍ້າຍເງິນພາຍໃນຄູ່ໜຶ່ງ"""
+        transfer_category = AccountCategory.objects.create(
+            name="ຍ້າຍເງິນເຂົ້າບັນຊີ", transaction_type="OUT", is_internal_transfer=True
+        )
+        transfer_in_category = AccountCategory.objects.create(
+            name="ຍ້າຍເງິນເຂົ້າບັນຊີ", transaction_type="IN", is_internal_transfer=True
+        )
+        first = self.today.replace(day=1)
+        CashBook.objects.create(
+            date=first,
+            description="ຮັບເງິນສົດ",
+            transaction_type="IN",
+            category=self.income_category,
+            amount=Decimal("1000000"),
+            currency="LAK",
+            payment_method=CashBook.PaymentMethod.CASH,
+            created_by=self.user,
+        )
+        CashBook.objects.create(
+            date=first,
+            description="ຈ່າຍຄ່ານ້ຳຢາ ໂອນ",
+            transaction_type="OUT",
+            category=self.expense_category,
+            amount=Decimal("200000"),
+            currency="LAK",
+            payment_method=CashBook.PaymentMethod.TRANSFER,
+            created_by=self.user,
+        )
+        # ຍ້າຍເງິນສົດ 300,000 ເຂົ້າບັນຊີ = 2 ແຖວ ຜູກກັນ
+        CashBook.objects.create(
+            date=first,
+            description="ຕັດເງິນສົດອອກຈາກກຳປັ່ນ",
+            transaction_type="OUT",
+            category=transfer_category,
+            amount=Decimal("300000"),
+            currency="LAK",
+            payment_method=CashBook.PaymentMethod.CASH,
+            created_by=self.user,
+        )
+        CashBook.objects.create(
+            date=first,
+            description="ເຂົ້າບັນຊີທະນາຄານ",
+            transaction_type="IN",
+            category=transfer_in_category,
+            amount=Decimal("300000"),
+            currency="LAK",
+            payment_method=CashBook.PaymentMethod.TRANSFER,
+            created_by=self.user,
+        )
+        return first
+
+    def test_payment_method_report_keeps_internal_transfers_out_of_profit_totals(self):
+        self.login()
+        first = self._seed_statement_month()
+
+        response = self.client.get(
+            reverse("accounting:payment_method_report"),
+            {"month": f"{first.month:02d}", "year": str(first.year), "currency": "LAK"},
+        )
+        self.assertEqual(response.status_code, 200)
+        totals = response.context["full_totals"]
+        # ການຍ້າຍເງິນບໍ່ບວມທັງລາຍຮັບ ແລະ ລາຍຈ່າຍ
+        self.assertEqual(totals["IN"]["cash"], Decimal("1000000"))
+        self.assertEqual(totals["IN"]["bank"], Decimal("0"))
+        self.assertEqual(totals["OUT"]["cash"], Decimal("0"))
+        self.assertEqual(totals["OUT"]["bank"], Decimal("200000"))
+        self.assertEqual(response.context["internal_moved"], Decimal("300000"))
+        # ແຕ່ໃນລາຍລະອຽດ ຍັງເຫັນທັງ 4 ແຖວ ເພາະເງິນຍ້າຍຈິງ
+        self.assertEqual(len(response.context["items"]), 4)
+
+    def test_cash_statement_runs_a_balance_and_shows_the_transfer_out(self):
+        self.login()
+        first = self._seed_statement_month()
+
+        response = self.client.get(
+            reverse("accounting:payment_method_report"),
+            {
+                "month": f"{first.month:02d}",
+                "year": str(first.year),
+                "currency": "LAK",
+                "report_type": "cash",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["opening_balance"], Decimal("0"))
+        # ຮັບສົດ 1,000,000 ແລ້ວຍ້າຍອອກ 300,000 → ເຫຼືອ 700,000 ໃນກຳປັ່ນ
+        self.assertEqual(response.context["closing_balance"], Decimal("700000"))
+        self.assertEqual(response.context["total_credit"], Decimal("1000000"))
+        self.assertEqual(response.context["total_debit"], Decimal("300000"))
+        self.assertEqual(response.context["credit_count"], 1)
+        self.assertEqual(response.context["debit_count"], 1)
+
+    def test_bank_statement_counts_qr_with_transfers(self):
+        self.login()
+        first = self._seed_statement_month()
+        CashBook.objects.create(
+            date=first,
+            description="ຮັບເງິນຜ່ານ QR",
+            transaction_type="IN",
+            category=self.income_category,
+            amount=Decimal("50000"),
+            currency="LAK",
+            payment_method=CashBook.PaymentMethod.QR,
+            created_by=self.user,
+        )
+
+        response = self.client.get(
+            reverse("accounting:payment_method_report"),
+            {
+                "month": f"{first.month:02d}",
+                "year": str(first.year),
+                "currency": "LAK",
+                "report_type": "bank",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # QR ນັບເປັນລາຍຮັບບັນຊີ; ຍ້າຍເງິນເຂົ້າ 300,000 ບໍ່ນັບເປັນລາຍຮັບ
+        self.assertEqual(response.context["full_totals"]["IN"]["bank"], Decimal("50000"))
+        # ໃບແຈ້ງຍອດ: +300,000 (ຍ້າຍເຂົ້າ) +50,000 (QR) −200,000 (ຈ່າຍໂອນ)
+        self.assertEqual(response.context["closing_balance"], Decimal("150000"))
+
+    def test_statement_opening_balance_carries_from_earlier_months(self):
+        self.login()
+        first = self.today.replace(day=1)
+        CashBook.objects.create(
+            date=first - timedelta(days=10),
+            description="ຮັບເງິນສົດເດືອນກ່ອນ",
+            transaction_type="IN",
+            category=self.income_category,
+            amount=Decimal("400000"),
+            currency="LAK",
+            payment_method=CashBook.PaymentMethod.CASH,
+            created_by=self.user,
+        )
+
+        response = self.client.get(
+            reverse("accounting:payment_method_report"),
+            {
+                "month": f"{first.month:02d}",
+                "year": str(first.year),
+                "currency": "LAK",
+                "report_type": "cash",
+            },
+        )
+        self.assertEqual(response.context["opening_balance"], Decimal("400000"))
+        self.assertEqual(response.context["closing_balance"], Decimal("400000"))
+
+    def test_legacy_payment_report_links_land_on_the_merged_statement(self):
+        self.login()
+        response = self.client.get(
+            reverse("accounting:payment_method_report"), {"report_type": "out_transfer"}
+        )
+        self.assertEqual(response.context["report_type"], "bank")
+
+    def test_report_exports_csv_and_pdf(self):
+        self.login()
+        self._seed_statement_month()
+
+        csv_response = self.client.get(
+            reverse("accounting:export_report"), {"format": "csv"}
+        )
+        self.assertEqual(csv_response.status_code, 200)
+        self.assertIn("text/csv", csv_response["Content-Type"])
+        self.assertIn(".csv", csv_response["Content-Disposition"])
+
+        pdf_response = self.client.get(
+            reverse("accounting:export_report"), {"format": "pdf"}
+        )
+        self.assertEqual(pdf_response.status_code, 200)
+        self.assertEqual(pdf_response["Content-Type"], "application/pdf")
+        self.assertTrue(pdf_response.content.startswith(b"%PDF"))
+
+    def test_report_exports_excel_and_word_when_the_packages_are_available(self):
+        self.login()
+        self._seed_statement_month()
+
+        for export_format, extension in (("excel", ".xlsx"), ("word", ".docx")):
+            with self.subTest(export_format=export_format):
+                response = self.client.get(
+                    reverse("accounting:export_report"), {"format": export_format}
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn(extension, response["Content-Disposition"])
+                # ທັງສອງເປັນ zip container ຂອງ Office Open XML
+                self.assertTrue(response.content.startswith(b"PK"))
+
+    def test_daily_export_can_be_filtered_to_one_payment_channel(self):
+        self.login()
+        first = self._seed_statement_month()
+
+        response = self.client.get(
+            reverse("accounting:export_daily_transactions"),
+            {"date": first.isoformat(), "payment": "bank"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("attachment", response["Content-Disposition"])
+
+    def test_category_detail_print_lists_every_bank_movement(self):
+        self.login()
+        first = self._seed_statement_month()
+
+        response = self.client.get(
+            reverse("accounting:category_detail_print"),
+            {
+                "key": "bank_expense",
+                "month": f"{first.month:02d}",
+                "year": str(first.year),
+                "currency": "LAK",
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        # ລາຍຈ່າຍທີ່ຈ່າຍດ້ວຍການໂອນ ບໍ່ວ່າຈະຢູ່ໝວດໃດ
+        self.assertEqual(response.context["total"], Decimal("200000"))
+        self.assertFalse(response.context["show_balance"])

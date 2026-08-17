@@ -1,15 +1,17 @@
 # Force reload dev server to register templatetags
 from datetime import timedelta
 
-from django.db.models import Count, Max, Sum
+from django.db.models import Count, F, Max, Sum
 from django.db.models.functions import TruncDate
 from django.shortcuts import render
 from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.translation import gettext_lazy as _, ngettext
 
+from ai_mart_grading.models import Assessment
 from crm.models import Customer
-from pos.models import Expense, Payment
+from pos.models import Expense, Order, OrderItem, Payment
+from resell_pricing_engine.models import PriceValuation, PromoContent
 from staff.decorators import role_required
 from staff.models import StaffProfile
 
@@ -20,6 +22,68 @@ PERIODS = {
     "month": (_("30 days"), 30),
     "year": (_("1 year"), 365),
 }
+
+
+@role_required(StaffProfile.Role.MANAGER)
+def service_usage(request):
+    """ສະຖິຕິການໃຊ້ບໍລິການ ແລະ ການປະເມີນຂອງ AI (Scope 2.5) — ຜູ້ຈັດການເທົ່ານັ້ນ"""
+    period = request.GET.get("period", "month")
+    if period not in PERIODS:
+        period = "month"
+    label, days = PERIODS[period]
+    start = timezone.localdate() - timedelta(days=days - 1)
+
+    # ນັບຈາກລາຍການໃນບິນ ບໍ່ນັບບິນທີ່ຍົກເລີກ — ບິນທີ່ຍົກເລີກບໍ່ແມ່ນການໃຊ້ບໍລິການຈິງ
+    service_rows = list(
+        OrderItem.objects.filter(
+            order__created_at__date__gte=start,
+            service_type__isnull=False,
+        )
+        .exclude(order__status=Order.Status.CANCELLED)
+        .values("service_type__name", "service_type__category")
+        .annotate(
+            times_used=Sum("quantity"),
+            orders_count=Count("order", distinct=True),
+            revenue=Sum(F("quantity") * F("unit_price")),
+        )
+        .order_by("-times_used")
+    )
+
+    busiest = service_rows[0]["times_used"] if service_rows else 0
+    for row in service_rows:
+        row["share_percent"] = (
+            int((row["times_used"] / busiest) * 100) if busiest else 0
+        )
+
+    assessments = Assessment.objects.filter(created_at__date__gte=start)
+    grade_rows = list(
+        assessments.exclude(overall_grade="")
+        .values("overall_grade")
+        .annotate(count=Count("id"))
+        .order_by("-count")
+    )
+
+    return render(
+        request,
+        "reports/service_usage.html",
+        {
+            "active_nav": "service_usage",
+            "period": period,
+            "period_label": label,
+            "periods": PERIODS,
+            "service_rows": service_rows,
+            "total_services_used": sum(r["times_used"] for r in service_rows),
+            "total_service_revenue": sum(r["revenue"] or 0 for r in service_rows),
+            "assessment_count": assessments.count(),
+            "grade_rows": grade_rows,
+            "valuation_count": PriceValuation.objects.filter(
+                created_at__date__gte=start
+            ).count(),
+            "promo_count": PromoContent.objects.filter(
+                created_at__date__gte=start
+            ).count(),
+        },
+    )
 
 
 @role_required(StaffProfile.Role.MANAGER)

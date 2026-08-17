@@ -20,6 +20,22 @@
             <a href="{% url 'accounting:report' %}" class="inline-flex items-center gap-2 rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-5 py-3 font-bold text-on-surface hover:border-ai-cyan">
                 <span class="material-symbols-outlined">analytics</span> {% trans "View report" %}
             </a>
+            <a href="https://wa.me/?text={{ whatsapp_text }}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-5 py-3 font-bold text-emerald-500 hover:border-emerald-500">
+                <span class="material-symbols-outlined">share</span> {% trans "Share on WhatsApp" %}
+            </a>
+            <div class="relative inline-block text-left">
+                <button type="button" onclick="toggleExportMenu()" class="inline-flex items-center gap-2 rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-5 py-3 font-bold text-on-surface hover:border-ai-cyan">
+                    <span class="material-symbols-outlined">download</span> {% trans "Export the day" %}
+                    <span class="material-symbols-outlined text-xs">keyboard_arrow_down</span>
+                </button>
+                <div id="export-daily-menu" class="hidden absolute right-0 z-50 mt-2 w-56 rounded-xl border border-outline-variant/30 bg-surface-container shadow-xl">
+                    <div class="py-1">
+                        <a href="{% url 'accounting:export_daily_transactions' %}?date={{ selected_date|date:'Y-m-d' }}&payment=all" class="block px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">{% trans "All payment methods" %}</a>
+                        <a href="{% url 'accounting:export_daily_transactions' %}?date={{ selected_date|date:'Y-m-d' }}&payment=cash" class="block px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">{% trans "Cash" %}</a>
+                        <a href="{% url 'accounting:export_daily_transactions' %}?date={{ selected_date|date:'Y-m-d' }}&payment=bank" class="block px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">{% trans "Bank account" %}</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -76,6 +92,16 @@
             <div class="relative mt-5 grid grid-cols-2 gap-3 border-t border-outline-variant/20 pt-4 text-sm">
                 <div><p class="text-xs text-on-surface-variant">{% trans "Income" %}</p><p class="mt-1 font-data-mono font-bold text-emerald-500">+{{ stats.income|floatformat:0|intcomma }}</p></div>
                 <div><p class="text-xs text-on-surface-variant">{% trans "Expense" %}</p><p class="mt-1 font-data-mono font-bold text-status-error">-{{ stats.expense|floatformat:0|intcomma }}</p></div>
+            </div>
+            <div class="relative mt-3 grid grid-cols-2 gap-3 border-t border-outline-variant/20 pt-3 text-xs">
+                <div class="rounded-lg bg-surface-container-low p-2">
+                    <p class="text-on-surface-variant">💵 {% trans "Cash" %}</p>
+                    <p class="mt-1 font-data-mono font-bold {% if stats.split.cash.balance < 0 %}text-status-error{% else %}text-on-surface{% endif %}">{{ stats.split.cash.balance|floatformat:0|intcomma }}</p>
+                </div>
+                <div class="rounded-lg bg-surface-container-low p-2">
+                    <p class="text-on-surface-variant">🏦 {% trans "Bank account" %}</p>
+                    <p class="mt-1 font-data-mono font-bold {% if stats.split.bank.balance < 0 %}text-status-error{% else %}text-on-surface{% endif %}">{{ stats.split.bank.balance|floatformat:0|intcomma }}</p>
+                </div>
             </div>
         </article>
         {% endfor %}
@@ -141,4 +167,15 @@
         </aside>
     </div>
 </section>
+
+<script>
+function toggleExportMenu() {
+    document.getElementById('export-daily-menu').classList.toggle('hidden');
+}
+window.addEventListener('click', function (event) {
+    if (!event.target.closest('.relative')) {
+        document.getElementById('export-daily-menu').classList.add('hidden');
+    }
+});
+</script>
 {% endblock %}

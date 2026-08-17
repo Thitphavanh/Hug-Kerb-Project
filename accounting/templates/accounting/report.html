@@ -39,6 +39,24 @@
                 </div>
             </div>
 
+            <!-- Statement by payment channel -->
+            <div class="relative inline-block text-left">
+                <button type="button"
+                    onclick="toggleDropdown('dropdown-statement')"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-surface-container border border-outline-variant/30 px-4 py-3 font-bold text-on-surface">
+                    <span class="material-symbols-outlined text-sm">account_balance</span>
+                    {% trans "Statement by channel" %}
+                    <span class="material-symbols-outlined text-xs">keyboard_arrow_down</span>
+                </button>
+                <div id="dropdown-statement" class="hidden absolute right-0 mt-2 w-64 rounded-xl bg-surface-container border border-outline-variant/30 shadow-xl z-50">
+                    <div class="py-1">
+                        <a href="{% url 'accounting:payment_method_report' %}?month={{ start_date|date:'m' }}&year={{ start_date|date:'Y' }}&currency=LAK&report_type=all" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">📊 {% trans "All payment methods" %}</a>
+                        <a href="{% url 'accounting:payment_method_report' %}?month={{ start_date|date:'m' }}&year={{ start_date|date:'Y' }}&currency=LAK&report_type=cash" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">💵 {% trans "Cash" %}</a>
+                        <a href="{% url 'accounting:payment_method_report' %}?month={{ start_date|date:'m' }}&year={{ start_date|date:'Y' }}&currency=LAK&report_type=bank" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">🏦 {% trans "Bank account" %}</a>
+                    </div>
+                </div>
+            </div>
+
             <!-- Yearly Cash Handover Dropdown -->
             <div class="relative inline-block text-left">
                 <button type="button"
@@ -66,9 +84,28 @@
                 </div>
             </div>
 
-            <a href="{% url 'accounting:export_csv' %}?start={{ start_date }}&end={{ end_date }}&group={{ grouping }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-ai-cyan px-5 py-3 font-bold text-on-primary">
-                <span class="material-symbols-outlined">download</span> {% trans "Export CSV" %}
+            <a href="https://wa.me/?text={{ whatsapp_text }}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 font-bold text-emerald-500 hover:border-emerald-500">
+                <span class="material-symbols-outlined text-sm">share</span> WhatsApp
             </a>
+
+            <!-- Export dropdown -->
+            <div class="relative inline-block text-left">
+                <button type="button"
+                    onclick="toggleDropdown('dropdown-export')"
+                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-ai-cyan px-5 py-3 font-bold text-on-primary">
+                    <span class="material-symbols-outlined">download</span>
+                    {% trans "Export" %}
+                    <span class="material-symbols-outlined text-xs">keyboard_arrow_down</span>
+                </button>
+                <div id="dropdown-export" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-surface-container border border-outline-variant/30 shadow-xl z-50">
+                    <div class="py-1">
+                        <a href="{% url 'accounting:export_report' %}?start={{ start_date|date:'Y-m-d' }}&end={{ end_date|date:'Y-m-d' }}&group={{ grouping }}&format=csv" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">📄 CSV</a>
+                        <a href="{% url 'accounting:export_report' %}?start={{ start_date|date:'Y-m-d' }}&end={{ end_date|date:'Y-m-d' }}&group={{ grouping }}&format=excel" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">📊 Excel</a>
+                        <a href="{% url 'accounting:export_report' %}?start={{ start_date|date:'Y-m-d' }}&end={{ end_date|date:'Y-m-d' }}&group={{ grouping }}&format=word" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">📝 Word</a>
+                        <a href="{% url 'accounting:export_report' %}?start={{ start_date|date:'Y-m-d' }}&end={{ end_date|date:'Y-m-d' }}&group={{ grouping }}&format=pdf" class="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-on-surface hover:bg-white/5 hover:text-ai-cyan">🧾 PDF</a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     {% include "accounting/_nav.html" %}

@@ -6,6 +6,9 @@
     <a href="{% url 'accounting:report' %}" class="rounded-lg px-4 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'report' or request.resolver_match.url_name == 'monthly_summary_financial' or request.resolver_match.url_name == 'yearly_summary_financial' %}bg-ai-cyan text-on-primary{% else %}text-on-surface-variant hover:bg-surface-container{% endif %}">
         <span class="material-symbols-outlined mr-1 align-middle text-lg">monitoring</span> {% trans "Reports" %}
     </a>
+    <a href="{% url 'accounting:payment_method_report' %}" class="rounded-lg px-4 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'payment_method_report' %}bg-ai-cyan text-on-primary{% else %}text-on-surface-variant hover:bg-surface-container{% endif %}">
+        <span class="material-symbols-outlined mr-1 align-middle text-lg">account_balance</span> {% trans "Statement by channel" %}
+    </a>
     <a href="{% url 'accounting:cash_handover' %}" class="rounded-lg px-4 py-2 text-sm font-bold transition {% if request.resolver_match.url_name == 'cash_handover' %}bg-ai-cyan text-on-primary{% else %}text-on-surface-variant hover:bg-surface-container{% endif %}">
         <span class="material-symbols-outlined mr-1 align-middle text-lg">price_check</span> {% trans "Cash handover" %}
     </a>

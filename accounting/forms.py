@@ -2,6 +2,8 @@ from django import forms
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
+from media_backup.validators import UploadRejected, validate_receipt
+
 from .labels import localized_category_name
 from .models import AccountCategory, Budget, CashBook, CashHandover
 
@@ -45,6 +47,20 @@ class CashBookForm(forms.ModelForm):
             "note": forms.Textarea(attrs={"rows": 3}),
             "attachment": forms.FileInput(attrs={"accept": "image/*,.pdf"}),
         }
+
+    def clean_attachment(self):
+        """ກວດຂະໜາດ/ຊະນິດຢູ່ຝັ່ງເຊີບເວີ — attrs accept ໃນ widget ເປັນພຽງຄຳແນະນຳ
+        ໃນ browser ຂ້າມໄດ້ງ່າຍ ຈຶ່ງເຊື່ອບໍ່ໄດ້
+        """
+        attachment = self.cleaned_data.get("attachment")
+        # ບໍ່ໄດ້ແນບໃໝ່ (ຫວ່າງ ຫຼື ເປັນໄຟລ໌ເກົ່າທີ່ເກັບໄວ້ແລ້ວ) — ບໍ່ຕ້ອງກວດຊ້ຳ
+        if not attachment or not hasattr(attachment, "content_type"):
+            return attachment
+        try:
+            validate_receipt(attachment)
+        except UploadRejected as rejection:
+            raise forms.ValidationError(rejection.message)
+        return attachment
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

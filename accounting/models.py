@@ -22,6 +22,14 @@ class AccountCategory(models.Model):
     color = models.CharField("ສີ", max_length=7, default="#22d3ee")
     is_active = models.BooleanField("ໃຊ້ງານ", default=True)
     sort_order = models.PositiveSmallIntegerField("ລຳດັບ", default=0)
+    # ໝວດ "ຍ້າຍເງິນລະຫວ່າງກະເປົ໋າຂອງຮ້ານເອງ" ເຊັ່ນ ເອົາເງິນສົດເຂົ້າບັນຊີທະນາຄານ.
+    # ເງິນບໍ່ໄດ້ເຂົ້າ ຫຼື ອອກຈາກຮ້ານ ຈຶ່ງຕ້ອງບໍ່ນັບເປັນລາຍຮັບ/ລາຍຈ່າຍໃນທຸກລາຍງານ
+    # ແຕ່ຍັງຕ້ອງເຫັນໃນໃບແຈ້ງຍອດ ເພາະຍອດເງິນສົດຫຼຸດ ແລະ ຍອດທະນາຄານເພີ່ມແທ້.
+    is_internal_transfer = models.BooleanField(
+        "ເປັນການຍ້າຍເງິນພາຍໃນ",
+        default=False,
+        help_text="ໝວດນີ້ຈະບໍ່ຖືກນັບເປັນລາຍຮັບ ຫຼື ລາຍຈ່າຍ",
+    )
 
     class Meta:
         ordering = ["transaction_type", "sort_order", "name"]
@@ -77,6 +85,11 @@ class CashBook(models.Model):
         default=PaymentMethod.CASH,
     )
     reference = models.CharField("ເລກອ້າງອີງ", max_length=80, blank=True)
+    # ການຍ້າຍເງິນ 1 ຄັ້ງ = 2 ແຖວ (ອອກຈາກກຳປັ່ນ + ເຂົ້າບັນຊີ) ຜູກກັນດ້ວຍລະຫັດນີ້
+    # ເພື່ອໃຫ້ລຶບພ້ອມກັນທັງຄູ່ໄດ້ — ລຶບເຄິ່ງດຽວຈະເຮັດໃຫ້ບັນຊີບໍ່ສົມດຸນ
+    transfer_group = models.UUIDField(
+        "ລະຫັດຄູ່ຍ້າຍເງິນ", null=True, blank=True, editable=False, db_index=True
+    )
     note = models.TextField("ໝາຍເຫດ", blank=True)
     attachment = models.FileField(
         "ຫຼັກຖານ/ໃບບິນ", upload_to="accounting/receipts/%Y/%m/", blank=True
@@ -114,6 +127,10 @@ class CashBook(models.Model):
 
     def __str__(self):
         return f"{self.date} — {self.description} ({self.amount} {self.currency})"
+
+    @property
+    def is_internal_transfer(self):
+        return bool(self.category_id and self.category.is_internal_transfer)
 
     def clean(self):
         from django.core.exceptions import ValidationError

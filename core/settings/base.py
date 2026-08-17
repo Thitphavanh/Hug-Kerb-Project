@@ -144,9 +144,6 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# ໜ້າ login ສຳລັບ @login_required (ໃຊ້ໜ້າ login ຂອງ admin ໄປກ່ອນ)
-LOGIN_URL = "/admin/login/"
-
 # ------------------------------------------------------------
 # ການແຈ້ງເຕືອນລູກຄ້າ (Telegram) ແລະ ລິ້ງ Customer Portal
 # ------------------------------------------------------------
@@ -171,4 +168,29 @@ POS_BASE_CURRENCY = os.getenv("POS_BASE_CURRENCY", "LAK")
 # ປະຫວ່າງໄວ້ = ບັງຄັບໃຫ້ພະນັກງານປ້ອນອັດຕາເອງທຸກຄັ້ງທີ່ຮັບເງິນສະກຸນອື່ນ
 # (ອັດຕາຖືກລັອກເກັບໄວ້ໃນແຕ່ລະແຖວ Payment ຈຶ່ງທຽບບັນຊີຄືນໄດ້ສະເໝີ)
 POS_FX_RATES = {}
-STATIC_ROOT = '/Users/hery/My-Project/Hug-Kerb-Project/staticfiles'
+
+# ------------------------------------------------------------
+# ການອັບໂຫຼດຫຼັກຖານ (Scope 2.3 — Media Backup)
+# ------------------------------------------------------------
+# ໄຟລ໌ຫຼັກຖານເກັບລົງ disk ຂອງເຄື່ອງ ຈຶ່ງຕ້ອງມີເພດານ ບໍ່ດັ່ງນັ້ນວິດີໂອຄລິບດຽວ
+# ກໍເຮັດໃຫ້ດິສເຕັມ ແລ້ວຮ້ານຮັບເຄື່ອງບໍ່ໄດ້ທັງລະບົບ
+MAX_UPLOAD_IMAGE_MB = int(os.getenv("MAX_UPLOAD_IMAGE_MB", "12"))
+MAX_UPLOAD_VIDEO_MB = int(os.getenv("MAX_UPLOAD_VIDEO_MB", "60"))
+
+# ຈຳນວນໄຟລ໌ສູງສຸດຕໍ່ການອັບໂຫຼດ 1 ຄັ້ງ — ກັນການເລືອກທັງອະລະບ້ຳຮູບໃນມືຖື
+MAX_UPLOAD_FILES_PER_REQUEST = int(os.getenv("MAX_UPLOAD_FILES_PER_REQUEST", "20"))
+
+# ------------------------------------------------------------
+# ຄະແນນສະສົມ (Scope 2.2 — Digital Member)
+# ------------------------------------------------------------
+# ໃຊ້ຈ່າຍຄົບເທົ່າໃດ (ສະກຸນຫຼັກ) ຈຶ່ງໄດ້ 1 ຄະແນນ. ຄິດຈາກຍອດບິນທີ່ຊຳລະຄົບ
+# ຕັ້ງເປັນ 0 = ປິດການສະສົມຄະແນນ (ຮ້ານໃຊ້ແຕ່ລະບົບ Stamp)
+LOYALTY_KIP_PER_POINT = int(os.getenv("LOYALTY_KIP_PER_POINT", "10000"))
+
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+# ໜ້າ login ຂອງຮ້ານ — ບໍ່ໃຊ້ໜ້າ admin ຂອງ Django ອີກ ເພາະໜ້ານັ້ນຮັບແຕ່ຜູ້ທີ່ is_staff
+# ເຊິ່ງພະນັກງານທີ່ຮ້ານສ້າງເອງບໍ່ມີ ຈຶ່ງເຂົ້າລະບົບບໍ່ໄດ້
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard:index"
+LOGOUT_REDIRECT_URL = "login"

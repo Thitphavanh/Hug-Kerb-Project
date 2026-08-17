@@ -1,6 +1,15 @@
 from django.contrib import admin
 
-from .models import StockMovement, Supply
+from .models import ServiceSupply, StockMovement, Supply
+
+
+@admin.register(ServiceSupply)
+class ServiceSupplyAdmin(admin.ModelAdmin):
+    list_display = ["service_type", "supply", "quantity_per_unit"]
+    list_filter = ["service_type"]
+    search_fields = ["service_type__name", "supply__name", "supply__sku"]
+    autocomplete_fields = ["service_type", "supply"]
+    list_editable = ["quantity_per_unit"]
 
 
 @admin.register(Supply)

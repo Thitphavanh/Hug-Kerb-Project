@@ -8,7 +8,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from asset_intake.models import Asset, StorageSlot
+from asset_intake.models import Asset, AssetService, StorageSlot
 from crm.models import Customer
 
 from .models import Order, OrderItem, Payment, ServiceType
@@ -1076,3 +1076,169 @@ class SendStampCardImageTest(TestCase):
         with patch("notifications.services.requests.post") as post:
             self.client.get(reverse("pos:send_stamp_card", args=[self.order.pk]))
         post.assert_not_called()
+
+
+class QuotationKeepsAssetLinksTest(TestCase):
+    """ໃບສະເໜີລາຄາຕ້ອງ *ອັບເດດ* ລາຍການ ບໍ່ແມ່ນລຶບແລ້ວສ້າງໃໝ່
+
+    ການລຶບ-ສ້າງໃໝ່ເຮັດໃຫ້ການຜູກ "ບໍລິການ ↔ ເກີບແຕ່ລະຄູ່" ທີ່ POS ສ້າງໄວ້ຫາຍໄປ
+    ແລ້ວເກີບຄູ່ທີ 2 ຈະຫຼຸດອອກຈາກບິນ ຈົນສົ່ງມອບຜ່ານໜ້າ POS ບໍ່ໄດ້
+    """
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("cash", password="pw12345678")
+        self.client.force_login(self.user)
+        self.wash = ServiceType.objects.create(
+            name="ຊັກສະອາດທົ່ວໄປ",
+            category=ServiceType.Category.PRIMARY,
+            work_type=ServiceType.WorkType.WASH,
+            price=Decimal("90000"),
+        )
+        self.repair = ServiceType.objects.create(
+            name="ສ້ອມພື້ນເກີບ",
+            category=ServiceType.Category.ADD_ON,
+            work_type=ServiceType.WorkType.REPAIR,
+            price=Decimal("180000"),
+        )
+
+    def _open_two_pair_order(self):
+        self.client.post(
+            reverse("pos:create"),
+            {
+                "next_action": "quotation",
+                "customer_name": "ທ້າວ ສີ",
+                "customer_phone": "02055553333",
+                "item_indices": "0,1",
+                "brand_0": "Nike",
+                "model_name_0": "Air Force 1",
+                "service_0": self.wash.pk,
+                "brand_1": "Adidas",
+                "model_name_1": "Samba",
+                "service_1": self.repair.pk,
+            },
+        )
+        return Order.objects.get()
+
+    def test_both_pairs_stay_on_the_bill_after_the_quotation_step(self):
+        order = self._open_two_pair_order()
+        nike = Asset.objects.get(brand="Nike")
+        adidas = Asset.objects.get(brand="Adidas")
+
+        self.client.post(
+            reverse("pos:quotation", args=[order.pk]),
+            {"services": [str(self.wash.pk), str(self.repair.pk)], "vat_rate": "10"},
+        )
+        order.refresh_from_db()
+
+        self.assertEqual(
+            {a.pk for a in order.assets()}, {nike.pk, adidas.pk}
+        )
+        # ແຕ່ລະຄູ່ຍັງຖືວຽກຂອງຕົນ ບໍ່ຖືກລວມໃສ່ຄູ່ດຽວ
+        self.assertEqual(
+            [i.service_type_id for i in nike.order_items.all()], [self.wash.pk]
+        )
+        self.assertEqual(
+            [i.service_type_id for i in adidas.order_items.all()], [self.repair.pk]
+        )
+        self.assertEqual(
+            {(s.asset_id, s.service_type_id) for s in AssetService.objects.all()},
+            {(nike.pk, self.wash.pk), (adidas.pk, self.repair.pk)},
+        )
+
+    def test_subtotal_counts_every_pair(self):
+        order = self._open_two_pair_order()
+
+        self.client.post(
+            reverse("pos:quotation", args=[order.pk]),
+            {"services": [str(self.wash.pk), str(self.repair.pk)], "vat_rate": "0"},
+        )
+        order.refresh_from_db()
+
+        self.assertEqual(order.subtotal, Decimal("270000"))
+
+    def test_unticking_a_service_drops_its_item_and_pending_card(self):
+        order = self._open_two_pair_order()
+        nike = Asset.objects.get(brand="Nike")
+
+        self.client.post(
+            reverse("pos:quotation", args=[order.pk]),
+            {"services": [str(self.repair.pk)], "vat_rate": "10"},
+        )
+
+        self.assertEqual(nike.order_items.count(), 0)
+        self.assertFalse(
+            AssetService.objects.filter(
+                asset=nike, service_type=self.wash
+            ).exists()
+        )
+
+    def test_work_already_started_keeps_its_card_when_removed_from_the_bill(self):
+        order = self._open_two_pair_order()
+        nike = Asset.objects.get(brand="Nike")
+        job = AssetService.objects.get(asset=nike, service_type=self.wash)
+        job.status = AssetService.Status.IN_PROGRESS
+        job.save(update_fields=["status"])
+
+        self.client.post(
+            reverse("pos:quotation", args=[order.pk]),
+            {"services": [str(self.repair.pk)], "vat_rate": "10"},
+        )
+
+        # ຊ່າງລົງມືແລ້ວ — ຮັກສາໄວ້ເປັນປະຫວັດ ເຖິງແມ່ນຫຼຸດອອກຈາກບິນ
+        self.assertTrue(AssetService.objects.filter(pk=job.pk).exists())
+
+    def test_a_new_bill_does_not_adopt_an_older_pair_of_the_same_customer(self):
+        customer = Customer.objects.create(name="ນາງ ດາ", phone="02055554444")
+        old_asset = Asset.objects.create(
+            customer=customer, brand="Vans", model_name="Old Skool"
+        )
+        order = Order.objects.create(customer=customer)
+
+        self.client.post(
+            reverse("pos:quotation", args=[order.pk]),
+            {"services": [str(self.wash.pk)], "vat_rate": "10"},
+        )
+
+        self.assertEqual(order.assets(), [])
+        self.assertEqual(old_asset.order_items.count(), 0)
+
+    def test_a_service_added_at_the_quotation_step_lands_on_this_bill_pair(self):
+        order = self._open_two_pair_order()
+        nike = Asset.objects.get(brand="Nike")
+
+        self.client.post(
+            reverse("pos:quotation", args=[order.pk]),
+            {
+                "services": [
+                    str(self.wash.pk),
+                    str(self.repair.pk),
+                    str(
+                        ServiceType.objects.create(
+                            name="ແຕ່ງສີ", price=Decimal("50000")
+                        ).pk
+                    ),
+                ],
+                "vat_rate": "10",
+            },
+        )
+        order.refresh_from_db()
+
+        extra = order.items.get(service_type__name="ແຕ່ງສີ")
+        self.assertEqual(extra.asset_id, nike.pk)
+        self.assertEqual(order.items.count(), 3)
+
+    def test_replacing_every_service_still_lands_on_this_bill_pair(self):
+        """ຖອດບໍລິການເດີມອອກໝົດ ແລ້ວເລືອກອັນໃໝ່ — ຍັງຕ້ອງຜູກກັບຄູ່ຂອງບິນນີ້"""
+        order = self._open_two_pair_order()
+        nike = Asset.objects.get(brand="Nike")
+        spa = ServiceType.objects.create(name="ສະປາພຣີມຽມ", price=Decimal("220000"))
+
+        self.client.post(
+            reverse("pos:quotation", args=[order.pk]),
+            {"services": [str(spa.pk)], "vat_rate": "0"},
+        )
+        order.refresh_from_db()
+
+        self.assertEqual(order.items.count(), 1)
+        self.assertEqual(order.items.get().asset_id, nike.pk)
+        self.assertEqual(order.subtotal, Decimal("220000"))

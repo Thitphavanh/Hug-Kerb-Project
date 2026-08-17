@@ -628,3 +628,152 @@ class TicketNumberCollisionTest(TestCase):
 
         max_length = Asset._meta.get_field("ticket_number").max_length
         self.assertLessEqual(len(generate_ticket_number()), max_length)
+
+
+class IntakeHandoverGateTest(TestCase):
+    """ປຸ່ມ "ສົ່ງມອບແລ້ວ" ໜ້າລາຍລະອຽດ ຕ້ອງຜ່ານ gate ຍອດຄ້າງຄືກັບໜ້າ POS
+
+    ກ່ອນນີ້ມັນຕັ້ງ status=returned ໂດຍກົງ → ເກີບອອກຈາກຮ້ານໄດ້ ທັ້ງທີ່ຍັງບໍ່ໄດ້ຮັບເງິນ
+    ແລະ ບໍ່ມີບັນທຶກວ່າໃຜມາຮັບ / ໃຜເປັນຜູ້ມອບ
+    """
+
+    def setUp(self):
+        from decimal import Decimal
+
+        from pos.models import Order, OrderItem, Payment
+        from pos.services import record_payment
+
+        from .models import StorageSlot
+
+        self.Order = Order
+        self.Payment = Payment
+        self.record_payment = record_payment
+        self.Decimal = Decimal
+
+        self.user = get_user_model().objects.create_user("desk", password="pw12345678")
+        self.client.force_login(self.user)
+        self.customer = Customer.objects.create(name="ນາງ ພອນ", phone="02055556666")
+        self.slot = StorageSlot.objects.create(zone="A", cabinet=1, position=7)
+        self.asset = Asset.objects.create(
+            customer=self.customer,
+            brand="Nike",
+            model_name="Dunk Low",
+            status=Asset.Status.READY,
+            storage_slot=self.slot,
+        )
+        self.order = Order.objects.create(customer=self.customer, vat_rate=0)
+        OrderItem.objects.create(
+            order=self.order,
+            asset=self.asset,
+            description="ຊັກເກີບ",
+            quantity=1,
+            unit_price=Decimal("150000.00"),
+        )
+
+    def _press_delivered(self, received_to="ນາງ ພອນ"):
+        return self.client.post(
+            reverse("asset_intake:detail", args=[self.asset.pk]),
+            {"status": "returned", "received_to": received_to},
+            follow=True,
+        )
+
+    def test_unpaid_pair_cannot_be_marked_delivered(self):
+        response = self._press_delivered()
+        self.asset.refresh_from_db()
+
+        self.assertEqual(self.asset.status, Asset.Status.READY)
+        self.assertIsNotNone(self.asset.storage_slot)
+        text = " ".join(str(m) for m in response.context["messages"])
+        self.assertIn(self.order.order_number, text)
+
+    def test_paid_pair_is_delivered_and_records_custody(self):
+        self.record_payment(
+            order=self.order,
+            amount=self.Decimal("150000"),
+            method=self.Payment.Method.CASH,
+            user=self.user,
+        )
+
+        self._press_delivered()
+        self.asset.refresh_from_db()
+
+        self.assertEqual(self.asset.status, Asset.Status.RETURNED)
+        self.assertEqual(self.asset.returned_to, "ນາງ ພອນ")
+        self.assertEqual(self.asset.returned_by, self.user)
+        self.assertIsNotNone(self.asset.completed_at)
+        self.assertIsNone(self.asset.storage_slot)
+
+    def test_every_bill_holding_the_pair_must_be_settled(self):
+        """ຄູ່ດຽວອາດຢູ່ 2 ບິນ (ຊັກບິນນຶ່ງ ມາສ້ອມເພີ່ມອີກບິນ) — ຕ້ອງຄົບທັງສອງ"""
+        from pos.models import OrderItem
+
+        self.record_payment(
+            order=self.order,
+            amount=self.Decimal("150000"),
+            method=self.Payment.Method.CASH,
+            user=self.user,
+        )
+        second = self.Order.objects.create(customer=self.customer, vat_rate=0)
+        OrderItem.objects.create(
+            order=second,
+            asset=self.asset,
+            description="ສ້ອມພື້ນ",
+            quantity=1,
+            unit_price=self.Decimal("80000.00"),
+        )
+
+        self._press_delivered()
+        self.asset.refresh_from_db()
+        self.assertEqual(self.asset.status, Asset.Status.READY)
+
+        self.record_payment(
+            order=second,
+            amount=self.Decimal("80000"),
+            method=self.Payment.Method.CASH,
+            user=self.user,
+        )
+        self._press_delivered()
+        self.asset.refresh_from_db()
+        self.assertEqual(self.asset.status, Asset.Status.RETURNED)
+
+    def test_pair_without_any_bill_can_still_be_delivered(self):
+        """ຮັບເຂົ້າຜ່ານໜ້າ intake ໂດຍກົງ ຍັງບໍ່ມີບິນ — ບໍ່ຄວນລັອກໄວ້"""
+        loose = Asset.objects.create(
+            customer=self.customer, brand="Vans", status=Asset.Status.READY
+        )
+
+        self.client.post(
+            reverse("asset_intake:detail", args=[loose.pk]),
+            {"status": "returned", "received_to": "ນາງ ພອນ"},
+            follow=True,
+        )
+        loose.refresh_from_db()
+
+        self.assertEqual(loose.status, Asset.Status.RETURNED)
+        self.assertEqual(loose.returned_by, self.user)
+
+    def test_other_statuses_still_update_normally(self):
+        self.client.post(
+            reverse("asset_intake:detail", args=[self.asset.pk]),
+            {"status": "cleaning"},
+        )
+        self.asset.refresh_from_db()
+        self.assertEqual(self.asset.status, Asset.Status.CLEANING)
+
+
+class IntakeDetailTemplateTest(TestCase):
+    """{# ... #} ຮອງຮັບແຖວດຽວ — ຂຽນຫຼາຍແຖວມັນຈະ render ອອກໜ້າຈໍໃຫ້ລູກຄ້າເຫັນ"""
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("desk", password="pw12345678")
+        self.client.force_login(self.user)
+        self.asset = Asset.objects.create(
+            customer=Customer.objects.create(name="ທ້າວ ບຸນ", phone="02055557777"),
+            brand="Nike",
+        )
+
+    def test_developer_comments_do_not_leak_onto_the_page(self):
+        response = self.client.get(reverse("asset_intake:detail", args=[self.asset.pk]))
+        body = response.content.decode()
+        self.assertNotIn("responsive", body)
+        self.assertNotIn("{#", body)

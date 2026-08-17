@@ -258,6 +258,10 @@
             <span class="material-symbols-outlined">assessment</span>
             <span class="font-label-caps tracking-widest">{% trans "Reports" %}</span>
         </a>
+        <a href="{% url 'reports:service_usage' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'service_usage' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
+            <span class="material-symbols-outlined">bar_chart</span>
+            <span class="font-label-caps tracking-widest">{% trans "Service usage" %}</span>
+        </a>
         <a href="{% url 'staff:commissions' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'staff' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
             <span class="material-symbols-outlined">badge</span>
             <span class="font-label-caps tracking-widest">{% trans "Staff" %}</span>
@@ -275,7 +279,10 @@
         {% if user.is_authenticated %}
         <div class="sidebar-user flex items-center justify-between text-xs text-on-surface-variant px-1">
             <span class="truncate">{{ user.username }}</span>
-            <a href="{% url 'admin:logout' %}" class="hover:text-ai-cyan">{% trans "Logout" %}</a>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="hover:text-ai-cyan">{% trans "Logout" %}</button>
+            </form>
         </div>
         {% endif %}
     </div>

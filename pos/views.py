@@ -373,25 +373,55 @@ def quotation_view(request, pk):
     order_services = [item.service_type for item in order.items.all() if item.service_type]
     
     if request.method == "POST":
-        selected_service_ids = request.POST.getlist("services")
+        selected_service_ids = [
+            int(sid) for sid in request.POST.getlist("services") if sid.isdigit()
+        ]
         promo_code = request.POST.get("promo_code", "").strip().upper()
         vat_rate = int(request.POST.get("vat_rate", 10))
-        
-        # Clear existing items
-        order.items.all().delete()
-        
-        # Calculate subtotal first to apply percentage discount
-        subtotal = 0
-        services_to_add = []
+
+        # ເກີບຂອງ *ບິນນີ້* ເທົ່ານັ້ນ — ບໍ່ດຶງເກີບຄູ່ອື່ນຂອງລູກຄ້າ (ຄູ່ຈາກການມາຄັ້ງກ່ອນ)
+        # ມາຜູກ ບໍ່ດັ່ງນັ້ນຄູ່ນັ້ນຈະຖືກລັອກໄວ້ກັບຍອດຄ້າງຂອງບິນໃໝ່.
+        # ອ່ານກ່ອນລຶບ ແລະ ອ່ານສົດຈາກ DB — order.items ຖືກ prefetch ໄວ້ຕອນໂຫຼດໜ້າ
+        default_asset = (
+            OrderItem.objects.filter(order=order, asset__isnull=False)
+            .select_related("asset")
+            .order_by("pk")
+            .first()
+        )
+        default_asset = default_asset.asset if default_asset else None
+
+        # ອັບເດດລາຍການເດີມ ບໍ່ແມ່ນລຶບແລ້ວສ້າງໃໝ່ — ການລຶບເຮັດໃຫ້ການຜູກ
+        # "ບໍລິການ ↔ ເກີບແຕ່ລະຄູ່" ທີ່ POS ສ້າງໄວ້ຫາຍໄປ ແລ້ວເກີບຄູ່ທີ 2
+        # ຈະຫຼຸດອອກຈາກບິນ ຈົນສົ່ງມອບຜ່ານໜ້າ POS ບໍ່ໄດ້ ແລະບ່ອນເກັບບໍ່ຖືກປົດ
+        selected = set(selected_service_ids)
+        kept_service_ids = set()
+        for item in order.items.select_related("service_type"):
+            if item.service_type_id in selected:
+                # ຄູ່ 2 ຄູ່ທີ່ສັ່ງບໍລິການດຽວກັນ = 2 ແຖວ — ຮັກສາໄວ້ທັງສອງ
+                kept_service_ids.add(item.service_type_id)
+            else:
+                item.delete()
+
         for service_id in selected_service_ids:
-            try:
-                service = ServiceType.objects.get(pk=service_id)
-                subtotal += service.price
-                services_to_add.append(service)
-            except ServiceType.DoesNotExist:
-                pass
-                
-        # Calculate discount
+            if service_id in kept_service_ids:
+                continue
+            service = ServiceType.objects.filter(pk=service_id).first()
+            if service is None:
+                continue
+            OrderItem.objects.create(
+                order=order,
+                service_type=service,
+                asset=default_asset,
+                description=service.name,
+                quantity=1,
+                unit_price=service.price,
+            )
+
+        # ຄິດຍອດຈາກລາຍການຈິງທີ່ບັນທຶກແລ້ວ (ນັບທຸກຄູ່) ບໍ່ແມ່ນລາຄາຕໍ່ບໍລິການອັນລະເທື່ອ
+        subtotal = sum(
+            item.subtotal for item in OrderItem.objects.filter(order=order)
+        )
+
         discount_amount = 0
         if promo_code == "KVAIPRO20":
             discount_amount = int(subtotal * 20 / 100)
@@ -399,23 +429,9 @@ def quotation_view(request, pk):
             discount_amount = 15000
         elif promo_code == "MISSYOU25":
             discount_amount = 25000
-            
+
         order.discount = discount_amount
         order.vat_rate = vat_rate
-        
-        # Get first asset of this customer if any
-        customer_asset = order.customer.assets.first() if order.customer else None
-        
-        for service in services_to_add:
-            OrderItem.objects.create(
-                order=order,
-                service_type=service,
-                asset=customer_asset,
-                description=service.name,
-                quantity=1,
-                unit_price=service.price
-            )
-            
         order.save()
         # Redirect to step 3 signature page
         return redirect("pos:quotation_sign", pk=order.pk)

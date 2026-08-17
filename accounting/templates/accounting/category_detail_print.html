@@ -134,20 +134,37 @@
                         <th class="border border-slate-800 px-3 py-2 text-center font-black w-10">#</th>
                         <th class="border border-slate-800 px-3 py-2 text-center font-black w-24">ວັນທີ (Date)</th>
                         <th class="border border-slate-800 px-3 py-2 text-left font-black">ລາຍການ (Description)</th>
+                        <th class="border border-slate-800 px-3 py-2 text-center font-black w-24">ຊ່ອງທາງ (Payment)</th>
                         <th class="border border-slate-800 px-3 py-2 text-right font-black w-32">ຈຳນວນເງິນ (Amount)</th>
+                        {% if show_balance %}<th class="border border-slate-800 px-3 py-2 text-right font-black w-32">ຍອດຄົງເຫຼືອ (Balance)</th>{% endif %}
                     </tr>
                 </thead>
                 <tbody>
+                    {% if show_balance %}
+                    <tr class="bg-slate-50">
+                        <td class="border border-slate-800 px-2 py-1.5"></td>
+                        <td class="border border-slate-800 px-3 py-1.5"></td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-left font-bold text-slate-600" colspan="3">
+                            {% if request.LANGUAGE_CODE == 'en' %}Office administration fund received{% else %}ເງິນບໍລິຫານທີ່ຮັບໃນເດືອນນີ້{% endif %}
+                        </td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-right font-black text-slate-900 tabular-nums">{{ opening_balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% endif %}
                     {% for it in items %}
                     <tr>
                         <td class="border border-slate-800 px-2 py-1.5 text-center text-slate-500">{{ forloop.counter }}</td>
                         <td class="border border-slate-800 px-3 py-1.5 text-center">{{ it.date|date:'d/m/Y' }}</td>
-                        <td class="border border-slate-800 px-3 py-1.5 text-left font-semibold text-slate-800">{{ it.description }}</td>
-                        <td class="border border-slate-800 px-3 py-1.5 text-right font-bold text-slate-900">{{ it.amount|floatformat:2|intcomma }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-left font-semibold text-slate-800">
+                            {{ it.description }}
+                            <span class="text-slate-400 font-normal">· {{ it.category }}</span>
+                        </td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-center text-slate-700">{{ it.method }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-right font-bold text-slate-900 tabular-nums">{{ it.amount|floatformat:2|intcomma }}</td>
+                        {% if show_balance %}<td class="border border-slate-800 px-3 py-1.5 text-right font-black text-slate-900 tabular-nums">{{ it.balance|floatformat:2|intcomma }}</td>{% endif %}
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="border border-slate-800 px-3 py-8 text-center text-slate-400">
+                        <td colspan="{% if show_balance %}6{% else %}5{% endif %}" class="border border-slate-800 px-3 py-8 text-center text-slate-400">
                             {% if request.LANGUAGE_CODE == 'en' %}No records for this period{% else %}ບໍ່ມີລາຍການໃນເດືອນນີ້{% endif %}
                         </td>
                     </tr>
@@ -155,8 +172,9 @@
                 </tbody>
                 <tfoot>
                     <tr class="font-black bg-amber-300 text-slate-900">
-                        <td colspan="3" class="border border-slate-800 px-3 py-2 text-right">{% if request.LANGUAGE_CODE == 'en' %}TOTAL{% else %}ລວມທັງໝົດ{% endif %} ({{ currency }})</td>
-                        <td class="border border-slate-800 px-3 py-2 text-right">{{ total|floatformat:2|intcomma }}</td>
+                        <td colspan="4" class="border border-slate-800 px-3 py-2 text-right">{% if request.LANGUAGE_CODE == 'en' %}TOTAL{% else %}ລວມທັງໝົດ{% endif %} ({{ currency }})</td>
+                        <td class="border border-slate-800 px-3 py-2 text-right tabular-nums">{{ total|floatformat:2|intcomma }}</td>
+                        {% if show_balance %}<td class="border border-slate-800 px-3 py-2 text-right tabular-nums">{{ remaining_balance|floatformat:2|intcomma }}</td>{% endif %}
                     </tr>
                 </tfoot>
             </table>

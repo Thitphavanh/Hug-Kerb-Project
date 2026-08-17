@@ -5,6 +5,7 @@ URL configuration for core project.
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
 from django.urls import include, path
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import RedirectView
@@ -23,6 +24,13 @@ urlpatterns = [
         name="favicon",
     ),
     path("admin/", admin.site.urls),
+    # ໜ້າ login ຂອງຮ້ານ — ຮັບພະນັກງານທຸກຄົນ ບໍ່ຈຳກັດແຕ່ຜູ້ທີ່ເຂົ້າ admin ໄດ້
+    path(
+        "login/",
+        auth_views.LoginView.as_view(redirect_authenticated_user=True),
+        name="login",
+    ),
+    path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("i18n/", include("django.conf.urls.i18n")),
     path("", include("home.urls")),
     path("dashboard/", include("dashboard.urls")),

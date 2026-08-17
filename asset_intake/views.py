@@ -3,6 +3,7 @@ from datetime import timedelta
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
@@ -14,6 +15,7 @@ from django.utils.translation import gettext as _, gettext_noop
 from ai_mart_grading.models import Assessment, ChecklistItem
 from crm.models import Customer
 from media_backup.models import MediaFile
+from media_backup.services import store_uploads
 from notifications.services import build_wa_link
 
 from .forms import IntakeForm
@@ -232,13 +234,13 @@ def intake_create(request):
                 condition_note=data["condition_note"],
                 pickup_date=data["pickup_date"],
             )
-            for f in request.FILES.getlist("photos"):
-                MediaFile.objects.create(
-                    asset=asset,
-                    file=f,
-                    stage=MediaFile.Stage.BEFORE,
-                    media_type=MediaFile.MediaType.IMAGE,
-                )
+            _saved, upload_errors = store_uploads(
+                asset=asset,
+                files=request.FILES.getlist("photos"),
+                stage=MediaFile.Stage.BEFORE,
+            )
+            for error in upload_errors:
+                messages.error(request, error)
 
             messages.success(
                 request, f"ຮັບເຄື່ອງສຳເລັດ — ເລກໃບຮັບ {asset.ticket_number}"
@@ -271,18 +273,16 @@ def intake_detail(request, pk):
         valid_angles = {value for value, _label in MediaFile.CaptureAngle.choices}
         if capture_angle not in valid_angles:
             capture_angle = ""
-        for f in request.FILES.getlist("photos"):
-            is_video = (f.content_type or "").startswith("video")
-            MediaFile.objects.create(
-                asset=asset,
-                file=f,
-                stage=stage,
-                media_type=(
-                    MediaFile.MediaType.VIDEO if is_video else MediaFile.MediaType.IMAGE
-                ),
-                capture_angle=capture_angle,
-            )
-        messages.success(request, _("Files uploaded successfully."))
+        saved, upload_errors = store_uploads(
+            asset=asset,
+            files=request.FILES.getlist("photos"),
+            stage=stage,
+            capture_angle=capture_angle,
+        )
+        for error in upload_errors:
+            messages.error(request, error)
+        if saved:
+            messages.success(request, _("Files uploaded successfully."))
         if ai_mode:
             detail_url = reverse("asset_intake:detail", args=[asset.pk])
             return redirect(f"{detail_url}?ai=1#ai-photo-upload")
@@ -290,12 +290,27 @@ def intake_detail(request, pk):
 
     if request.method == "POST" and "status" in request.POST:
         new_status = request.POST["status"]
-        if new_status in Asset.Status.values:
+        if new_status not in Asset.Status.values:
+            messages.error(request, _("Invalid status."))
+        elif new_status == Asset.Status.RETURNED:
+            # ສົ່ງມອບເປັນຈຸດຕັດເລື່ອງເງິນ — ຕ້ອງຜ່ານ gate ດຽວກັບໜ້າ POS ສະເໝີ
+            from pos.services import hand_over_asset_from_intake
+
+            try:
+                hand_over_asset_from_intake(
+                    asset=asset,
+                    user=request.user,
+                    received_to=request.POST.get("received_to", "").strip(),
+                )
+            except DjangoValidationError as exc:
+                for message in exc.messages:
+                    messages.error(request, message)
+            else:
+                messages.success(request, _("Item handed over to the customer."))
+        else:
             asset.status = new_status
             asset.save(update_fields=["status", "updated_at"])
             messages.success(request, _("Status updated successfully."))
-        else:
-            messages.error(request, _("Invalid status."))
         return redirect("asset_intake:detail", pk=asset.pk)
 
     if request.method == "POST" and "assigned_to" in request.POST:

@@ -1,0 +1,520 @@
+{% extends "base.html" %}
+{% load i18n static humanize l10n %}
+
+{% block title %}
+    {% if request.LANGUAGE_CODE == 'en' %}{{ report_title_en }}{% else %}{{ report_title_lo }}{% endif %} | Hug ເກີບ AI
+{% endblock %}
+
+{% block content %}
+<style>
+    .document-page {
+        background-color: white;
+        width: 210mm;
+        min-height: 297mm;
+        padding: 15mm 12mm;
+        margin: 0 auto;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e2e8f0;
+        position: relative;
+        box-sizing: border-box;
+    }
+    @media (max-width: 900px) {
+        .document-page {
+            width: 100%;
+            min-height: auto;
+            padding: 8mm 5mm;
+            font-size: 9pt;
+        }
+    }
+    @media print {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+        aside#sidebar, nav#bottom-nav, #bottom-nav, header, .no-print, button, .btn, form {
+            display: none !important;
+        }
+        body, html { background: #fff !important; color: #000 !important; margin: 0 !important; padding: 0 !important; height: auto !important; }
+        main, .flex-1 { padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+        .document-page { box-shadow: none !important; border: none !important; width: 100% !important; min-height: 100% !important; padding: 5mm !important; margin: 0 !important; }
+        .statement-table thead { display: table-header-group; }
+        .statement-table tr { page-break-inside: avoid; }
+        .keep-together { page-break-inside: avoid; }
+        @page { size: A4; margin: 0; }
+    }
+</style>
+
+<div class="flex flex-col xl:flex-row gap-6 h-full">
+
+    <!-- Filter / Actions sidebar (not printed) -->
+    <div class="w-full xl:w-72 shrink-0 space-y-4 no-print">
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
+            <h3 class="font-black text-slate-800 text-lg">
+                {% if request.LANGUAGE_CODE == 'en' %}Filter{% else %}ການກັ່ນຕອງ{% endif %}
+            </h3>
+            <form method="get" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">{% if request.LANGUAGE_CODE == 'en' %}Report Type:{% else %}ລາຍງານ / ຊ່ອງທາງຊຳລະ:{% endif %}</label>
+                    <select name="report_type" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        <option value="all" {% if report_type == 'all' %}selected{% endif %}>📊 {% if request.LANGUAGE_CODE == 'en' %}All Methods (Combined){% else %}ທັງໝົດ (ທຸກຊ່ອງທາງ){% endif %}</option>
+                        <option value="cash" {% if report_type == 'cash' %}selected{% endif %}>💵 {% if request.LANGUAGE_CODE == 'en' %}Income — Expense (Cash){% else %}ລາຍຮັບ — ລາຍຈ່າຍ (ເງິນສົດ){% endif %}</option>
+                        <option value="bank" {% if report_type == 'bank' %}selected{% endif %}>🏦 {% if request.LANGUAGE_CODE == 'en' %}Income — Expense (Bank Account){% else %}ລາຍຮັບ — ລາຍຈ່າຍ (ບັນຊີທະນາຄານ){% endif %}</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">{% if request.LANGUAGE_CODE == 'en' %}Month / Year:{% else %}ເດືອນ / ປີ:{% endif %}</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select name="month" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                            <option value="01" {% if selected_month == '01' %}selected{% endif %}>01</option>
+                            <option value="02" {% if selected_month == '02' %}selected{% endif %}>02</option>
+                            <option value="03" {% if selected_month == '03' %}selected{% endif %}>03</option>
+                            <option value="04" {% if selected_month == '04' %}selected{% endif %}>04</option>
+                            <option value="05" {% if selected_month == '05' %}selected{% endif %}>05</option>
+                            <option value="06" {% if selected_month == '06' %}selected{% endif %}>06</option>
+                            <option value="07" {% if selected_month == '07' %}selected{% endif %}>07</option>
+                            <option value="08" {% if selected_month == '08' %}selected{% endif %}>08</option>
+                            <option value="09" {% if selected_month == '09' %}selected{% endif %}>09</option>
+                            <option value="10" {% if selected_month == '10' %}selected{% endif %}>10</option>
+                            <option value="11" {% if selected_month == '11' %}selected{% endif %}>11</option>
+                            <option value="12" {% if selected_month == '12' %}selected{% endif %}>12</option>
+                        </select>
+                        <input type="number" name="year" value="{{ selected_year|unlocalize }}" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">{% if request.LANGUAGE_CODE == 'en' %}Currency:{% else %}ສະກຸນເງິນ:{% endif %}</label>
+                    <select name="currency" class="w-full text-xs font-bold border border-slate-200 rounded-xl px-3 py-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                        <option value="LAK" {% if currency == 'LAK' %}selected{% endif %}>LAK (ກີບ)</option>
+                        <option value="THB" {% if currency == 'THB' %}selected{% endif %}>THB (ບາດ)</option>
+                        <option value="USD" {% if currency == 'USD' %}selected{% endif %}>USD (ໂດລາ)</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl transition shadow-sm">
+                    {% if request.LANGUAGE_CODE == 'en' %}Apply Filter{% else %}ສະແດງຂໍ້ມູນ{% endif %}
+                </button>
+            </form>
+
+            <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                <button onclick="window.print()" class="w-full py-3 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-base">print</span>
+                    {% if request.LANGUAGE_CODE == 'en' %}Print Report{% else %}ພິມລາຍງານ{% endif %}
+                </button>
+                <a href="{% url 'accounting:dashboard' %}" class="w-full py-2.5 border border-slate-200 hover:bg-slate-50 text-slate-600 font-bold text-sm rounded-xl text-center transition">
+                    {% if request.LANGUAGE_CODE == 'en' %}Back{% else %}ກັບຄືນ{% endif %}
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable sheet -->
+    <div class="flex-1 overflow-x-auto p-2">
+
+        <!-- Quick filter tabs (not printed) -->
+        <div class="no-print mb-4 overflow-x-auto pb-1 flex items-center gap-1.5 bg-slate-200/80 p-1.5 rounded-2xl border border-slate-200 shadow-inner">
+            <a href="?month={{ selected_month }}&year={{ selected_year|unlocalize }}&currency={{ currency }}&report_type=all"
+               class="px-3 py-2 rounded-xl text-xs font-black transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap {% if report_type == 'all' %}bg-white text-slate-900 shadow-sm ring-1 ring-slate-300{% else %}text-slate-600 hover:text-slate-900 hover:bg-white/50{% endif %}">
+                📊 {% if request.LANGUAGE_CODE == 'en' %}All Methods{% else %}ທັງໝົດ{% endif %}
+            </a>
+            <a href="?month={{ selected_month }}&year={{ selected_year|unlocalize }}&currency={{ currency }}&report_type=cash"
+               class="px-3 py-2 rounded-xl text-xs font-black transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap {% if report_type == 'cash' %}bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-700{% else %}text-emerald-700 hover:bg-emerald-100/70{% endif %}">
+                💵 {% if request.LANGUAGE_CODE == 'en' %}Income — Expense (Cash){% else %}ລາຍຮັບ — ລາຍຈ່າຍ (ເງິນສົດ){% endif %}
+            </a>
+            <a href="?month={{ selected_month }}&year={{ selected_year|unlocalize }}&currency={{ currency }}&report_type=bank"
+               class="px-3 py-2 rounded-xl text-xs font-black transition-all duration-150 flex items-center gap-1.5 whitespace-nowrap {% if report_type == 'bank' %}bg-sky-600 text-white shadow-sm ring-1 ring-sky-700{% else %}text-sky-700 hover:bg-sky-100/70{% endif %}">
+                🏦 {% if request.LANGUAGE_CODE == 'en' %}Income — Expense (Bank Account){% else %}ລາຍຮັບ — ລາຍຈ່າຍ (ບັນຊີທະນາຄານ){% endif %}
+            </a>
+        </div>
+
+        <div class="document-page text-black">
+
+            <!-- Country header -->
+            <div class="text-center space-y-0.5 mb-5">
+                <p class="font-black text-sm leading-tight" style="font-family: 'Lexend', 'Phetsarath', 'Phetsarath OT', sans-serif;">ສາທາລະນະລັດ ປະຊາທິປະໄຕ ປະຊາຊົນລາວ</p>
+                <p class="text-[10px] font-semibold" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">ສັນຕິພາບ ເອກະພາບ ປະຊາທິປະໄຕ ເອກະພາບ ວັດທະນະຖາວອນ</p>
+            </div>
+
+            <!-- Brand header -->
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-[#efefef] flex items-center justify-center border border-slate-300">
+                    <span class="material-symbols-outlined text-[#00ADEF] text-2xl fill" style="font-variation-settings: 'FILL' 1;">steps</span>
+                </div>
+                <div>
+                    <h2 class="text-base font-black tracking-tight" style="font-family: 'Lexend', sans-serif;"><span style="color:#00ADEF;">Hug ເກີບ AI</span></h2>
+                    <p class="text-[9px] text-slate-500 font-medium">Premium Shoe Cleaning &amp; Care</p>
+                </div>
+            </div>
+
+            <!-- Title banner -->
+            <div class="w-full bg-[#3b82f6] text-white py-2 px-4 rounded-md text-center mb-3">
+                <h1 class="text-sm font-black tracking-wider leading-tight" style="font-family: 'Lexend', sans-serif;">
+                    {{ report_title_en }} ({{ currency }}) {{ selected_month }}/{{ selected_year|unlocalize }}
+                </h1>
+                <h2 class="text-xs font-bold leading-tight" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                    {{ report_title_lo }} ({{ currency }}) ປະຈຳເດືອນ {{ selected_month }}/{{ selected_year|unlocalize }}
+                </h2>
+            </div>
+
+            {% if statement_group %}
+            <!-- Account strip (statement header) -->
+            <table class="w-full border-collapse border border-slate-800 text-[10px] mb-3" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <tbody>
+                    <tr>
+                        <td class="border border-slate-800 px-3 py-1.5 bg-slate-100 font-black w-32">{% if request.LANGUAGE_CODE == 'en' %}Account{% else %}ບັນຊີ{% endif %}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 font-bold">
+                            {% if report_type == 'bank' %}
+                                {% if request.LANGUAGE_CODE == 'en' %}Shop bank account (transfer &amp; QR){% else %}ບັນຊີທະນາຄານຂອງຮ້ານ (ເງິນໂອນ ແລະ ສະແກນ QR){% endif %}
+                            {% else %}
+                                {% if request.LANGUAGE_CODE == 'en' %}Cash on hand (shop till){% else %}ເງິນສົດໃນກຳປັ່ນ{% endif %}
+                            {% endif %}
+                        </td>
+                        <td class="border border-slate-800 px-3 py-1.5 bg-slate-100 font-black w-24">{% if request.LANGUAGE_CODE == 'en' %}Currency{% else %}ສະກຸນເງິນ{% endif %}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 font-bold w-24">{{ currency }}</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-slate-800 px-3 py-1.5 bg-slate-100 font-black">{% if request.LANGUAGE_CODE == 'en' %}Period{% else %}ງວດ{% endif %}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 font-bold">{{ selected_month }}/{{ selected_year|unlocalize }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 bg-slate-100 font-black">{% if request.LANGUAGE_CODE == 'en' %}Printed{% else %}ວັນທີພິມ{% endif %}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 font-bold">{{ today|date:'d/m/Y' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            {% endif %}
+
+            <!-- Summary cards -->
+            <div class="grid grid-cols-2 gap-3 mb-4 text-[11px] keep-together" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                {% if report_type == 'all' or report_type == 'cash' %}
+                <div class="border border-emerald-800 rounded-md p-3 bg-emerald-50 {% if report_type == 'cash' %}ring-2 ring-emerald-500 shadow-sm{% endif %}">
+                    <p class="font-black text-emerald-900 mb-1 flex items-center justify-between">
+                        <span>💵 {% if request.LANGUAGE_CODE == 'en' %}Income — Cash{% else %}ລາຍຮັບ — ເງິນສົດ{% endif %}</span>
+                        {% if report_type != 'all' %}<span class="px-2 py-0.5 bg-emerald-600 text-white text-[9px] rounded font-bold">ACTIVE</span>{% endif %}
+                    </p>
+                    <p class="font-black text-emerald-800 text-base tabular-nums">{{ full_totals.IN.cash|floatformat:2|intcomma }} {{ currency }}</p>
+                </div>
+                {% endif %}
+
+                {% if report_type == 'all' or report_type == 'bank' %}
+                <div class="border border-sky-800 rounded-md p-3 bg-sky-50 {% if report_type == 'bank' %}ring-2 ring-sky-500 shadow-sm{% endif %}">
+                    <p class="font-black text-sky-900 mb-1 flex items-center justify-between">
+                        <span>🏦 {% if request.LANGUAGE_CODE == 'en' %}Income — Bank Account{% else %}ລາຍຮັບ — ບັນຊີທະນາຄານ{% endif %}</span>
+                        {% if report_type != 'all' %}<span class="px-2 py-0.5 bg-sky-600 text-white text-[9px] rounded font-bold">ACTIVE</span>{% endif %}
+                    </p>
+                    <p class="font-black text-sky-800 text-base tabular-nums">{{ full_totals.IN.bank|floatformat:2|intcomma }} {{ currency }}</p>
+                </div>
+                {% endif %}
+
+                {% if report_type == 'all' or report_type == 'cash' %}
+                <div class="border border-rose-800 rounded-md p-3 bg-rose-50 {% if report_type == 'cash' %}ring-2 ring-rose-500 shadow-sm{% endif %}">
+                    <p class="font-black text-rose-900 mb-1 flex items-center justify-between">
+                        <span>💵 {% if request.LANGUAGE_CODE == 'en' %}Expense — Cash{% else %}ລາຍຈ່າຍ — ເງິນສົດ{% endif %}</span>
+                        {% if report_type != 'all' %}<span class="px-2 py-0.5 bg-rose-600 text-white text-[9px] rounded font-bold">ACTIVE</span>{% endif %}
+                    </p>
+                    <p class="font-black text-rose-800 text-base tabular-nums">{{ full_totals.OUT.cash|floatformat:2|intcomma }} {{ currency }}</p>
+                    {% if internal_moved %}
+                    <p class="text-[10px] font-semibold text-slate-500 mt-1">
+                        {% if request.LANGUAGE_CODE == 'en' %}Excludes{% else %}ບໍ່ລວມ{% endif %}
+                        <span class="font-black text-slate-700 tabular-nums">{{ internal_moved|floatformat:2|intcomma }}</span>
+                        {% if request.LANGUAGE_CODE == 'en' %}moved between the shop's own pockets — moved, not spent{% else %}ທີ່ຍ້າຍລະຫວ່າງກະເປົ໋າຂອງຮ້ານເອງ — ເປັນການຍ້າຍເງິນ ບໍ່ແມ່ນລາຍຈ່າຍ{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                {% if report_type == 'all' or report_type == 'bank' %}
+                <div class="border border-orange-800 rounded-md p-3 bg-orange-50 {% if report_type == 'bank' %}ring-2 ring-orange-500 shadow-sm{% endif %}">
+                    <p class="font-black text-orange-900 mb-1 flex items-center justify-between">
+                        <span>🏦 {% if request.LANGUAGE_CODE == 'en' %}Expense — Bank Account{% else %}ລາຍຈ່າຍ — ບັນຊີທະນາຄານ{% endif %}</span>
+                        {% if report_type != 'all' %}<span class="px-2 py-0.5 bg-orange-600 text-white text-[9px] rounded font-bold">ACTIVE</span>{% endif %}
+                    </p>
+                    <p class="font-black text-orange-800 text-base tabular-nums">{{ full_totals.OUT.bank|floatformat:2|intcomma }} {{ currency }}</p>
+                </div>
+                {% endif %}
+
+                {% if report_type == 'all' and full_totals.IN.other or report_type == 'all' and full_totals.OUT.other %}
+                <div class="border border-slate-700 rounded-md p-3 bg-slate-50 col-span-2">
+                    <p class="font-black text-slate-800 mb-1">{% if request.LANGUAGE_CODE == 'en' %}Other channels{% else %}ຊ່ອງທາງອື່ນໆ{% endif %}</p>
+                    <p class="text-[11px] font-bold text-slate-700 tabular-nums">
+                        {% if request.LANGUAGE_CODE == 'en' %}Income{% else %}ລາຍຮັບ{% endif %} {{ full_totals.IN.other|floatformat:2|intcomma }}
+                        · {% if request.LANGUAGE_CODE == 'en' %}Expense{% else %}ລາຍຈ່າຍ{% endif %} {{ full_totals.OUT.other|floatformat:2|intcomma }} {{ currency }}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Income by category -->
+            <p class="font-black text-slate-700 text-xs mb-2" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                {% if request.LANGUAGE_CODE == 'en' %}Summary by Category{% else %}ສະຫຼູບ ແຍກຕາມລາຍການ{% endif %}
+            </p>
+            <table class="keep-together w-full border-collapse border border-slate-800 text-[11px] mb-4" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <thead>
+                    <tr class="bg-emerald-100 text-emerald-900">
+                        <th class="border border-slate-800 px-3 py-2 text-left font-black">
+                            {% if request.LANGUAGE_CODE == 'en' %}Income by Category{% else %}ລາຍຮັບ ແຍກຕາມລາຍການ{% endif %}
+                            {% if report_type == 'cash' %}({% if request.LANGUAGE_CODE == 'en' %}Cash Only{% else %}ເງິນສົດເທົ່ານັ້ນ{% endif %}){% elif report_type == 'bank' %}({% if request.LANGUAGE_CODE == 'en' %}Bank Account Only{% else %}ບັນຊີທະນາຄານເທົ່ານັ້ນ{% endif %}){% endif %}
+                        </th>
+                        {% if report_type == 'all' %}
+                        <th class="border border-slate-800 px-3 py-2 text-right font-black w-28">{% if request.LANGUAGE_CODE == 'en' %}Cash{% else %}ເງິນສົດ{% endif %}</th>
+                        <th class="border border-slate-800 px-3 py-2 text-right font-black w-28">{% if request.LANGUAGE_CODE == 'en' %}Bank{% else %}ບັນຊີທະນາຄານ{% endif %}</th>
+                        {% endif %}
+                        <th class="border border-slate-800 px-3 py-2 text-right font-black w-28">{% if request.LANGUAGE_CODE == 'en' %}Total{% else %}ລວມ{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in category_breakdown.IN %}
+                    <tr>
+                        <td class="border border-slate-800 px-3 py-1.5 text-left font-semibold text-slate-800">{{ row.description }}</td>
+                        {% if report_type == 'all' %}
+                        <td class="border border-slate-800 px-3 py-1.5 text-right text-slate-700 font-medium tabular-nums">{{ row.cash|floatformat:2|intcomma }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-right text-sky-700 font-medium tabular-nums">{{ row.bank|floatformat:2|intcomma }}</td>
+                        {% endif %}
+                        <td class="border border-slate-800 px-3 py-1.5 text-right font-bold text-slate-900 tabular-nums">{{ row.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="border border-slate-800 px-3 py-4 text-center text-slate-400">
+                            {% if request.LANGUAGE_CODE == 'en' %}No income records for this period{% else %}ບໍ່ມີລາຍຮັບໃນເດືອນນີ້{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="font-black bg-emerald-200 text-slate-900">
+                        <td class="border border-slate-800 px-3 py-2 text-left">{% if request.LANGUAGE_CODE == 'en' %}TOTAL INCOME{% else %}ລວມລາຍຮັບ{% endif %}</td>
+                        {% if report_type == 'all' %}
+                        <td class="border border-slate-800 px-3 py-2 text-right tabular-nums">{{ full_totals.IN.cash|floatformat:2|intcomma }}</td>
+                        <td class="border border-slate-800 px-3 py-2 text-right tabular-nums">{{ full_totals.IN.bank|floatformat:2|intcomma }}</td>
+                        {% endif %}
+                        <td class="border border-slate-800 px-3 py-2 text-right tabular-nums">
+                            {% if report_type == 'cash' %}{{ full_totals.IN.cash|floatformat:2|intcomma }}
+                            {% elif report_type == 'bank' %}{{ full_totals.IN.bank|floatformat:2|intcomma }}
+                            {% else %}{{ grand_total_income|floatformat:2|intcomma }}{% endif %}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Expense by category -->
+            <table class="keep-together w-full border-collapse border border-slate-800 text-[11px] mb-5" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <thead>
+                    <tr class="bg-rose-100 text-rose-900">
+                        <th class="border border-slate-800 px-3 py-2 text-left font-black">
+                            {% if request.LANGUAGE_CODE == 'en' %}Expense by Category{% else %}ລາຍຈ່າຍ ແຍກຕາມລາຍການ{% endif %}
+                            {% if report_type == 'cash' %}({% if request.LANGUAGE_CODE == 'en' %}Cash Only{% else %}ເງິນສົດເທົ່ານັ້ນ{% endif %}){% elif report_type == 'bank' %}({% if request.LANGUAGE_CODE == 'en' %}Bank Account Only{% else %}ບັນຊີທະນາຄານເທົ່ານັ້ນ{% endif %}){% endif %}
+                        </th>
+                        {% if report_type == 'all' %}
+                        <th class="border border-slate-800 px-3 py-2 text-right font-black w-28">{% if request.LANGUAGE_CODE == 'en' %}Cash{% else %}ເງິນສົດ{% endif %}</th>
+                        <th class="border border-slate-800 px-3 py-2 text-right font-black w-28">{% if request.LANGUAGE_CODE == 'en' %}Bank{% else %}ບັນຊີທະນາຄານ{% endif %}</th>
+                        {% endif %}
+                        <th class="border border-slate-800 px-3 py-2 text-right font-black w-28">{% if request.LANGUAGE_CODE == 'en' %}Total{% else %}ລວມ{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in category_breakdown.OUT %}
+                    <tr>
+                        <td class="border border-slate-800 px-3 py-1.5 text-left font-semibold text-slate-800">{{ row.description }}</td>
+                        {% if report_type == 'all' %}
+                        <td class="border border-slate-800 px-3 py-1.5 text-right text-slate-700 font-medium tabular-nums">{{ row.cash|floatformat:2|intcomma }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-right text-sky-700 font-medium tabular-nums">{{ row.bank|floatformat:2|intcomma }}</td>
+                        {% endif %}
+                        <td class="border border-slate-800 px-3 py-1.5 text-right font-bold text-slate-900 tabular-nums">{{ row.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="border border-slate-800 px-3 py-4 text-center text-slate-400">
+                            {% if request.LANGUAGE_CODE == 'en' %}No expense records for this period{% else %}ບໍ່ມີລາຍຈ່າຍໃນເດືອນນີ້{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="font-black bg-rose-200 text-slate-900">
+                        <td class="border border-slate-800 px-3 py-2 text-left">{% if request.LANGUAGE_CODE == 'en' %}TOTAL EXPENSE{% else %}ລວມລາຍຈ່າຍ{% endif %}</td>
+                        {% if report_type == 'all' %}
+                        <td class="border border-slate-800 px-3 py-2 text-right tabular-nums">{{ full_totals.OUT.cash|floatformat:2|intcomma }}</td>
+                        <td class="border border-slate-800 px-3 py-2 text-right tabular-nums">{{ full_totals.OUT.bank|floatformat:2|intcomma }}</td>
+                        {% endif %}
+                        <td class="border border-slate-800 px-3 py-2 text-right tabular-nums">
+                            {% if report_type == 'cash' %}{{ full_totals.OUT.cash|floatformat:2|intcomma }}
+                            {% elif report_type == 'bank' %}{{ full_totals.OUT.bank|floatformat:2|intcomma }}
+                            {% else %}{{ grand_total_expense|floatformat:2|intcomma }}{% endif %}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            {% if statement_group %}
+            <!-- ══ Statement ledger: one row per movement, with running balance ══ -->
+            <p class="font-black text-slate-700 text-xs mb-2 flex flex-wrap items-baseline gap-2" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <span>{% if request.LANGUAGE_CODE == 'en' %}Statement of Account{% else %}ລາຍການເຄື່ອນໄຫວບັນຊີ{% endif %}</span>
+                <span class="font-semibold text-slate-400 text-[10px]">
+                    {% if request.LANGUAGE_CODE == 'en' %}Sorted oldest → newest; the latest entry is always last{% else %}ຮຽງເກົ່າ → ໃໝ່ (ລາຍການລ່າສຸດຢູ່ລຸ່ມສຸດ){% endif %}
+                </span>
+            </p>
+            <table class="statement-table w-full border-collapse border border-slate-800 text-[10px] mb-4" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-800">
+                        <th class="border border-slate-800 px-2 py-2 text-center font-black w-[45px]">{% if request.LANGUAGE_CODE == 'en' %}No.{% else %}ລຳດັບ{% endif %}</th>
+                        <th class="border border-slate-800 px-2 py-2 text-center font-black w-[78px]">{% if request.LANGUAGE_CODE == 'en' %}Date / Time{% else %}ວັນທີ / ເວລາ{% endif %}</th>
+                        <th class="border border-slate-800 px-2 py-2 text-left font-black">{% if request.LANGUAGE_CODE == 'en' %}Description{% else %}ລາຍການ{% endif %}</th>
+                        <th class="border border-slate-800 px-2 py-2 text-right font-black w-[85px]">{% if request.LANGUAGE_CODE == 'en' %}Debit{% else %}ຈ່າຍອອກ{% endif %}</th>
+                        <th class="border border-slate-800 px-2 py-2 text-right font-black w-[85px]">{% if request.LANGUAGE_CODE == 'en' %}Credit{% else %}ຮັບເຂົ້າ{% endif %}</th>
+                        <th class="border border-slate-800 px-2 py-2 text-right font-black w-[95px]">{% if request.LANGUAGE_CODE == 'en' %}Balance{% else %}ຍອດເຫຼືອ{% endif %}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="bg-slate-50">
+                        <td class="border border-slate-800 px-2 py-1.5"></td>
+                        <td class="border border-slate-800 px-2 py-1.5"></td>
+                        <td class="border border-slate-800 px-2 py-1.5 text-left font-bold text-slate-600">
+                            {% if request.LANGUAGE_CODE == 'en' %}From Previous Balance{% else %}ຍອດຍົກມາ (From Previous Balance){% endif %}
+                        </td>
+                        <td class="border border-slate-800 px-2 py-1.5"></td>
+                        <td class="border border-slate-800 px-2 py-1.5"></td>
+                        <td class="border border-slate-800 px-2 py-1.5 text-right font-black text-slate-900 tabular-nums">{{ opening_balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% for it in items %}
+                    <tr{% if forloop.last %} class="bg-amber-50"{% endif %}>
+                        <td class="border border-slate-800 px-2 py-1.5 text-center font-bold text-slate-600 tabular-nums">{{ forloop.counter }}</td>
+                        <td class="border border-slate-800 px-2 py-1.5 text-center tabular-nums">
+                            <span class="block font-semibold text-slate-800">{{ it.date|date:'d/m/Y' }}</span>
+                            <span class="block mt-0.5 text-[9px] font-medium text-slate-500">{{ it.time|time:'H:i' }}</span>
+                        </td>
+                        <td class="border border-slate-800 px-2 py-1.5 text-left font-semibold text-slate-800">
+                            {{ it.description }}
+                            <span class="text-slate-400 font-normal">· {{ it.category }}</span>
+                            {% if it.internal %}
+                            <span class="ml-1 px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-black align-middle">
+                                {% if request.LANGUAGE_CODE == 'en' %}INTERNAL TRANSFER{% else %}ຍ້າຍເງິນພາຍໃນ{% endif %}
+                            </span>
+                            {% endif %}
+                            {% if forloop.last %}
+                            <span class="no-print ml-1 px-1.5 py-0.5 rounded bg-amber-500 text-white text-[9px] font-black align-middle">
+                                {% if request.LANGUAGE_CODE == 'en' %}LATEST{% else %}ລ່າສຸດ{% endif %}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="border border-slate-800 px-2 py-1.5 text-right text-rose-700 font-bold tabular-nums">{% if it.debit %}{{ it.debit|floatformat:2|intcomma }}{% else %}0.00{% endif %}</td>
+                        <td class="border border-slate-800 px-2 py-1.5 text-right text-emerald-700 font-bold tabular-nums">{% if it.credit %}{{ it.credit|floatformat:2|intcomma }}{% else %}0.00{% endif %}</td>
+                        <td class="border border-slate-800 px-2 py-1.5 text-right font-black text-slate-900 tabular-nums">{{ it.balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="border border-slate-800 px-3 py-8 text-center text-slate-400">
+                            {% if request.LANGUAGE_CODE == 'en' %}No records found for this filter{% else %}ບໍ່ມີລາຍການໃນເງື່ອນໄຂນີ້{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="bg-slate-100 font-black text-slate-900">
+                        <td class="border border-slate-800 px-2 py-2" colspan="3"></td>
+                        <td class="border border-slate-800 px-2 py-2 text-right tabular-nums">{{ total_debit|floatformat:2|intcomma }}</td>
+                        <td class="border border-slate-800 px-2 py-2 text-right tabular-nums">{{ total_credit|floatformat:2|intcomma }}</td>
+                        <td class="border border-slate-800 px-2 py-2 text-right tabular-nums">{{ closing_balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Statement totals block -->
+            <table class="keep-together w-full border-collapse border border-slate-800 text-[11px] mb-5" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <tbody>
+                    <tr>
+                        <td class="border border-slate-800 px-3 py-2 text-right font-black">{% if request.LANGUAGE_CODE == 'en' %}TOTAL DR{% else %}ລວມຈ່າຍອອກ (TOTAL DR){% endif %}</td>
+                        <td class="border border-slate-800 px-3 py-2 text-center font-bold tabular-nums">{{ debit_count }}</td>
+                        <td class="border border-slate-800 px-3 py-2 text-right font-black text-rose-700 tabular-nums">{{ total_debit|floatformat:2|intcomma }}</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-slate-800 px-3 py-2 text-right font-black">{% if request.LANGUAGE_CODE == 'en' %}TOTAL CR{% else %}ລວມຮັບເຂົ້າ (TOTAL CR){% endif %}</td>
+                        <td class="border border-slate-800 px-3 py-2 text-center font-bold tabular-nums">{{ credit_count }}</td>
+                        <td class="border border-slate-800 px-3 py-2 text-right font-black text-emerald-700 tabular-nums">{{ total_credit|floatformat:2|intcomma }}</td>
+                    </tr>
+                    <tr class="bg-slate-200">
+                        <td class="border border-slate-800 px-3 py-2 text-right font-black">{% if request.LANGUAGE_CODE == 'en' %}ENDING BALANCE{% else %}ຍອດເຫຼືອທ້າຍງວດ (ENDING BALANCE){% endif %}</td>
+                        <td class="border border-slate-800 px-3 py-2"></td>
+                        <td class="border border-slate-800 px-3 py-2 text-right font-black text-base tabular-nums">{{ closing_balance|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            {% else %}
+            <!-- Detail table (combined view) -->
+            <p class="font-black text-slate-700 text-xs mb-2 flex flex-wrap items-baseline gap-2" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <span>{% if request.LANGUAGE_CODE == 'en' %}Transaction Detail{% else %}ລາຍລະອຽດແຕ່ລະລາຍການ{% endif %}</span>
+                <span class="font-semibold text-slate-400 text-[10px]">
+                    {% if request.LANGUAGE_CODE == 'en' %}Sorted oldest → newest; the latest entry is always last{% else %}ຮຽງເກົ່າ → ໃໝ່ (ລາຍການລ່າສຸດຢູ່ລຸ່ມສຸດ){% endif %}
+                </span>
+            </p>
+            <table class="statement-table w-full border-collapse border border-slate-800 text-[11px] mb-5" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-800">
+                        <th class="border border-slate-800 px-3 py-2 text-center font-black w-10">#</th>
+                        <th class="border border-slate-800 px-3 py-2 text-center font-black w-20">ວັນທີ (Date)</th>
+                        <th class="border border-slate-800 px-3 py-2 text-center font-black w-16">ເວລາ (Time)</th>
+                        <th class="border border-slate-800 px-3 py-2 text-left font-black">ລາຍການ (Description)</th>
+                        <th class="border border-slate-800 px-3 py-2 text-center font-black w-20">ປະເພດ (Type)</th>
+                        <th class="border border-slate-800 px-3 py-2 text-center font-black w-24">ຊ່ອງທາງ (Payment)</th>
+                        <th class="border border-slate-800 px-3 py-2 text-right font-black w-28">ຈຳນວນເງິນ (Amount)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for it in items %}
+                    <tr{% if forloop.last %} class="bg-amber-50"{% endif %}>
+                        <td class="border border-slate-800 px-2 py-1.5 text-center text-slate-500">{{ forloop.counter }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-center">{{ it.date|date:'d/m/Y' }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-center text-slate-600 tabular-nums">{{ it.time|time:'H:i' }}</td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-left font-semibold text-slate-800">
+                            {{ it.description }}
+                            <span class="text-slate-400 font-normal">· {{ it.category }}</span>
+                            {% if it.internal %}
+                            <span class="ml-1 px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 text-[9px] font-black align-middle">
+                                {% if request.LANGUAGE_CODE == 'en' %}INTERNAL TRANSFER{% else %}ຍ້າຍເງິນພາຍໃນ{% endif %}
+                            </span>
+                            {% endif %}
+                            {% if forloop.last %}
+                            <span class="no-print ml-1 px-1.5 py-0.5 rounded bg-amber-500 text-white text-[9px] font-black align-middle">
+                                {% if request.LANGUAGE_CODE == 'en' %}LATEST{% else %}ລ່າສຸດ{% endif %}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-center {% if it.transaction_type == 'IN' %}text-emerald-700{% else %}text-rose-700{% endif %} font-bold">
+                            {% if it.transaction_type == 'IN' %}ລາຍຮັບ{% else %}ລາຍຈ່າຍ{% endif %}
+                        </td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-center {% if it.payment_group == 'bank' %}text-sky-700{% else %}text-slate-700{% endif %} font-bold">
+                            {{ it.method }}
+                        </td>
+                        <td class="border border-slate-800 px-3 py-1.5 text-right font-bold text-slate-900 tabular-nums">{{ it.amount|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="border border-slate-800 px-3 py-8 text-center text-slate-400">
+                            {% if request.LANGUAGE_CODE == 'en' %}No records found for this filter{% else %}ບໍ່ມີລາຍການໃນເງື່ອນໄຂນີ້{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="font-black bg-emerald-200 text-slate-900">
+                        <td colspan="6" class="border border-slate-800 px-3 py-2 text-right">
+                            {% if request.LANGUAGE_CODE == 'en' %}TOTAL INCOME{% else %}ລວມລາຍຮັບທັງໝົດ{% endif %} ({{ currency }})
+                        </td>
+                        <td class="border border-slate-800 px-3 py-2 text-right tabular-nums">{{ grand_total_income|floatformat:2|intcomma }}</td>
+                    </tr>
+                    <tr class="font-black bg-rose-200 text-slate-900">
+                        <td colspan="6" class="border border-slate-800 px-3 py-2 text-right">
+                            {% if request.LANGUAGE_CODE == 'en' %}TOTAL EXPENSE{% else %}ລວມລາຍຈ່າຍທັງໝົດ{% endif %} ({{ currency }})
+                        </td>
+                        <td class="border border-slate-800 px-3 py-2 text-right tabular-nums">{{ grand_total_expense|floatformat:2|intcomma }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+            {% endif %}
+
+            <!-- Signatures -->
+            <div class="grid grid-cols-3 gap-4 pt-8 text-center text-[10px] font-bold keep-together" style="font-family: 'Phetsarath', 'Phetsarath OT', sans-serif;">
+                <div class="space-y-12"><p>ຜູ້ກວດສອບ</p><p class="text-slate-400 font-normal text-[9px]">..............................</p></div>
+                <div class="space-y-12"><p>ຫົວໜ້າບັນຊີ</p><p class="text-slate-400 font-normal text-[9px]">..............................</p></div>
+                <div class="space-y-12"><p>ຜູ້ລາຍງານ</p><p class="text-slate-400 font-normal text-[9px]">..............................</p></div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

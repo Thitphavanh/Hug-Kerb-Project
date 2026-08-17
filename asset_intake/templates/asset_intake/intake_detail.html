@@ -66,9 +66,16 @@
 </div>
 
 <!-- Bento Grid Layout -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+{% comment %}
+  ຈັງຫວະ responsive ຂອງໜ້ານີ້:
+    ມືຖື   (<1024px) — 1 ຖັນ ຊ້ອນລົງມາ
+    ແທັບເລັດ/ໂນດບຸກ (1024–1279px) — 2 ຖັນ (7/5) ແລ້ວກາດຂ້າງລົງມາເຕັມແຖວແບບ 2 ໃບຕໍ່ແຖວ
+    ເດັສທັອບ (≥1280px) — 3 ຖັນ 5/4/3 ຄືເດີມ
+  ເມື່ອກ່ອນກະໂດດເປັນ 3 ຖັນຕັ້ງແຕ່ 1024px ເຮັດໃຫ້ຖັນທີ 3 ເຫຼືອ ~190px ຈົນຂໍ້ຄວາມຫັກເປັນຄຳໆ
+{% endcomment %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
     <!-- Left Column: Image Intake -->
-    <div class="lg:col-span-5 space-y-6">
+    <div class="lg:col-span-7 xl:col-span-5 space-y-6">
         <div class="glass-card rounded-xl p-6 h-full flex flex-col border border-white/5 justify-between">
             <div>
                 <div class="flex justify-between items-center mb-4">
@@ -274,7 +281,7 @@
     </div>
 
     <!-- Middle Column: AI Checklist / Work Progress -->
-    <div class="lg:col-span-4 space-y-6">
+    <div class="lg:col-span-5 xl:col-span-4 space-y-6">
         {% if show_ai_grading %}
         <div class="glass-card rounded-xl p-6 h-full flex flex-col justify-between">
             <div>
@@ -391,7 +398,8 @@
     </div>
 
     <!-- Right Column: Results & Insights -->
-    <div class="lg:col-span-3 flex flex-col gap-6">
+    {# ກາດຂ້າງ: ໃຕ້ 1280px ລົງມາເຕັມແຖວ ແລ້ວຈັດ 2 ໃບຕໍ່ແຖວ ແທນທີ່ຈະບີບເປັນຖັນແຄບ #}
+    <div class="lg:col-span-12 xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-6 items-start">
         {% if care_price_recommendation %}
         <div class="glass-card ai-glow-border p-6 rounded-xl relative overflow-hidden">
             <div class="absolute top-0 right-0 p-4 opacity-10">
@@ -561,9 +569,9 @@
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="font-label-caps text-label-caps text-ai-cyan mb-1">{% trans "AI promotional content" %}</p>
-                    <form method="post" action="{% url 'resell_pricing_engine:run_promo' asset.pk %}" class="flex gap-2 mt-3">
+                    <form method="post" action="{% url 'resell_pricing_engine:run_promo' asset.pk %}" class="flex flex-wrap gap-2 mt-3">
                         {% csrf_token %}
-                        <select name="platform" class="rounded-lg border border-white/10 bg-surface-container px-2 py-1.5 text-xs flex-1 text-on-surface focus:outline-none focus:border-ai-cyan">
+                        <select name="platform" class="rounded-lg border border-white/10 bg-surface-container px-2 py-1.5 text-xs flex-1 min-w-[7rem] text-on-surface focus:outline-none focus:border-ai-cyan">
                             <option value="facebook">Facebook</option>
                             <option value="tiktok">TikTok</option>
                             <option value="instagram">Instagram</option>
@@ -635,12 +643,12 @@
 
         <!-- ວຽກບໍລິການຂອງຄູ່ນີ້ — ຊັກ / ສ້ອມແປງ ແຍກແຖວ ຍ້າຍສະຖານະເປັນອິດສະຫຼະ -->
         <div class="glass-card rounded-xl p-5 border border-white/5">
-            <div class="flex items-center justify-between mb-3">
-                <h3 class="font-body-md font-semibold text-on-surface flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[20px] text-ai-cyan">checklist</span>
-                    {% trans "Service jobs for this pair" %}
+            <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-3">
+                <h3 class="font-body-md font-semibold text-on-surface flex items-center gap-2 min-w-0">
+                    <span class="material-symbols-outlined text-[20px] text-ai-cyan shrink-0">checklist</span>
+                    <span class="min-w-0">{% trans "Service jobs for this pair" %}</span>
                 </h3>
-                <a href="{% url 'asset_intake:kanban' %}" class="text-xs font-semibold text-ai-cyan hover:underline">{% trans "Open board" %}</a>
+                <a href="{% url 'asset_intake:kanban' %}" class="text-xs font-semibold text-ai-cyan hover:underline whitespace-nowrap">{% trans "Open board" %}</a>
             </div>
 
             {% for job in asset.services.all %}
@@ -678,6 +686,9 @@
         <form method="post" class="glass-card rounded-xl p-5 border border-white/5">
             {% csrf_token %}
             <p class="text-xs text-on-surface-variant mb-3">{% trans "Press this once the customer has paid and collected the pair. This notifies the customer and frees the storage slot." %}</p>
+            <input type="text" name="received_to" maxlength="120"
+                   placeholder="{% trans 'Who collected it? (name)' %}"
+                   class="w-full mb-3 rounded-lg border border-white/10 bg-surface-container px-3 py-2 text-sm text-on-surface focus:outline-none focus:border-ai-cyan">
             <button type="submit" name="status" value="returned"
                     class="w-full justify-center px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition-colors inline-flex items-center gap-2">
                 <span class="material-symbols-outlined text-[18px]">task_alt</span>
