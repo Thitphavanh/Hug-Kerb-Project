@@ -1,6 +1,7 @@
 import uuid
 from decimal import Decimal
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -12,7 +13,9 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.translation import gettext, gettext as _
 
+from asset_intake.views import brand_catalogue
 from inventory.models import StockMovement, Supply
+from media_backup.services import intake_photo_slots
 from staff.decorators import role_required
 from staff.models import StaffProfile, get_role
 
@@ -140,10 +143,77 @@ def scan_lookup(request):
     })
 
 
+# ------------------------------------------------------------------
+# ລາຄາ ແລະ ບໍລິການ — ໃຊ້ຮ່ວມກັນລະຫວ່າງໜ້າຂາຍໜ້າຮ້ານ ແລະ ໜ້າແກ້ບິນເກົ່າ
+# ------------------------------------------------------------------
+
+# ລະຫັດສ່ວນຫຼຸດຂອງຮ້ານ: (ເປີເຊັນ, ຈຳນວນເງິນຄົງທີ່)
+PROMO_CODES = {
+    "KVAIPRO20": (20, 0),
+    "RAINY15": (0, 15000),
+    "MISSYOU25": (0, 25000),
+}
+
+
+def promo_discount(subtotal, code):
+    """ຄິດເປັນຈຳນວນເງິນສ່ວນຫຼຸດຈາກລະຫັດ — ລະຫັດບໍ່ຖືກຕ້ອງ = ບໍ່ຫຼຸດ"""
+    percent, flat = PROMO_CODES.get((code or "").strip().upper(), (0, 0))
+    if percent:
+        return int(Decimal(subtotal) * percent / 100)
+    # ຫຼຸດແບບຈຳນວນເງິນ ຫ້າມເກີນຍອດບິນ — ບໍ່ດັ່ງນັ້ນຍອດຈະຕິດລົບ
+    return min(int(flat), int(subtotal))
+
+
+def build_service_groups():
+    """ບໍລິການແຍກເປັນໝວດ — ໃຊ້ວາງເປັນບລັອກເລືອກໃນໜ້າຂາຍ ແລະ ໜ້າແກ້ບິນ"""
+    all_services = ServiceType.objects.filter(is_active=True)
+    return [
+        {
+            "key": ServiceType.Category.AI_ASSESSMENT,
+            "title": "AI assessment",
+            "services": all_services.filter(
+                category=ServiceType.Category.AI_ASSESSMENT
+            ),
+        },
+        {
+            "key": ServiceType.Category.PRIMARY,
+            "title": "Primary services",
+            "services": all_services.filter(category=ServiceType.Category.PRIMARY),
+        },
+        {
+            "key": ServiceType.Category.ADD_ON,
+            "title": "Repair and add-on services",
+            "services": all_services.filter(category=ServiceType.Category.ADD_ON),
+        },
+    ]
+
+
+
+def _attach_intake_photos(request, asset, prefix):
+    """ເກັບຮູບ "ກ່ອນເຮັດ" ທີ່ຖ່າຍຕອນເປີດບິນ ໃສ່ຄູ່ເກີບທີ່ຫາກໍສ້າງ (Scope 2.3)
+
+    ຮູບກ່ອນເຮັດຄືຫຼັກຖານດຽວທີ່ຮ້ານໃຊ້ຢືນຢັນສະພາບເດີມກັບລູກຄ້າ ຖ້າມີຂໍ້ຂັດແຍ່ງ
+    ຈຶ່ງຕ້ອງຖ່າຍໄດ້ຕັ້ງແຕ່ຕອນຮັບເຄື່ອງ ບໍ່ແມ່ນລໍໃຫ້ເປີດໜ້າລາຍລະອຽດກ່ອນ.
+
+    ແຍກເປັນຊ່ອງຕາມມຸມ (ດ້ານໜ້າ, ພື້ນເກີບ, ສາຍເກີບ...) ເພື່ອໃຫ້ຮູບຖືກຈຸດ
+    ແລະ AI ປະເມີນໄດ້ຖືກຕ້ອງ — ຜ່ານຕົວກວດຂະໜາດ/ຊະນິດອັນດຽວກັບໜ້າຮັບເຄື່ອງ
+    """
+    from media_backup.services import store_slot_uploads
+
+    _saved, errors = store_slot_uploads(
+        asset=asset,
+        get_files=request.FILES.getlist,
+        prefix=prefix,
+        uploaded_by=request.user,
+    )
+    for error in errors:
+        messages.error(request, error)
+
+
 @login_required
 def create_order(request):
     if request.method == "POST":
-        next_action = request.POST.get("next_action", "quotation")
+        next_action = request.POST.get("next_action", "invoice")
         customer_id = request.POST.get("customer_id", "").strip()
         customer_name = request.POST.get("customer_name", "").strip()
         customer_phone = request.POST.get("customer_phone", "").strip()
@@ -218,6 +288,7 @@ def create_order(request):
                             storage_slot=storage_slot,
                         )
                         created_assets.append(asset)
+                        _attach_intake_photos(request, asset, f"photos_{idx}")
 
                         # Create OrderItem
                         try:
@@ -273,6 +344,7 @@ def create_order(request):
                         storage_slot=storage_slot,
                     )
                     created_assets.append(asset)
+                    _attach_intake_photos(request, asset, "photos")
                     try:
                         service = ServiceType.objects.exclude(
                             category=ServiceType.Category.AI_ASSESSMENT
@@ -291,9 +363,41 @@ def create_order(request):
                     except ServiceType.DoesNotExist:
                         pass
 
+            # ບໍລິການເສີມທີ່ຕິກໄວ້ໃນບລັອກດຽວກັນ (ຄິດຕໍ່ບິນ ບໍ່ແມ່ນຕໍ່ຄູ່)
+            # ໜ້າຂາຍໜ້າຮ້ານລວມຂັ້ນຕອນ "ໃບສະເໜີລາຄາ" ເຂົ້າມາຢູ່ໜ້າດຽວກັນແລ້ວ
+            extra_service_ids = [
+                int(sid) for sid in request.POST.getlist("services") if sid.isdigit()
+            ]
+            if extra_service_ids:
+                default_asset = created_assets[0] if created_assets else None
+                extra_services = ServiceType.objects.filter(
+                    pk__in=extra_service_ids, is_active=True
+                ).exclude(category=ServiceType.Category.AI_ASSESSMENT)
+                for service in extra_services:
+                    OrderItem.objects.create(
+                        order=order,
+                        service_type=service,
+                        asset=default_asset,
+                        description=service.name,
+                        quantity=1,
+                        unit_price=service.price,
+                    )
+
+            # ສ່ວນຫຼຸດ ແລະ VAT — ຄິດຈາກລາຍການທີ່ບັນທຶກແລ້ວຈິງ ບໍ່ແມ່ນຈາກຄ່າທີ່ໜ້າຈໍສົ່ງມາ
+            subtotal = sum(
+                (item.subtotal for item in OrderItem.objects.filter(order=order)),
+                start=0,
+            )
+            order.discount = promo_discount(
+                subtotal, request.POST.get("promo_code", "")
+            )
+            vat_rate = request.POST.get("vat_rate", "")
+            order.vat_rate = int(vat_rate) if vat_rate.isdigit() else order.vat_rate
+            order.save(update_fields=["discount", "vat_rate", "updated_at"])
+
             # ອໍເດີທີ່ມີແຕ່ບໍລິການ "ຮັບຊື້ເກີບມືສອງ" ຢ່າງດຽວ (ບໍ່ມີບໍລິການທີ່ຄິດຄ່າບໍລິການ)
-            # ຂ້າມຂັ້ນຕອນໃບສະເໜີລາຄາ/ເຊັນຢືນຢັນ — ຮ້ານເປັນຝ່າຍຈ່າຍເງິນຊື້ ບໍ່ແມ່ນເກັບເງິນລູກຄ້າ
-            # ຈຶ່ງບໍ່ມີຫຍັງໃຫ້ "ສະເໜີລາຄາ" ໃຫ້ພາໄປໜ້າ AI Grading ຂອງເກີບເລີຍ ເພື່ອຖ່າຍຮູບປະເມີນລາຄາຮັບຊື້
+            # ຂ້າມການອອກໃບບິນ — ຮ້ານເປັນຝ່າຍຈ່າຍເງິນຊື້ ບໍ່ແມ່ນເກັບເງິນລູກຄ້າ
+            # ຈຶ່ງບໍ່ມີຫຍັງໃຫ້ຄິດເງິນ ໃຫ້ພາໄປໜ້າ AI Grading ຂອງເກີບເລີຍ ເພື່ອຖ່າຍຮູບປະເມີນລາຄາຮັບຊື້
             order_items = list(order.items.select_related("service_type"))
             has_buyback_item = any(
                 item.service_type
@@ -313,7 +417,8 @@ def create_order(request):
                 )
                 return redirect(f"{detail_url}?ai=1#ai-photo-upload")
 
-            return redirect("pos:quotation", pk=order.pk)
+            # ໜ້າດຽວຈົບ: ບໍ່ຜ່ານໃບສະເໜີລາຄາ ແລະ ບໍ່ຕ້ອງລົງລາຍເຊັນອະນຸມັດອີກ
+            return redirect("pos:invoice", pk=order.pk)
 
     recent_orders = Order.objects.select_related("customer").prefetch_related(
         "items__service_type", "items__asset", "payments"
@@ -323,6 +428,17 @@ def create_order(request):
     care_services = ServiceType.objects.filter(is_active=True).exclude(
         category=ServiceType.Category.AI_ASSESSMENT
     ).order_by("-category", "price", "name")
+    # ບໍລິການຫຼັກ = ເລືອກ 1 ຢ່າງຕໍ່ເກີບ 1 ຄູ່ / ບໍລິການເສີມ = ຕິກໄດ້ຫຼາຍຢ່າງຕໍ່ 1 ບິນ
+    primary_services = [
+        service
+        for service in care_services
+        if service.category != ServiceType.Category.ADD_ON
+    ]
+    addon_services = [
+        service
+        for service in care_services
+        if service.category == ServiceType.Category.ADD_ON
+    ]
     from asset_intake.models import StorageSlot
 
     storage_slots = StorageSlot.objects.filter(
@@ -331,7 +447,8 @@ def create_order(request):
     context = {
         "active_nav": "pos",
         # AI assessment is shown in its own panel, not mixed into shoe-care choices.
-        "services": care_services,
+        "services": primary_services,
+        "addon_services": addon_services,
         "storage_slots": storage_slots,
         "recent_orders": recent_orders,
         "latest_order": latest_order,
@@ -340,6 +457,11 @@ def create_order(request):
         "supplies": supplies,
         "stock_movements": StockMovement.objects.select_related("supply", "order")[:6],
         "low_stock_supplies": [s for s in supplies if s.is_low_stock][:5],
+        # ຍີ່ຫໍ້/ລຸ້ນ ຮ້ານຈັດການເອງໄດ້ທີ່ໜ້າ /intake/brands/ — ບໍ່ຝັງແຂງໃນ template ອີກ
+        "brand_catalogue": brand_catalogue(),
+        # ບອກເພດານຈາກ settings ຈິງ — ຢ່າຂຽນເລກຕາຍໃນໜ້າ ບໍ່ດັ່ງນັ້ນຄ່າສອງບ່ອນຈະຄາດເຄື່ອນ
+        "max_photo_mb": settings.MAX_UPLOAD_IMAGE_MB,
+        "photo_slots": intake_photo_slots(),
     }
     return render(request, "pos/create_order.html", context)
 
@@ -351,25 +473,7 @@ def quotation_view(request, pk):
         pk=pk
     )
     all_services = ServiceType.objects.filter(is_active=True)
-    service_groups = [
-        {
-            "key": ServiceType.Category.AI_ASSESSMENT,
-            "title": "AI assessment",
-            "services": all_services.filter(
-                category=ServiceType.Category.AI_ASSESSMENT
-            ),
-        },
-        {
-            "key": ServiceType.Category.PRIMARY,
-            "title": "Primary services",
-            "services": all_services.filter(category=ServiceType.Category.PRIMARY),
-        },
-        {
-            "key": ServiceType.Category.ADD_ON,
-            "title": "Repair and add-on services",
-            "services": all_services.filter(category=ServiceType.Category.ADD_ON),
-        },
-    ]
+    service_groups = build_service_groups()
     order_services = [item.service_type for item in order.items.all() if item.service_type]
     
     if request.method == "POST":
@@ -422,20 +526,13 @@ def quotation_view(request, pk):
             item.subtotal for item in OrderItem.objects.filter(order=order)
         )
 
-        discount_amount = 0
-        if promo_code == "KVAIPRO20":
-            discount_amount = int(subtotal * 20 / 100)
-        elif promo_code == "RAINY15":
-            discount_amount = 15000
-        elif promo_code == "MISSYOU25":
-            discount_amount = 25000
-
-        order.discount = discount_amount
+        order.discount = promo_discount(subtotal, promo_code)
         order.vat_rate = vat_rate
         order.save()
-        # Redirect to step 3 signature page
-        return redirect("pos:quotation_sign", pk=order.pk)
-        
+        # ບໍ່ມີຂັ້ນຕອນລົງລາຍເຊັນອະນຸມັດອີກແລ້ວ — ອອກໃບບິນເລີຍ
+        return redirect("pos:invoice", pk=order.pk)
+
+
     context = {
         "active_nav": "pos",
         "order": order,
@@ -444,36 +541,6 @@ def quotation_view(request, pk):
         "order_services": order_services,
     }
     return render(request, "pos/quotation.html", context)
-
-
-@login_required
-def quotation_sign_view(request, pk):
-    order = get_object_or_404(
-        Order.objects.select_related("customer").prefetch_related("items__service_type"),
-        pk=pk
-    )
-    
-    if request.method == "POST":
-        signature_data = request.POST.get("signature_data", "")
-        signer_name = request.POST.get("signer_name", "").strip()
-        signer_title = request.POST.get("signer_title", "").strip()
-        
-        if signature_data:
-            order.note = f"Authorized by {signer_name} ({signer_title}) via Digital Signature.\n{order.note}"
-            order.save()
-            
-        return redirect("pos:invoice", pk=order.pk)
-        
-    # Calculate tax based on order.vat_rate
-    vat_amount = order.vat_amount
-    total_amount = order.total
-    
-    context = {
-        "order": order,
-        "vat_amount": vat_amount,
-        "total_amount": total_amount,
-    }
-    return render(request, "pos/quotation_sign.html", context)
 
 
 @login_required

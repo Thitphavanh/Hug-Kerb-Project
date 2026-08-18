@@ -60,6 +60,11 @@ class Assessment(models.Model):
         "ຄະແນນລວມ", max_digits=6, decimal_places=2, null=True, blank=True
     )
     summary = models.TextField("ສະຫຼູບຈາກ AI", blank=True)
+    # AI ຖືກສັ່ງໃຫ້ຕອບ confidence_score ມາຢູ່ແລ້ວ — ເກັບເປັນຖັນຈຶ່ງກັ່ນຕອງ
+    # ຜົນປະເມີນທີ່ AI ເອງກໍບໍ່ໝັ້ນໃຈ ອອກມາໃຫ້ພະນັກງານກວດຊ້ຳດ້ວຍຕາໄດ້
+    confidence_score = models.DecimalField(
+        "ຄວາມໝັ້ນໃຈຂອງ AI (%)", max_digits=5, decimal_places=2, null=True, blank=True
+    )
     ai_model = models.CharField("AI Model", max_length=100, blank=True)
     raw_response = models.JSONField("ຄຳຕອບດິບຈາກ AI", null=True, blank=True)
     created_at = models.DateTimeField("ວັນທີປະເມີນ", auto_now_add=True)

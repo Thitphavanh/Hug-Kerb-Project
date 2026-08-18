@@ -60,6 +60,21 @@
     </div>
 </section>
 
+{% if backup_alert %}
+<section class="glass-card rounded-xl p-5 border-l-2 border-l-status-alert">
+    <div class="flex items-start gap-3">
+        <span class="material-symbols-outlined text-status-alert">cloud_off</span>
+        <div>
+            <p class="font-label-caps text-label-caps text-status-alert mb-1">{% trans "Evidence backup" %}</p>
+            <p class="font-body-md text-on-surface">{{ backup_alert }}</p>
+            <p class="font-body-sm text-on-surface-variant mt-1">
+                {% blocktrans count count=backup_pending %}{{ count }} evidence file is not backed up yet. Run: manage.py backup_media{% plural %}{{ count }} evidence files are not backed up yet. Run: manage.py backup_media{% endblocktrans %}
+            </p>
+        </div>
+    </div>
+</section>
+{% endif %}
+
 {% if low_stock_supplies %}
 <section class="glass-card rounded-xl p-5 border-l-2 border-l-status-alert">
     <div class="flex items-start gap-3">

@@ -8,42 +8,85 @@
 {% trans "No matching customers found." as js_no_customer_results %}
 {% trans "Existing customer" as js_existing_customer %}
 {% trans "New CRM Entry" as js_new_customer %}
+{% trans "Select services to view the summary." as js_empty_summary %}
+{% trans "Code applied successfully!" as js_code_applied %}
+{% trans "Invalid discount code." as js_invalid_code %}
+{% trans "off" as js_off %}
+{% trans "Select a free storage slot (optional)" as js_pick_slot %}
 <style>
-    /* Ambient Background Pattern */
-    .bg-pattern {
-        background-image: radial-gradient(var(--grid-dot, #dce9ff) 1px, transparent 1px);
-        background-size: 24px 24px;
-    }
-    
-    /* Glassmorphism utility */
-    .glass-panel {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-    }
-    .dark .glass-panel {
-        background: rgba(15, 23, 42, 0.7);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-    }
+    /* ── ໜ້າຂາຍໜ້າຮ້ານແບບໜ້າດຽວຈົບ ──
+       ໂຄງແບບຮ້ານຂາຍເຄື່ອງອອນລາຍ: ຊ້າຍເລືອກ / ຂວາສະຫຼຸບຍອດຕິດຢູ່ກັບທີ່
+       ພື້ນຂາວກວ້າງ ຕົວໜັງສືໃຫຍ່ ຂອບບາງ ເງົາເບົາ ໃຫ້ອ່ານໄວໜ້າຮ້ານ */
+    .pos-shell { width: 100%; }
 
-    /* Theme-aligned native controls: consistent in light and dark mode. */
+    .pos-step-num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 30px; height: 30px; border-radius: 9999px; flex-shrink: 0;
+        background: rgb(var(--color-ai-cyan)); color: rgb(var(--color-on-primary));
+        font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums;
+    }
+    .pos-card {
+        background: rgb(var(--color-surface-container-lowest));
+        border: 1px solid rgb(var(--color-outline-variant) / .7);
+        border-radius: 18px;
+    }
+    .tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+
+    /* ແຜ່ນເລືອກບໍລິການ — ຄືບລັອກເລືອກລຸ້ນສິນຄ້າ: ຂອບໜາຂຶ້ນເມື່ອຖືກເລືອກ */
+    .opt-tile {
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        width: 100%; min-height: 68px; padding: 14px 16px;
+        border: 1px solid rgb(var(--color-outline-variant));
+        border-radius: 14px; cursor: pointer;
+        background: rgb(var(--color-surface-container-lowest));
+        transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+    }
+    .opt-tile:hover { border-color: rgb(var(--color-ai-cyan) / .45); }
+    .opt-input:focus-visible + .opt-tile {
+        outline: 2px solid rgb(var(--color-ai-cyan)); outline-offset: 2px;
+    }
+    .opt-input:checked + .opt-tile {
+        border-color: rgb(var(--color-ai-cyan));
+        box-shadow: inset 0 0 0 1px rgb(var(--color-ai-cyan));
+        background: rgb(var(--color-ai-cyan) / .04);
+    }
+    .opt-title { font-weight: 600; font-size: 15px; color: rgb(var(--color-on-surface)); }
+    .opt-note { font-size: 12px; color: rgb(var(--color-on-surface-variant)); }
+    .opt-price {
+        font-weight: 700; font-size: 15px; white-space: nowrap;
+        color: rgb(var(--color-on-surface));
+        font-variant-numeric: tabular-nums;
+    }
+    /* ເຄື່ອງໝາຍຖືກ: ຂຶ້ນສະເພາະແຜ່ນທີ່ເລືອກ — ບອກສະຖານະດ້ວຍຮູບ ບໍ່ແມ່ນສີຢ່າງດຽວ */
+    .opt-mark {
+        width: 22px; height: 22px; border-radius: 9999px; flex-shrink: 0;
+        border: 1.5px solid rgb(var(--color-outline));
+        display: flex; align-items: center; justify-content: center;
+        color: transparent;
+    }
+    .opt-input:checked + .opt-tile .opt-mark {
+        border-color: rgb(var(--color-ai-cyan));
+        background: rgb(var(--color-ai-cyan));
+        color: rgb(var(--color-on-primary));
+    }
+    .opt-mark .material-symbols-outlined { font-size: 15px; }
+    /* ຕິກໄດ້ຫຼາຍອັນ = ຮູບສີ່ຫຼ່ຽມ / ເລືອກໄດ້ອັນດຽວ = ຮູບກົມ — ບອກກົດເກນດ້ວຍຮູບຊົງ */
+    .opt-mark--box { border-radius: 7px; }
+
+    /* ຟອມ: input/select ໜ້າຕາດຽວກັນທັງໂໝດແຈ້ງ ແລະ ມືດ */
     .theme-select,
     .theme-input {
         width: 100%;
-        min-height: 46px;
-        border: 1px solid rgb(var(--color-outline-variant) / 0.65);
+        min-height: 48px;
+        border: 1px solid rgb(var(--color-outline-variant));
         border-radius: 12px;
         background-color: rgb(var(--color-surface-container-lowest));
         color: rgb(var(--color-on-surface));
-        font-size: 0.875rem;
-        line-height: 1.25rem;
-        transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
-        box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+        font-size: 0.9375rem;
+        line-height: 1.4;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
     }
-    .theme-input {
-        padding: 0.7rem 0.9rem;
-    }
+    .theme-input { padding: 0.7rem 0.9rem; }
     .theme-select {
         appearance: none;
         -webkit-appearance: none;
@@ -55,24 +98,19 @@
         background-size: 1.15rem;
     }
     .theme-select:hover,
-    .theme-input:hover {
-        border-color: rgb(29 43 83 / 0.65);
-        background-color: rgb(var(--color-surface-container-low));
-    }
+    .theme-input:hover { border-color: rgb(var(--color-ai-cyan) / .5); }
     .theme-select:focus,
     .theme-input:focus {
         outline: none;
-        border-color: #1d2b53;
-        box-shadow: 0 0 0 3px rgb(29 43 83 / 0.14);
+        border-color: rgb(var(--color-ai-cyan));
+        box-shadow: 0 0 0 3px rgb(var(--color-ai-cyan) / .14);
     }
     .theme-select option,
     .theme-select optgroup {
         background: rgb(var(--color-surface-container-lowest));
         color: rgb(var(--color-on-surface));
     }
-    .theme-select-with-swatch {
-        padding-left: 2.75rem;
-    }
+    .theme-select-with-swatch { padding-left: 2.75rem; }
     .color-swatch {
         position: absolute;
         left: 0.9rem;
@@ -90,96 +128,204 @@
         color-scheme: dark;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%238aacff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
     }
+    .field-label {
+        display: block; margin-bottom: 6px;
+        font-size: 12px; font-weight: 600;
+        color: rgb(var(--color-on-surface-variant));
+    }
+
+    /* ປຸ່ມຫຼັກ — ປຸ່ມດຽວຕໍ່ໜ້າ ສູງ ≥52px ຈິ້ມງ່າຍດ້ວຍນິ້ວ */
+    .btn-primary {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; min-height: 52px; border-radius: 9999px;
+        background: rgb(var(--color-ai-cyan)); color: rgb(var(--color-on-primary));
+        font-weight: 700; font-size: 15px; cursor: pointer;
+        transition: opacity .15s ease, transform .15s ease;
+    }
+    .btn-primary:hover { opacity: .92; }
+    .btn-primary:active { transform: scale(.99); }
+    .btn-quiet {
+        display: flex; align-items: center; justify-content: center; gap: 6px;
+        min-height: 44px; border-radius: 9999px;
+        border: 1px solid rgb(var(--color-outline-variant));
+        color: rgb(var(--color-on-surface));
+        font-weight: 600; font-size: 13px;
+        transition: border-color .15s ease, color .15s ease;
+    }
+    .btn-quiet:hover { border-color: rgb(var(--color-ai-cyan)); color: rgb(var(--color-ai-cyan)); }
+
+    /* ແຖບຍອດລວມລອຍລຸ່ມຈໍ — ສະເພາະມືຖື ບ່ອນທີ່ແຜງສະຫຼຸບຢູ່ໄກສາຍຕາ */
+    .pos-mobile-bar {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        background: rgb(var(--color-surface-container-lowest) / .96);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgb(var(--color-outline-variant));
+    }
+    @media (min-width: 1024px) { .pos-mobile-bar { display: none; } }
+
+    @media (prefers-reduced-motion: reduce) {
+        .opt-tile, .btn-primary, .btn-quiet, .theme-select, .theme-input { transition: none; }
+    }
+    /* ── ຊ່ອງຖ່າຍຮູບແຍກຕາມມຸມ ── */
+    .photo-slots {
+        display: grid; gap: 10px;
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    }
+    .photo-slot {
+        display: flex; flex-direction: column; align-items: center; gap: 6px;
+        cursor: pointer; text-align: center;
+    }
+    .photo-slot .thumb {
+        width: 100%; aspect-ratio: 1; border-radius: 12px;
+        border: 2px dashed rgb(var(--color-outline-variant));
+        display: flex; align-items: center; justify-content: center;
+        color: rgb(var(--color-on-surface-variant));
+        background: rgb(var(--color-surface-container-lowest));
+        overflow: hidden; transition: border-color .15s ease, background .15s ease;
+    }
+    .photo-slot:hover .thumb {
+        border-color: rgb(var(--color-ai-cyan));
+        background: rgb(var(--color-ai-cyan) / .06);
+    }
+    .photo-slot .thumb img { width: 100%; height: 100%; object-fit: cover; }
+    /* ຖ່າຍແລ້ວ: ຂອບເຂັ້ມ ບໍ່ຂາດ — ເບິ່ງແວບດຽວຮູ້ວ່າມຸມໃດຍັງຂາດ */
+    .photo-slot.is-filled .thumb {
+        border-style: solid; border-color: rgb(var(--color-ai-cyan));
+    }
+    .photo-slot .name {
+        font-size: 11.5px; line-height: 1.4;
+        color: rgb(var(--color-on-surface-variant));
+    }
+    .photo-slot.is-filled .name { color: rgb(var(--color-on-surface)); font-weight: 600; }
+    .photo-drop:hover, .photo-drop.is-dragging {
+        border-color: rgb(var(--color-ai-cyan));
+        background: rgb(var(--color-ai-cyan) / .06);
+    }
+    .photo-drop .icon {
+        width: 46px; height: 46px; margin: 0 auto 8px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        background: rgb(var(--color-surface-container-high));
+        color: rgb(var(--color-on-surface-variant));
+    }
+    .photo-previews { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .photo-previews figure { position: relative; width: 74px; }
+    .photo-previews img {
+        width: 74px; height: 74px; object-fit: cover; border-radius: 10px;
+        border: 1px solid rgb(var(--color-outline-variant));
+    }
+    .photo-previews figcaption {
+        font-size: 10px; color: rgb(var(--color-on-surface-variant));
+        text-align: center; margin-top: 2px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
 </style>
 
-<!-- Main Workspace -->
-<div class="w-full bg-pattern min-h-full">
-    <!-- Page Header -->
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 w-full">
+<div class="pos-shell w-full pb-28 lg:pb-6">
+
+    <!-- ຫົວໜ້າ -->
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <div>
-            <h1 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-1 font-bold">{% trans "Point of Sale" %}</h1>
-            <p class="font-body-md text-on-surface-variant">{% trans "Process new service orders and manage intake." %}</p>
+            <p class="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant mb-2">{% trans "Point of Sale" %}</p>
+            <h1 class="font-display-lg text-headline-lg md:text-display-lg text-on-surface font-bold">{% trans "New order" %}</h1>
+            <p class="font-body-md text-on-surface-variant mt-2 max-w-xl">{% trans "Intake, services, discount and bill — everything on one page." %}</p>
         </div>
-        <div class="flex items-center gap-3 md:w-auto">
-            <button type="button" onclick="openScanModal()" class="bg-surface-container-highest text-on-surface p-2 rounded-lg border border-outline-variant/50 hover:bg-surface-variant transition-colors flex-shrink-0" title="{% trans 'Scan Barcode' %}">
-                <span class="material-symbols-outlined">barcode_scanner</span>
-            </button>
-        </div>
-    </div>
+        <button type="button" onclick="openScanModal()"
+                class="btn-quiet px-5 self-start md:self-auto"
+                title="{% trans 'Scan Barcode' %}">
+            <span class="material-symbols-outlined text-[20px]">barcode_scanner</span>
+            {% trans "Scan Barcode" %}
+        </button>
+    </header>
 
-    <!-- POS Layout: 2 Columns on Desktop -->
-    <form method="post" class="grid grid-cols-1 lg:grid-cols-12 gap-lg items-start w-full">
+    <form method="post" id="pos-form" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-8 items-start">
         {% csrf_token %}
-        
-        <!-- Left Column: Intake Form (8 cols) -->
-        <div class="lg:col-span-8 flex flex-col gap-6">
-            <!-- Customer Section -->
-            <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm overflow-hidden">
-                <div class="border-b border-outline-variant/20 px-6 py-4 bg-surface-bright flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">person</span>
-                        <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Customer Details" %}</h2>
-                    </div>
-                    <span id="customer-entry-badge" class="bg-secondary-container text-on-secondary-container font-bold text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider">{% trans "New CRM Entry" %}</span>
-                </div>
-                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="hidden" name="customer_id" id="customer-id" value="">
-                    <div class="relative md:col-span-2">
-                        <label class="block font-semibold text-xs text-on-surface-variant mb-1" for="customer-search">{% trans "Find an existing customer" %}</label>
-                        <div class="relative">
-                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-                            <input id="customer-search" class="w-full pl-10 pr-4 py-2.5 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" placeholder="{% trans 'Search existing customer by name or phone...' %}" type="search" autocomplete="off" aria-autocomplete="list" aria-controls="customer-search-results" aria-expanded="false"/>
-                            <div id="customer-search-results" class="absolute left-0 right-0 top-full z-50 mt-2 hidden overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl" role="listbox"></div>
-                        </div>
-                        <p class="mt-1.5 text-xs text-on-surface-variant">{% trans "Type a Lao name or part of a phone number, then select a customer." %}</p>
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Full Name" %}</label>
-                        <input id="customer-name" class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" name="customer_name" type="text" placeholder="{% trans 'e.g. John Doe' %}" autocomplete="name" required/>
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Phone Number" %}</label>
-                        <input id="customer-phone" class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all" name="customer_phone" type="tel" placeholder="e.g. 20XXXXXXXX" autocomplete="tel" required/>
-                    </div>
-                </div>
-            </div>
+        <input type="hidden" name="promo_code" id="promo-code-input" value="">
+        <input type="hidden" name="vat_rate" id="vat-rate-input" value="10">
 
-            <!-- Shoe Intake Section -->
-            <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-sm overflow-hidden">
-                <div class="border-b border-outline-variant/20 px-6 py-4 bg-surface-bright flex justify-between items-center">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary">steps</span>
-                        <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Item Intake" %}</h2>
+        <!-- ════════ ຊ້າຍ: ຂັ້ນຕອນເປີດບິນ ════════ -->
+        <div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-6">
+
+            <!-- ຂັ້ນ 1 — ລູກຄ້າ -->
+            <section class="pos-card p-6 md:p-7" aria-labelledby="step-customer" id="pos-step-1" data-step="1">
+                <div class="flex items-center justify-between gap-3 mb-5">
+                    <div class="flex items-center gap-3">
+                        <span class="pos-step-num">1</span>
+                        <h2 id="step-customer" class="font-headline-md text-headline-md text-on-surface font-bold">{% trans "Customer Details" %}</h2>
                     </div>
-                    <button type="button" onclick="addItem()" class="text-primary font-bold text-xs hover:underline flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[18px]">add</span> {% trans "Add Another Item" %}
+                    <span id="customer-entry-badge"
+                          class="shrink-0 rounded-full border border-outline-variant px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{% trans "New CRM Entry" %}</span>
+                </div>
+
+                <input type="hidden" name="customer_id" id="customer-id" value="">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="relative md:col-span-2">
+                        <label class="field-label" for="customer-search">{% trans "Find an existing customer" %}</label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+                            <input id="customer-search" class="theme-input !pl-11" placeholder="{% trans 'Search existing customer by name or phone...' %}"
+                                   type="search" autocomplete="off" aria-autocomplete="list"
+                                   aria-controls="customer-search-results" aria-expanded="false"/>
+                            <div id="customer-search-results"
+                                 class="absolute left-0 right-0 top-full z-50 mt-2 hidden overflow-hidden rounded-xl border border-outline-variant bg-surface-container-lowest shadow-xl"
+                                 role="listbox"></div>
+                        </div>
+                        <p class="mt-2 text-xs text-on-surface-variant">{% trans "Type a Lao name or part of a phone number, then select a customer." %}</p>
+                    </div>
+                    <div>
+                        <label class="field-label" for="customer-name">{% trans "Full Name" %}</label>
+                        <input id="customer-name" class="theme-input" name="customer_name" type="text"
+                               placeholder="{% trans 'e.g. John Doe' %}" autocomplete="name" required/>
+                    </div>
+                    <div>
+                        <label class="field-label" for="customer-phone">{% trans "Phone Number" %}</label>
+                        <input id="customer-phone" class="theme-input" name="customer_phone" type="tel"
+                               placeholder="e.g. 20XXXXXXXX" autocomplete="tel" required/>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ຂັ້ນ 2 — ເກີບທີ່ຮັບເຂົ້າ + ບໍລິການຫຼັກຂອງແຕ່ລະຄູ່ -->
+            <section class="pos-card p-6 md:p-7" aria-labelledby="step-items" id="pos-step-2" data-step="2">
+                <div class="flex items-center justify-between gap-3 mb-2">
+                    <div class="flex items-center gap-3">
+                        <span class="pos-step-num">2</span>
+                        <h2 id="step-items" class="font-headline-md text-headline-md text-on-surface font-bold">{% trans "Item Intake" %}</h2>
+                    </div>
+                    <button type="button" onclick="addItem()" class="btn-quiet px-4">
+                        <span class="material-symbols-outlined text-[18px]">add</span>
+                        {% trans "Add Another Item" %}
                     </button>
                 </div>
+                <p class="text-sm text-on-surface-variant mb-6 ml-[42px]">{% trans "Pick one main service for each pair received." %}</p>
+
                 <input type="hidden" name="item_indices" id="item_indices" value="0"/>
-                <div class="p-6 flex flex-col gap-6" id="items-container">
-                    <!-- Item 1 -->
-                    <div class="p-4 border border-outline-variant/30 rounded-lg bg-surface relative item-row" id="item-row-0" data-index="0">
-                        <button type="button" class="absolute top-3 right-3 text-on-surface-variant hover:text-status-error transition-colors" onclick="removeItem(0)">
-                            <span class="material-symbols-outlined text-[20px]">close</span>
-                        </button>
-                        <h3 class="font-bold text-xs text-on-surface mb-4">{% trans "Item #1 Details" %}</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div class="flex flex-col gap-5" id="items-container">
+                    <!-- ລາຍການທຳອິດ (ອັນຕໍ່ໄປ clone ຈາກ <template> ລຸ່ມສຸດ) -->
+                    <article class="item-row rounded-2xl border border-outline-variant/70 p-5 relative" id="item-row-0" data-index="0">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-sm text-on-surface">{% trans "Item" %} <span class="tnum">#1</span></h3>
+                            <button type="button" class="text-on-surface-variant hover:text-status-error transition-colors p-1"
+                                    onclick="removeItem(0)" aria-label="{% trans 'Remove item' %}">
+                                <span class="material-symbols-outlined text-[20px]">close</span>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
                             <div>
-                                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Brand" %}</label>
+                                <label class="field-label" for="brand-select-0">{% trans "Brand" %}</label>
                                 <select class="theme-select" id="brand-select-0" name="brand_0">
-                                    <option>Nike</option>
-                                    <option>Adidas</option>
-                                    <option>Jordan</option>
-                                    <option>New Balance</option>
-                                    <option>Other</option>
+                                    {% for brand_name in brand_catalogue %}<option>{{ brand_name }}</option>{% endfor %}
                                 </select>
                             </div>
                             <div>
-                                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Model" %}</label>
-                                <input class="theme-input model-input" id="model-input-0" name="model_name_0" placeholder="e.g. Air Force 1" type="text" required/>
+                                <label class="field-label" for="model-input-0">{% trans "Model" %}</label>
+                                <input class="theme-input model-input" id="model-input-0" name="model_name_0" placeholder="e.g. Air Force 1" type="text" required
+                                       list="model-options-0" autocomplete="off"/>
+                                <datalist id="model-options-0"></datalist>
                             </div>
                             <div>
-                                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Color" %}</label>
+                                <label class="field-label" for="color-select-0">{% trans "Color" %}</label>
                                 <div class="relative">
                                     <span class="color-swatch" id="color-swatch-0" aria-hidden="true"></span>
                                     <select class="theme-select theme-select-with-swatch" id="color-select-0" name="color_0">
@@ -199,7 +345,7 @@
                                 </div>
                             </div>
                             <div>
-                                <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Size (US/EU)" %}</label>
+                                <label class="field-label" for="size-select-0">{% trans "Size (US/EU)" %}</label>
                                 <select class="theme-select" id="size-select-0" name="size_0">
                                     <optgroup label="{% trans 'EU sizes' %}">
                                         <option value="36">36</option>
@@ -249,152 +395,499 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="mb-4 max-w-md">
-                            <label class="block font-semibold text-xs text-on-surface-variant mb-1">
-                                {% trans "Storage location" %}
-                            </label>
+
+                        <div class="mb-5 max-w-md">
+                            <label class="field-label">{% trans "Storage location" %}</label>
                             <input type="hidden" class="storage-select" id="storage-select-0" name="storage_slot_0" value="" data-code="">
                             <button type="button" onclick="openStorageModal(0)"
-                                    class="storage-picker-btn w-full flex items-center justify-between gap-2 bg-surface border border-outline-variant/50 rounded-lg px-4 py-2.5 text-sm text-on-surface hover:border-primary transition-colors">
+                                    class="storage-picker-btn theme-input flex items-center justify-between gap-2 text-left">
                                 <span class="flex items-center gap-2 truncate">
                                     <span class="material-symbols-outlined text-[18px] text-on-surface-variant">shelves</span>
                                     <span class="truncate text-on-surface-variant" id="storage-label-0">{% trans "Select a free storage slot (optional)" %}</span>
                                 </span>
                                 <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">chevron_right</span>
                             </button>
-                            <p class="mt-1.5 text-xs text-on-surface-variant">
+                            <p class="mt-2 text-xs text-on-surface-variant">
                                 {% blocktrans count counter=storage_slots|length %}{{ counter }} free slot available{% plural %}{{ counter }} free slots available{% endblocktrans %}
                             </p>
                         </div>
-                        <div class="mb-4">
-                            <label class="block font-semibold text-xs text-on-surface-variant mb-2">{% trans "Service Type" %}</label>
-                            <div class="flex flex-wrap gap-2">
+
+                        <fieldset>
+                            <legend class="field-label">{% trans "Service Type" %}</legend>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 {% for service in services %}
-                                <label class="cursor-pointer">
-                                    <input class="peer sr-only service-radio-0" name="service_0" type="radio" value="{{ service.pk }}" data-name="{{ service.name|service_name }}" data-price="{{ service.price }}" {% if forloop.first %}checked{% endif %} onchange="updateCart()"/>
-                                    <div class="px-4 py-2 rounded-lg border border-outline-variant/50 text-sm text-on-surface peer-checked:bg-primary-container peer-checked:border-primary peer-checked:text-on-primary-container hover:bg-surface-container/60 transition-all font-semibold">
-                                        {{ service.name|service_name }} (₭ {{ service.price|money }})
-                                    </div>
-                                </label>
+                                <div>
+                                    <input class="opt-input sr-only service-radio-0" name="service_0" type="radio"
+                                           id="service-0-{{ service.pk }}" value="{{ service.pk }}"
+                                           data-name="{{ service.name|service_name }}" data-price="{{ service.price }}"
+                                           {% if forloop.first %}checked{% endif %} onchange="updateCart()"/>
+                                    <label class="opt-tile" for="service-0-{{ service.pk }}">
+                                        <span class="flex items-center gap-3 min-w-0">
+                                            <span class="opt-mark"><span class="material-symbols-outlined">check</span></span>
+                                            <span class="opt-title truncate">{{ service.name|service_name }}</span>
+                                        </span>
+                                        <span class="opt-price">₭ {{ service.price|money }}</span>
+                                    </label>
+                                </div>
                                 {% endfor %}
                             </div>
+                        </fieldset>
+                        <!-- ຮູບ "ກ່ອນເຮັດ" ແຍກຕາມມຸມ — ຖ່າຍໃຫ້ຖືກຈຸດ AI ຈຶ່ງປະເມີນໄດ້ຖືກຕ້ອງ -->
+                        <div class="mt-5">
+                            <label class="field-label">{% trans "Photos before service" %}</label>
+                            <p class="text-xs text-on-surface-variant mb-3">{% trans "Tap each box to take or choose that photo. All optional." %}</p>
+                            <div class="photo-slots">
+                                {% for slot in photo_slots %}
+                                <label class="photo-slot" for="photo-0-{{ slot.angle }}" id="slot-0-{{ slot.angle }}">
+                                    <span class="thumb"><span class="material-symbols-outlined">photo_camera</span></span>
+                                    <span class="name">{{ slot.label }}</span>
+                                    <input type="file" id="photo-0-{{ slot.angle }}" name="photos_0_{{ slot.angle }}"
+                                           accept="image/*,video/*" capture="environment" class="sr-only photo-slot-input">
+                                </label>
+                                {% endfor %}
+                                <label class="photo-slot" for="photo-0-extra" id="slot-0-extra">
+                                    <span class="thumb"><span class="material-symbols-outlined">add_photo_alternate</span></span>
+                                    <span class="name">{% trans "Other photos" %}</span>
+                                    <input type="file" id="photo-0-extra" name="photos_0" multiple
+                                           accept="image/*,video/*" class="sr-only photo-slot-input">
+                                </label>
+                            </div>
+                            <p class="text-xs text-on-surface-variant mt-2 font-data-mono">{% blocktrans with limit=max_photo_mb %}JPG, PNG, video (max {{ limit }} MB){% endblocktrans %}</p>
+                            <p class="text-xs text-on-surface-variant mt-1">{% trans "Taken before washing, repair, or AI assessment — kept as the record of how the pair arrived." %}</p>
                         </div>
-                        
-                        <!-- AI Assessment Hook -->
-                        <div class="mt-4 p-4 rounded-lg border border-secondary/30 bg-secondary-container/10 relative overflow-hidden">
-                            <div class="absolute top-0 right-0 p-2 opacity-10">
-                                <span class="material-symbols-outlined text-[64px]">auto_awesome</span>
-                            </div>
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="material-symbols-outlined text-secondary">psychology</span>
-                                <span class="font-bold text-xs text-secondary">{% trans "AI Condition Assessment Recommended" %}</span>
-                            </div>
-                            <p class="text-xs text-on-surface-variant mb-3">{% trans "Save this order, then upload photos and analyze the new pair with AI." %}</p>
+                            <div class="photo-previews" id="photo-previews-0"></div>
+                            <p class="text-xs text-on-surface-variant mt-2">{% trans "Taken before washing, repair, or AI assessment — kept as the record of how the pair arrived." %}</p>
+                        </div>
+                    </article>
+                </div>
 
-                            <button type="submit" name="next_action" value="ai_scan" class="bg-gradient-to-r from-primary to-secondary text-on-primary font-bold text-xs py-1.5 px-3 rounded flex items-center gap-1 shadow-sm hover:opacity-90 transition-opacity w-fit">
-                                <span class="material-symbols-outlined text-[16px]">photo_camera</span>
-                                {% trans "Save & open AI scanner" %}
+                <!-- ປະເມີນສະພາບດ້ວຍ AI — ບັນທຶກບິນກ່ອນ ແລ້ວເປີດກ້ອງຖ່າຍຮູບ -->
+                <div class="mt-6 rounded-2xl border border-outline-variant/70 bg-surface-container-low p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-primary">psychology</span>
+                        <div>
+                            <p class="font-bold text-sm text-on-surface">{% trans "AI Condition Assessment Recommended" %}</p>
+                            <p class="text-xs text-on-surface-variant mt-1">{% trans "Save this order, then upload photos and analyze the new pair with AI." %}</p>
+                        </div>
+                    </div>
+                    <button type="submit" name="next_action" value="ai_scan" class="btn-quiet px-5 shrink-0">
+                        <span class="material-symbols-outlined text-[18px]">photo_camera</span>
+                        {% trans "Save & open AI scanner" %}
+                    </button>
+                </div>
+            </section>
+
+            <!-- ຂັ້ນ 3 — ບໍລິການເສີມຂອງທັງບິນ -->
+            {% if addon_services %}
+            <section class="pos-card p-6 md:p-7" aria-labelledby="step-addons" id="pos-step-3" data-step="3">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="pos-step-num">3</span>
+                    <h2 id="step-addons" class="font-headline-md text-headline-md text-on-surface font-bold">{% trans "Repair and add-on services" %}</h2>
+                </div>
+                <p class="text-sm text-on-surface-variant mb-6 ml-[42px]">{% trans "Optional. Added once to this bill." %}</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {% for service in addon_services %}
+                    <div>
+                        <input class="opt-input sr-only addon-checkbox" type="checkbox" name="services"
+                               id="addon-{{ service.pk }}" value="{{ service.pk }}"
+                               data-name="{{ service.name|service_name }}" data-price="{{ service.price }}"
+                               onchange="updateCart()"/>
+                        <label class="opt-tile" for="addon-{{ service.pk }}">
+                            <span class="flex items-center gap-3 min-w-0">
+                                <span class="opt-mark opt-mark--box"><span class="material-symbols-outlined">check</span></span>
+                                <span class="min-w-0">
+                                    <span class="opt-title block truncate">{{ service.name|service_name }}</span>
+                                    <span class="opt-note">{% trans "Optional repair or restoration service for specific needs." %}</span>
+                                </span>
+                            </span>
+                            <span class="opt-price">₭ {{ service.price|money }}</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- ຂັ້ນ 4 — ສ່ວນຫຼຸດ ແລະ VAT -->
+            <section class="pos-card p-6 md:p-7" aria-labelledby="step-promo" id="pos-step-4" data-step="4">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="pos-step-num">{% if addon_services %}4{% else %}3{% endif %}</span>
+                    <h2 id="step-promo" class="font-headline-md text-headline-md text-on-surface font-bold">{% trans "Promotions and discounts" %}</h2>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="field-label" for="promo-input">{% trans "Discount" %}</label>
+                        <div class="flex gap-2">
+                            <input class="theme-input uppercase placeholder:normal-case" id="promo-input" type="text"
+                                   placeholder="{% trans 'Enter discount code...' %}" autocomplete="off"/>
+                            <button type="button" class="btn-quiet px-6 shrink-0" onclick="applyPromo()">{% trans "Apply" %}</button>
+                        </div>
+                        <div id="promo-banner" class="mt-3 hidden items-center justify-between gap-2 rounded-xl border border-outline-variant bg-surface-container-low px-3 py-2">
+                            <span class="flex items-center gap-2 text-xs font-semibold text-on-surface" id="promo-msg"></span>
+                            <button type="button" class="text-on-surface-variant hover:text-status-error p-1" onclick="clearPromo()"
+                                    aria-label="{% trans 'Remove discount code' %}">
+                                <span class="material-symbols-outlined text-[16px]">close</span>
                             </button>
                         </div>
                     </div>
+                    <div>
+                        <label class="field-label" for="vat-rate-select">{% trans "VAT" %}</label>
+                        <select id="vat-rate-select" class="theme-select" onchange="updateVatRate()">
+                            <option value="10" selected>10%</option>
+                            <option value="7">7%</option>
+                            <option value="5">5%</option>
+                            <option value="0">0%</option>
+                        </select>
+                        <p class="mt-2 text-xs text-on-surface-variant">{% trans "Applied after the discount." %}</p>
+                    </div>
                 </div>
-            </div>
+            </section>
         </div>
 
-        <!-- Right Column: Cart & Billing (4 cols) -->
-        <div class="lg:col-span-4 sticky top-24">
-            <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-md sticky top-24">
-                <div class="p-6 border-b border-outline-variant/20">
-                    <h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2 font-bold">
-                        <span class="material-symbols-outlined">receipt_long</span>
-                        {% trans "Order Summary" %}
-                    </h2>
-                </div>
-                <div class="p-6 flex flex-col gap-4">
-                    <!-- Cart Items -->
-                    <div class="flex flex-col gap-3 min-h-[120px]" id="cart-list">
-                        <!-- Populated dynamically by JS -->
+        <!-- ════════ ຂວາ: ສະຫຼຸບຍອດ ຕິດຢູ່ກັບທີ່ ════════ -->
+        <aside class="lg:col-span-5 xl:col-span-4 w-full lg:sticky lg:top-6" id="pos-step-5" data-step="5">
+            <div class="pos-card p-6">
+                <h2 class="font-headline-md text-headline-md text-on-surface font-bold mb-5">{% trans "Order Summary" %}</h2>
+
+                <div class="flex flex-col gap-3 min-h-[96px]" id="cart-list"></div>
+
+                <div class="mt-5 pt-4 border-t border-outline-variant/70 flex flex-col gap-2.5 text-sm">
+                    <div class="flex justify-between text-on-surface-variant">
+                        <span>{% trans "Subtotal" %}</span>
+                        <span class="tnum" id="cart-subtotal">₭ 0</span>
                     </div>
-                    
-                    <!-- Totals -->
-                    <div class="border-t border-outline-variant/30 pt-4 flex flex-col gap-2">
-                        <div class="flex justify-between font-semibold text-xs text-on-surface-variant">
-                            <span>{% trans "Subtotal" %}</span>
-                            <span id="cart-subtotal">₭ 0</span>
-                        </div>
-                        <div class="flex justify-between font-semibold text-xs text-on-surface-variant">
-                            <span>{% trans "Tax (10%)" %}</span>
-                            <span id="cart-tax">₭ 0</span>
-                        </div>
-                        <div class="flex justify-between font-headline-sm text-headline-sm text-primary mt-2 pt-2 border-t border-outline-variant/30 font-bold">
-                            <span>{% trans "Total" %}</span>
-                            <span id="cart-total">₭ 0</span>
-                        </div>
+                    <div class="flex justify-between text-on-surface-variant hidden" id="cart-discount-row">
+                        <span id="cart-discount-label">{% trans "Discount" %}</span>
+                        <span class="tnum" id="cart-discount">₭ 0</span>
+                    </div>
+                    <div class="flex justify-between text-on-surface-variant">
+                        <span>{% trans "VAT" %} <span class="tnum" id="cart-vat-rate">10%</span></span>
+                        <span class="tnum" id="cart-tax">₭ 0</span>
                     </div>
                 </div>
-                
-                <!-- Actions -->
-                <div class="p-6 pt-0 bg-surface-container-lowest rounded-b-xl flex flex-col gap-3">
-                    <button type="submit" name="next_action" value="quotation" class="w-full bg-primary text-on-primary font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors shadow-md hover:scale-[1.02] active:scale-95">
-                        <span class="material-symbols-outlined">point_of_sale</span>
-                        {% trans "Confirm & Pay" %}
-                    </button>
-                    <div class="grid grid-cols-2 gap-2 mt-2">
-                        {% if latest_order %}
-                        <a href="{% url 'pos:invoice' latest_order.pk %}" target="_blank" class="bg-surface text-on-surface border border-outline-variant/50 font-bold text-xs py-2 rounded-lg flex items-center justify-center gap-1 hover:bg-surface-container transition-colors text-center">
-                            <span class="material-symbols-outlined text-[18px]">print</span>
-                            {% trans "Receipt" %}
-                        </a>
-                        <a href="{% url 'pos:invoice_pdf' latest_order.pk %}" target="_blank" class="bg-surface text-on-surface border border-outline-variant/50 font-bold text-xs py-2 rounded-lg flex items-center justify-center gap-1 hover:bg-surface-container transition-colors text-center">
-                            <span class="material-symbols-outlined text-[18px]">local_mall</span>
-                            {% trans "Slip" %}
-                        </a>
-                        {% else %}
-                        <button type="button" disabled class="bg-surface/50 text-on-surface-variant/40 border border-outline-variant/30 font-bold text-xs py-2 rounded-lg flex items-center justify-center gap-1 cursor-not-allowed">
-                            <span class="material-symbols-outlined text-[18px]">print</span>
-                            {% trans "Receipt" %}
-                        </button>
-                        <button type="button" disabled class="bg-surface/50 text-on-surface-variant/40 border border-outline-variant/30 font-bold text-xs py-2 rounded-lg flex items-center justify-center gap-1 cursor-not-allowed">
-                            <span class="material-symbols-outlined text-[18px]">local_mall</span>
-                            {% trans "Slip" %}
-                        </button>
-                        {% endif %}
-                    </div>
+
+                <div class="mt-4 pt-4 border-t-2 border-on-surface/70 flex items-baseline justify-between">
+                    <span class="font-bold text-on-surface">{% trans "Grand total" %}</span>
+                    <span class="tnum font-headline-lg text-headline-lg font-bold text-on-surface" id="cart-total">₭ 0</span>
                 </div>
+
+                <button type="submit" name="next_action" value="invoice" class="btn-primary mt-6">
+                    <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                    {% trans "Create bill" %}
+                </button>
+                <p class="mt-3 text-center text-xs text-on-surface-variant">{% trans "The bill opens next, then payment." %}</p>
+
+                {% if latest_order %}
+                <div class="grid grid-cols-2 gap-2 mt-5 pt-5 border-t border-outline-variant/60">
+                    <a href="{% url 'pos:invoice' latest_order.pk %}" target="_blank" class="btn-quiet">
+                        <span class="material-symbols-outlined text-[18px]">print</span>{% trans "Receipt" %}
+                    </a>
+                    <a href="{% url 'pos:invoice_pdf' latest_order.pk %}" target="_blank" class="btn-quiet">
+                        <span class="material-symbols-outlined text-[18px]">local_mall</span>{% trans "Slip" %}
+                    </a>
+                </div>
+                {% endif %}
             </div>
+        </aside>
+
+        <!-- ແຖບລອຍລຸ່ມຈໍ ສະເພາະມືຖື -->
+        <div class="pos-mobile-bar flex items-center gap-4">
+            <div class="min-w-0">
+                <p class="text-[11px] text-on-surface-variant">{% trans "Grand total" %}</p>
+                <p class="tnum font-bold text-lg text-on-surface" id="cart-total-mobile">₭ 0</p>
+            </div>
+            <button type="submit" name="next_action" value="invoice" class="btn-primary flex-1">
+                {% trans "Create bill" %}
+            </button>
         </div>
     </form>
 </div>
 
-<!-- Interactive JS Cart Sync -->
-<script>
-    function formatCurrency(val) {
-        return '₭ ' + Math.round(val).toLocaleString();
-    }
+<!-- ແມ່ແບບລາຍການເກີບ — ໃຊ້ຕອນກົດ "ເພີ່ມລາຍການ" (__IDX__ ຖືກແທນດ້ວຍເລກແຖວ) -->
+<template id="item-template">
+    <article class="item-row rounded-2xl border border-outline-variant/70 p-5 relative" id="item-row-__IDX__" data-index="__IDX__">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-sm text-on-surface">{% trans "Item" %} <span class="tnum">#__HUMAN_IDX__</span></h3>
+            <button type="button" class="text-on-surface-variant hover:text-status-error transition-colors p-1"
+                    onclick="removeItem(__IDX__)" aria-label="{% trans 'Remove item' %}">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
 
-    let maxIdx = 0;
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
+            <div>
+                <label class="field-label" for="brand-select-__IDX__">{% trans "Brand" %}</label>
+                <select class="theme-select" id="brand-select-__IDX__" name="brand___IDX__">
+                    {% for brand_name in brand_catalogue %}<option>{{ brand_name }}</option>{% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="field-label" for="model-input-__IDX__">{% trans "Model" %}</label>
+                <input class="theme-input model-input" list="model-options-__IDX__" autocomplete="off" id="model-input-__IDX__" name="model_name___IDX__" placeholder="e.g. Air Force 1" type="text" required/>
+                <datalist id="model-options-__IDX__"></datalist>
+            </div>
+            <div>
+                <label class="field-label" for="color-select-__IDX__">{% trans "Color" %}</label>
+                <div class="relative">
+                    <span class="color-swatch" id="color-swatch-__IDX__" aria-hidden="true"></span>
+                    <select class="theme-select theme-select-with-swatch" id="color-select-__IDX__" name="color___IDX__">
+                        <option value="Black">Black (ສີດຳ)</option>
+                        <option value="White">White (ສີຂາວ)</option>
+                        <option value="Grey">Grey (ສີເທົາ)</option>
+                        <option value="Blue">Blue (ສີຟ້າ/ນ້ຳເງິນ)</option>
+                        <option value="Red">Red (ສີແດງ)</option>
+                        <option value="Green">Green (ສີຂຽວ)</option>
+                        <option value="Yellow">Yellow (ສີເຫຼືອງ)</option>
+                        <option value="Pink">Pink (ສີບົວ)</option>
+                        <option value="Brown">Brown (ສີນ້ຳຕານ)</option>
+                        <option value="Cream">Cream (ສີຄຣີມ)</option>
+                        <option value="Multicolor">Multicolor (ຫຼາກຫຼາຍສີ)</option>
+                        <option value="Other">Other (ອື່ນໆ)</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="field-label" for="size-select-__IDX__">{% trans "Size (US/EU)" %}</label>
+                <select class="theme-select" id="size-select-__IDX__" name="size___IDX__">
+                    <optgroup label="{% trans 'EU sizes' %}">
+                        <option value="36">36</option>
+                        <option value="37">37</option>
+                        <option value="38">38</option>
+                        <option value="39">39</option>
+                        <option value="40">40</option>
+                        <option value="41">41</option>
+                        <option value="42">42</option>
+                        <option value="43" selected>43</option>
+                        <option value="44">44</option>
+                        <option value="45">45</option>
+                        <option value="46">46</option>
+                        <option value="47">47</option>
+                        <option value="48">48</option>
+                    </optgroup>
+                    <optgroup label="{% trans 'US sizes' %}">
+                        <option value="US 5">US 5</option>
+                        <option value="US 6">US 6</option>
+                        <option value="US 7">US 7</option>
+                        <option value="US 8">US 8</option>
+                        <option value="US 9">US 9</option>
+                        <option value="US 10">US 10</option>
+                        <option value="US 11">US 11</option>
+                        <option value="US 12">US 12</option>
+                        <option value="US 13">US 13</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-5 max-w-md">
+            <label class="field-label">{% trans "Storage location" %}</label>
+            <input type="hidden" class="storage-select" id="storage-select-__IDX__" name="storage_slot___IDX__" value="" data-code="">
+            <button type="button" onclick="openStorageModal(__IDX__)"
+                    class="storage-picker-btn theme-input flex items-center justify-between gap-2 text-left">
+                <span class="flex items-center gap-2 truncate">
+                    <span class="material-symbols-outlined text-[18px] text-on-surface-variant">shelves</span>
+                    <span class="truncate text-on-surface-variant" id="storage-label-__IDX__">{% trans "Select a free storage slot (optional)" %}</span>
+                </span>
+                <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">chevron_right</span>
+            </button>
+        </div>
+
+        <fieldset>
+            <legend class="field-label">{% trans "Service Type" %}</legend>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {% for service in services %}
+                <div>
+                    <input class="opt-input sr-only service-radio-__IDX__" name="service___IDX__" type="radio"
+                           id="service-__IDX__-{{ service.pk }}" value="{{ service.pk }}"
+                           data-name="{{ service.name|service_name }}" data-price="{{ service.price }}"
+                           {% if forloop.first %}checked{% endif %} onchange="updateCart()"/>
+                    <label class="opt-tile" for="service-__IDX__-{{ service.pk }}">
+                        <span class="flex items-center gap-3 min-w-0">
+                            <span class="opt-mark"><span class="material-symbols-outlined">check</span></span>
+                            <span class="opt-title truncate">{{ service.name|service_name }}</span>
+                        </span>
+                        <span class="opt-price">₭ {{ service.price|money }}</span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+        </fieldset>
+        <!-- ຮູບ "ກ່ອນເຮັດ" ແຍກຕາມມຸມ — ຖ່າຍໃຫ້ຖືກຈຸດ AI ຈຶ່ງປະເມີນໄດ້ຖືກຕ້ອງ -->
+        <div class="mt-5">
+            <label class="field-label">{% trans "Photos before service" %}</label>
+            <p class="text-xs text-on-surface-variant mb-3">{% trans "Tap each box to take or choose that photo. All optional." %}</p>
+            <div class="photo-slots">
+                {% for slot in photo_slots %}
+                <label class="photo-slot" for="photo-__IDX__-{{ slot.angle }}" id="slot-__IDX__-{{ slot.angle }}">
+                    <span class="thumb"><span class="material-symbols-outlined">photo_camera</span></span>
+                    <span class="name">{{ slot.label }}</span>
+                    <input type="file" id="photo-__IDX__-{{ slot.angle }}" name="photos___IDX___{{ slot.angle }}"
+                           accept="image/*,video/*" capture="environment" class="sr-only photo-slot-input">
+                </label>
+                {% endfor %}
+                <label class="photo-slot" for="photo-__IDX__-extra" id="slot-__IDX__-extra">
+                    <span class="thumb"><span class="material-symbols-outlined">add_photo_alternate</span></span>
+                    <span class="name">{% trans "Other photos" %}</span>
+                    <input type="file" id="photo-__IDX__-extra" name="photos___IDX__" multiple
+                           accept="image/*,video/*" class="sr-only photo-slot-input">
+                </label>
+            </div>
+            <p class="text-xs text-on-surface-variant mt-2 font-data-mono">{% blocktrans with limit=max_photo_mb %}JPG, PNG, video (max {{ limit }} MB){% endblocktrans %}</p>
+            <p class="text-xs text-on-surface-variant mt-1">{% trans "Taken before washing, repair, or AI assessment — kept as the record of how the pair arrived." %}</p>
+        </div>
+            <div class="photo-previews" id="photo-previews-__IDX__"></div>
+            <p class="text-xs text-on-surface-variant mt-2">{% trans "Taken before washing, repair, or AI assessment — kept as the record of how the pair arrived." %}</p>
+        </div>
+    </article>
+</template>
+
+<!-- Scan Modal (ເຄື່ອງສະແກນ USB + ກ້ອງມືຖື/iPad) -->
+<div id="scan-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4" onclick="if(event.target===this)closeScanModal()">
+    <div class="pos-card shadow-xl w-full max-w-md overflow-hidden">
+        <div class="border-b border-outline-variant/60 px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">barcode_scanner</span>
+                <h2 class="font-headline-md text-headline-md text-on-surface font-bold">{% trans "Scan Barcode" %}</h2>
+            </div>
+            <button type="button" onclick="closeScanModal()" class="text-on-surface-variant hover:text-status-error transition-colors p-1"
+                    aria-label="{% trans 'Close' %}">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6 flex flex-col gap-4">
+            <p class="text-xs text-on-surface-variant">{% trans "Point the USB scanner at the QR tag, or type the ticket / order number (e.g. TK-DEMO-004)." %}</p>
+            <input id="scan-input" type="text" autocomplete="off" class="theme-input font-mono" placeholder="TK-XXXXXX / ORDXXXXXX"/>
+            <div id="scan-status" class="text-xs font-semibold min-h-[1rem]" aria-live="polite"></div>
+            <div class="flex items-center gap-3">
+                <div class="flex-1 border-t border-outline-variant/60"></div>
+                <span class="text-[10px] uppercase tracking-wider text-on-surface-variant">{% trans "or" %}</span>
+                <div class="flex-1 border-t border-outline-variant/60"></div>
+            </div>
+            <button type="button" id="scan-camera-btn" onclick="toggleCameraScan()" class="btn-primary">
+                <span class="material-symbols-outlined text-[20px]">photo_camera</span>
+                <span id="scan-camera-label">{% trans "Scan with Camera" %}</span>
+            </button>
+            <div id="camera-reader" class="hidden rounded-lg overflow-hidden"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Storage Map Modal (ເລືອກບ່ອນເກັບແບບເບິ່ງຜັງ — ຄືໜ້າ /intake/storage/) -->
+<div id="storage-map-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4" onclick="if(event.target===this)closeStorageModal()">
+    <div class="pos-card shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+        <div class="border-b border-outline-variant/60 px-6 py-4 flex justify-between items-center shrink-0">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">shelves</span>
+                <h2 class="font-headline-md text-headline-md text-on-surface font-bold">{% trans "Choose Storage Slot" %}</h2>
+            </div>
+            <button type="button" onclick="closeStorageModal()" class="text-on-surface-variant hover:text-status-error transition-colors p-1"
+                    aria-label="{% trans 'Close' %}">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="px-6 py-3 border-b border-outline-variant/40 flex flex-wrap items-center gap-3 shrink-0">
+            <div class="relative flex-1 min-w-[180px]">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+                <input id="storage-map-search" type="text" oninput="applyStorageModalSearch()"
+                       placeholder="{% trans 'Find slot / ticket...' %}" class="theme-input !pl-10 !min-h-[40px]">
+            </div>
+            <span id="storage-map-kpi" class="text-xs font-mono font-semibold text-on-surface-variant shrink-0"></span>
+            <button type="button" onclick="clearStorageSlot()" class="text-xs font-semibold text-status-error hover:underline shrink-0">
+                {% trans "Don't store here" %}
+            </button>
+        </div>
+        <div class="flex items-center gap-4 px-6 py-2 text-[11px] text-on-surface-variant shrink-0 border-b border-outline-variant/30">
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500 inline-block"></span>{% trans "Free" %}</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-500/20 border border-red-500 inline-block"></span>{% trans "Occupied" %}</span>
+            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500 inline-block"></span>{% trans "Chosen for another item" %}</span>
+        </div>
+        <div id="storage-map-modal-body" class="p-6 space-y-4 overflow-y-auto"></div>
+    </div>
+</div>
+
+{{ brand_catalogue|json_script:"brand-catalogue" }}
+<script>
+    const i18n = {
+        emptySummary: '{{ js_empty_summary|escapejs }}',
+        codeApplied: '{{ js_code_applied|escapejs }}',
+        invalidCode: '{{ js_invalid_code|escapejs }}',
+        off: '{{ js_off|escapejs }}',
+        pickSlot: '{{ js_pick_slot|escapejs }}',
+        noCustomerResults: '{{ js_no_customer_results|escapejs }}',
+        existingCustomer: '{{ js_existing_customer|escapejs }}',
+        newCustomer: '{{ js_new_customer|escapejs }}'
+    };
+
+    /* ລະຫັດສ່ວນຫຼຸດ — ຄ່າດຽວກັນກັບຝັ່ງເຊີບເວີ (views.PROMO_CODES) ເຊີບເວີຄິດຊ້ຳອີກຮອບສະເໝີ */
+    const PROMO_CODES = {
+        KVAIPRO20: { percent: 20, flat: 0 },
+        RAINY15: { percent: 0, flat: 15000 },
+        MISSYOU25: { percent: 0, flat: 25000 }
+    };
 
     const COLOR_SWATCHES = {
-        Black: '#111827',
-        White: '#f8fafc',
-        Grey: '#94a3b8',
-        Blue: '#2563eb',
-        Red: '#ef4444',
-        Green: '#22c55e',
-        Yellow: '#facc15',
-        Pink: '#ec4899',
-        Brown: '#92400e',
-        Cream: '#f5e6c8',
+        Black: '#111827', White: '#f8fafc', Grey: '#94a3b8', Blue: '#2563eb',
+        Red: '#ef4444', Green: '#22c55e', Yellow: '#facc15', Pink: '#ec4899',
+        Brown: '#92400e', Cream: '#f5e6c8',
         Multicolor: 'linear-gradient(135deg, #ef4444, #facc15, #22c55e, #3b82f6, #a855f7)',
         Other: '#64748b'
     };
+
+    /* ═══════════ ເລື່ອນລົງຂັ້ນຕໍ່ໄປອັດຕະໂນມັດ ═══════════
+       ກົດລະບຽບ: ຊ່ວຍພະນັກງານ ບໍ່ແມ່ນແຍ່ງໜ້າຈໍຈາກລາວ
+       - ເລື່ອນໄປໜ້າເທົ່ານັ້ນ ບໍ່ດຶງກັບຂຶ້ນເທິງ
+       - ຂັ້ນໜຶ່ງເລື່ອນໃຫ້ເທື່ອດຽວ ຖ້າພະນັກງານເລື່ອນກັບໄປແກ້ເອງ ຈະບໍ່ດຶງລົງອີກ
+       - ຖ້າຂັ້ນນັ້ນເຫັນຢູ່ໃນຈໍແລ້ວ ບໍ່ຕ້ອງເລື່ອນ (ຈໍກວ້າງ ແຜງສະຫຼູບຕິດຢູ່ຂວາຢູ່ແລ້ວ) */
+    const posAutoScroll = (function () {
+        const advanced = new Set();
+        let highestReached = 1;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        function isMostlyVisible(el) {
+            const box = el.getBoundingClientRect();
+            const viewport = window.innerHeight || document.documentElement.clientHeight;
+            return box.top >= 0 && box.top < viewport * 0.6;
+        }
+
+        function go(step) {
+            if (advanced.has(step) || step < highestReached) return;
+            const target = document.getElementById('pos-step-' + step);
+            if (!target) return;                       // ຂັ້ນ 3 ບໍ່ມີຖ້າຮ້ານບໍ່ມີບໍລິການເສີມ
+            advanced.add(step);
+            highestReached = Math.max(highestReached, step);
+            if (isMostlyVisible(target)) return;
+            target.scrollIntoView({
+                behavior: reduceMotion ? 'auto' : 'smooth',
+                block: 'start',
+            });
+        }
+
+        // ຂ້າມຂັ້ນທີ່ບໍ່ມີຢູ່ໃນໜ້າ (ເຊັ່ນ ຂັ້ນ 3 ຕອນຮ້ານບໍ່ໄດ້ຕັ້ງບໍລິການເສີມ)
+        function next(from) {
+            for (let step = from + 1; step <= 5; step++) {
+                if (document.getElementById('pos-step-' + step)) return go(step);
+            }
+        }
+
+        // ພະນັກງານເລື່ອນເອງ = ລາວຄຸມເອງ ຢຸດຊ່ວຍຈົນກວ່າຈະເລືອກຂັ້ນຕໍ່ໄປ
+        return { next };
+    })();
+
+    let maxIdx = 0;
+    let vatPercent = 10;
+    let activePromo = '';
+
+    function formatCurrency(val) {
+        return '₭ ' + Math.round(val).toLocaleString();
+    }
 
     function updateColorSwatch(idx) {
         const select = document.getElementById(`color-select-${idx}`);
         const swatch = document.getElementById(`color-swatch-${idx}`);
         if (!select || !swatch) return;
-        const color = COLOR_SWATCHES[select.value] || COLOR_SWATCHES.Other;
-        swatch.style.background = color;
+        swatch.style.background = COLOR_SWATCHES[select.value] || COLOR_SWATCHES.Other;
     }
 
     function setMatchingSelectValue(select, value) {
@@ -410,12 +903,243 @@
         return true;
     }
 
-    function syncStorageSelections() {
-        // ຄວາມຖືກຕ້ອງ (ຫ້າມເລືອກຊ້ຳກັນລະຫວ່າງລາຍການ) ຖືກກວດຢູ່ຕອນເປີດ modal ແລ້ວ (getTakenSlotIdsExcept)
+    function itemIndices() {
+        return document.getElementById('item_indices').value
+            .split(',').map((i) => i.trim()).filter((i) => i !== '');
+    }
+
+    /* ── ລຸ້ນຕາມຍີ່ຫໍ້ ──
+       ໃຊ້ <datalist> ບໍ່ແມ່ນ <select> ເພາະລຸ້ນອອກໃໝ່ຕະຫຼອດ — ພະນັກງານຕ້ອງພິມ
+       ລຸ້ນທີ່ຍັງບໍ່ມີໃນລາຍການໄດ້ ບໍ່ດັ່ງນັ້ນເປີດບິນບໍ່ໄດ້ໜ້າຮ້ານ */
+    const BRAND_CATALOGUE = JSON.parse(
+        document.getElementById('brand-catalogue').textContent
+    );
+
+    function refreshModelOptions(idx) {
+        const brand = document.getElementById(`brand-select-${idx}`);
+        const model = document.getElementById(`model-input-${idx}`);
+        const list = document.getElementById(`model-options-${idx}`);
+        if (!brand || !model || !list) return;
+        const models = BRAND_CATALOGUE[brand.value] || [];
+        list.replaceChildren();
+        models.forEach(function (name) {
+            const opt = document.createElement('option');
+            opt.value = name;
+            list.appendChild(opt);
+        });
+        // ລຸ້ນເກົ່າບໍ່ແມ່ນຂອງຍີ່ຫໍ້ໃໝ່ → ລ້າງ ບໍ່ດັ່ງນັ້ນຈະໄດ້ Adidas ຄູ່ Air Force 1
+        if (model.value && !models.includes(model.value)) model.value = '';
+    }
+
+
+    /* ── ຮູບ "ກ່ອນເຮັດ": ສະແດງຕົວຢ່າງ + ລາກວາງ ──
+       ບໍ່ອັບຂຶ້ນເຊີບເວີຕອນນີ້ ເພາະຄູ່ເກີບຍັງບໍ່ທັນມີ — ໄຟລ໌ຈະໄປພ້ອມກັບຟອມ
+       ຕອນກົດ "ອອກໃບບິນ" ແລ້ວເຊີບເວີຄ່ອຍຜູກໃສ່ຄູ່ທີ່ຫາກໍສ້າງ */
+    function bindPhotoInput(idx) {
+        // ຊ່ອງແຕ່ລະມຸມແຍກກັນ — ເລືອກຮູບແລ້ວໃຫ້ເຫັນຕົວຢ່າງໃນຊ່ອງນັ້ນເລີຍ
+        // ບໍ່ອັບຂຶ້ນເຊີບເວີຕອນນີ້ ເພາະຄູ່ເກີບຍັງບໍ່ທັນມີ — ໄຟລ໌ໄປພ້ອມຟອມ
+        const row = document.getElementById(`item-row-${idx}`);
+        if (!row) return;
+
+        row.querySelectorAll('.photo-slot-input').forEach(function (input) {
+            const slot = input.closest('.photo-slot');
+            const thumb = slot ? slot.querySelector('.thumb') : null;
+            if (!slot || !thumb) return;
+
+            input.addEventListener('change', function () {
+                const file = input.files && input.files[0];
+                slot.classList.toggle('is-filled', Boolean(file));
+                if (!file) {
+                    thumb.replaceChildren(icon('photo_camera'));
+                    return;
+                }
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.alt = file.name;
+                    img.src = URL.createObjectURL(file);
+                    img.onload = () => URL.revokeObjectURL(img.src);
+                    thumb.replaceChildren(img);
+                } else {
+                    // ວິດີໂອບໍ່ມີ thumbnail ງ່າຍໆ — ໃຊ້ໄອຄອນບອກແທນ
+                    thumb.replaceChildren(icon('movie'));
+                }
+            });
+        });
+
+        function icon(name) {
+            const span = document.createElement('span');
+            span.className = 'material-symbols-outlined';
+            span.textContent = name;
+            return span;
+        }
+    }
+
+    function bindItemRow(idx) {
+        document.getElementById(`brand-select-${idx}`).addEventListener('change', () => {
+            refreshModelOptions(idx);
+            updateCart();
+        });
+        refreshModelOptions(idx);
+        bindPhotoInput(idx);
+        document.getElementById(`model-input-${idx}`).addEventListener('input', updateCart);
+        document.getElementById(`color-select-${idx}`).addEventListener('change', () => {
+            updateColorSwatch(idx);
+            updateCart();
+        });
+        document.getElementById(`size-select-${idx}`).addEventListener('change', updateCart);
+        updateColorSwatch(idx);
+    }
+
+    function addItem() {
+        maxIdx++;
+        const markup = document.getElementById('item-template').innerHTML
+            .replace(/__HUMAN_IDX__/g, String(maxIdx + 1))
+            .replace(/__IDX__/g, String(maxIdx));
+        document.getElementById('items-container').insertAdjacentHTML('beforeend', markup);
+
+        const indicesInput = document.getElementById('item_indices');
+        indicesInput.value = indicesInput.value + ',' + maxIdx;
+
+        bindItemRow(maxIdx);
+        document.getElementById(`item-row-${maxIdx}`).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
         updateCart();
     }
 
-    // ---- Storage Map Modal: ເລືອກບ່ອນເກັບແບບເບິ່ງຜັງ (ຄືໜ້າ /intake/storage/) ----
+    function removeItem(idx) {
+        const indicesInput = document.getElementById('item_indices');
+        let indices = itemIndices();
+        if (indices.length <= 1) {
+            alert('{% trans "You must keep at least one item." %}');
+            return;
+        }
+        const row = document.getElementById(`item-row-${idx}`);
+        if (row) row.remove();
+        indicesInput.value = indices.filter((i) => i !== String(idx)).join(',');
+        updateCart();
+    }
+
+
+    /* ── ສະຫຼຸບຍອດ: ຄິດຈາກສິ່ງທີ່ເລືອກຢູ່ໜ້າຈໍ ເຊີບເວີຈະຄິດຄືນອີກຮອບຕອນບັນທຶກ ── */
+    function updateCart() {
+        let subtotal = 0;
+        let cartHtml = '';
+
+        itemIndices().forEach((idx) => {
+            const brandSelect = document.getElementById(`brand-select-${idx}`);
+            const modelInput = document.getElementById(`model-input-${idx}`);
+            const colorSelect = document.getElementById(`color-select-${idx}`);
+            const sizeSelect = document.getElementById(`size-select-${idx}`);
+            const storageSelect = document.getElementById(`storage-select-${idx}`);
+            const selectedRadio = document.querySelector(`.service-radio-${idx}:checked`);
+            if (!selectedRadio) return;
+
+            const brandName = brandSelect ? brandSelect.value : 'Sneaker';
+            const modelName = (modelInput && modelInput.value.trim()) ? modelInput.value.trim() : 'Item';
+            const colorVal = colorSelect ? colorSelect.value : '';
+            const sizeVal = sizeSelect ? sizeSelect.value : '';
+            const storageCode = storageSelect && storageSelect.value ? storageSelect.dataset.code : '';
+
+            const meta = [colorVal, sizeVal ? `Size ${sizeVal}` : '', storageCode]
+                .filter(Boolean).join(' · ');
+            const price = parseFloat(selectedRadio.getAttribute('data-price')) || 0;
+            subtotal += price;
+
+            cartHtml += `
+                <div class="flex justify-between items-start gap-3">
+                    <div class="min-w-0">
+                        <p class="font-semibold text-sm text-on-surface truncate">${brandName} ${modelName}</p>
+                        <p class="text-xs text-on-surface-variant truncate">${selectedRadio.getAttribute('data-name')}</p>
+                        ${meta ? `<p class="text-[11px] text-on-surface-variant truncate">${meta}</p>` : ''}
+                    </div>
+                    <span class="tnum font-semibold text-sm text-on-surface shrink-0">${formatCurrency(price)}</span>
+                </div>`;
+        });
+
+        document.querySelectorAll('.addon-checkbox:checked').forEach((box) => {
+            const price = parseFloat(box.getAttribute('data-price')) || 0;
+            subtotal += price;
+            cartHtml += `
+                <div class="flex justify-between items-start gap-3">
+                    <div class="min-w-0">
+                        <p class="font-semibold text-sm text-on-surface truncate">${box.getAttribute('data-name')}</p>
+                        <p class="text-xs text-on-surface-variant">{% trans "Add-on" %}</p>
+                    </div>
+                    <span class="tnum font-semibold text-sm text-on-surface shrink-0">${formatCurrency(price)}</span>
+                </div>`;
+        });
+
+        document.getElementById('cart-list').innerHTML = cartHtml ||
+            `<p class="text-xs text-on-surface-variant italic py-6 text-center">${i18n.emptySummary}</p>`;
+
+        const promo = PROMO_CODES[activePromo];
+        let discount = 0;
+        if (promo) {
+            discount = promo.percent
+                ? Math.round(subtotal * promo.percent / 100)
+                : Math.min(promo.flat, subtotal);
+        }
+        const vat = Math.round((subtotal - discount) * vatPercent / 100);
+        const total = Math.max(subtotal - discount + vat, 0);
+
+        document.getElementById('cart-subtotal').textContent = formatCurrency(subtotal);
+        document.getElementById('cart-tax').textContent = formatCurrency(vat);
+        document.getElementById('cart-vat-rate').textContent = vatPercent + '%';
+        document.getElementById('cart-total').textContent = formatCurrency(total);
+        document.getElementById('cart-total-mobile').textContent = formatCurrency(total);
+
+        const discountRow = document.getElementById('cart-discount-row');
+        discountRow.classList.toggle('hidden', discount <= 0);
+        discountRow.classList.toggle('flex', discount > 0);
+        document.getElementById('cart-discount').textContent = '−' + formatCurrency(discount);
+        document.getElementById('cart-discount-label').textContent =
+            promo && promo.percent ? `{% trans "Discount" %} (${promo.percent}%)` : '{% trans "Discount" %}';
+    }
+
+    function applyPromo() {
+        const code = document.getElementById('promo-input').value.trim().toUpperCase();
+        const banner = document.getElementById('promo-banner');
+        const msg = document.getElementById('promo-msg');
+
+        if (!code) { clearPromo(); return; }
+
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+        if (PROMO_CODES[code]) {
+            activePromo = code;
+            document.getElementById('promo-code-input').value = code;
+            const rule = PROMO_CODES[code];
+            const amount = rule.percent ? rule.percent + '%' : '₭' + rule.flat.toLocaleString();
+            msg.innerHTML = `<span class="material-symbols-outlined text-[16px]">check_circle</span>
+                             <span>${i18n.codeApplied} <strong>${code}</strong> (${amount} ${i18n.off})</span>`;
+            msg.classList.remove('text-status-error');
+            // ລົງຂັ້ນຕໍ່ໄປສະເພາະລະຫັດທີ່ໃຊ້ໄດ້ — ລະຫັດຜິດຕ້ອງໃຫ້ເຫັນຂໍ້ຄວາມເຕືອນກ່ອນ
+            posAutoScroll.next(4);
+        } else {
+            activePromo = '';
+            document.getElementById('promo-code-input').value = '';
+            msg.innerHTML = `<span class="material-symbols-outlined text-[16px]">error</span><span>${i18n.invalidCode}</span>`;
+            msg.classList.add('text-status-error');
+        }
+        updateCart();
+    }
+
+    function clearPromo() {
+        activePromo = '';
+        document.getElementById('promo-input').value = '';
+        document.getElementById('promo-code-input').value = '';
+        const banner = document.getElementById('promo-banner');
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+        updateCart();
+    }
+
+    function updateVatRate() {
+        vatPercent = parseFloat(document.getElementById('vat-rate-select').value) || 0;
+        document.getElementById('vat-rate-input').value = vatPercent;
+        updateCart();
+    }
+
+    /* ---- ຜັງບ່ອນເກັບ: ເລືອກຊ່ອງແບບເບິ່ງຜັງຈິງ ---- */
     let currentStorageItemIdx = null;
     let storageMapDataPromise = null;
 
@@ -423,10 +1147,7 @@
         if (!storageMapDataPromise) {
             storageMapDataPromise = fetch("{% url 'pos:storage_map_data' %}")
                 .then((r) => r.json())
-                .catch((err) => {
-                    storageMapDataPromise = null;
-                    throw err;
-                });
+                .catch((err) => { storageMapDataPromise = null; throw err; });
         }
         return storageMapDataPromise;
     }
@@ -478,7 +1199,6 @@
         document.getElementById('storage-map-kpi').textContent =
             `${data.free} {% trans "free" %} / ${data.total} {% trans "total" %}`;
 
-        // ຮຽງເປັນຊັ້ນວາງຄືຜັງຈິງໜ້າຮ້ານ — ຈຳນວນຊ່ອງຕໍ່ຊັ້ນຕາມ zone.per_row
         const zonesHtml = data.zones.map((zone) => `
             <section class="space-y-2">
                 <h3 class="flex items-center justify-between gap-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">
@@ -490,7 +1210,7 @@
                         ${zone.free} {% trans "free" %}
                     </span>
                 </h3>
-                <div class="rounded-xl border border-outline-variant/30 bg-surface p-3 space-y-2 overflow-x-auto">
+                <div class="rounded-xl border border-outline-variant/50 bg-surface p-3 space-y-2 overflow-x-auto">
                     ${zone.rows.map((row) => `
                         <div>
                             <div class="grid gap-1.5" style="grid-template-columns:repeat(${zone.per_row},minmax(0,1fr))">
@@ -540,7 +1260,7 @@
         }
         return `
             <button type="button" onclick="selectStorageSlot(${slot.id}, '${escapeJsString(slot.code)}')"
-                    class="slot-cell aspect-square rounded-lg border border-emerald-500/60 bg-emerald-500/15 hover:bg-emerald-500/30 hover:border-emerald-500 hover:scale-105 transition-all flex flex-col items-center justify-center cursor-pointer"
+                    class="slot-cell aspect-square rounded-lg border border-emerald-500/60 bg-emerald-500/15 hover:bg-emerald-500/30 hover:border-emerald-500 transition-all flex flex-col items-center justify-center cursor-pointer"
                     data-search="${search}" title="{% trans 'Store here' %}: ${slot.code}">
                 <span class="material-symbols-outlined text-emerald-500 text-[16px] leading-none">add_circle</span>
                 <span class="font-mono text-[9px] font-semibold text-emerald-600 mt-0.5">${slot.code}</span>
@@ -563,7 +1283,7 @@
         if (label) {
             label.textContent = code;
             label.classList.remove('text-on-surface-variant');
-            label.classList.add('text-ai-cyan', 'font-semibold');
+            label.classList.add('text-primary', 'font-semibold');
         }
         closeStorageModal();
         updateCart();
@@ -579,9 +1299,9 @@
             input.dataset.code = '';
         }
         if (label) {
-            label.textContent = "{% trans 'Select a free storage slot (optional)' %}";
+            label.textContent = i18n.pickSlot;
             label.classList.add('text-on-surface-variant');
-            label.classList.remove('text-ai-cyan', 'font-semibold');
+            label.classList.remove('text-primary', 'font-semibold');
         }
         closeStorageModal();
         updateCart();
@@ -591,249 +1311,11 @@
         const q = document.getElementById('storage-map-search').value.trim().toLowerCase();
         document.querySelectorAll('#storage-map-modal-body .slot-cell').forEach((cell) => {
             const hay = cell.getAttribute('data-search') || '';
-            const match = !q || hay.includes(q);
-            cell.classList.toggle('opacity-20', !match);
+            cell.classList.toggle('opacity-20', !(!q || hay.includes(q)));
         });
     }
-    
-    function addItem() {
-        maxIdx++;
-        const container = document.getElementById('items-container');
-        
-        // Define the HTML structure for a new item row
-        const html = `
-            <div class="p-4 border border-outline-variant/30 rounded-lg bg-surface relative item-row mt-4" id="item-row-${maxIdx}" data-index="${maxIdx}">
-                <button type="button" class="absolute top-3 right-3 text-on-surface-variant hover:text-status-error transition-colors" onclick="removeItem(${maxIdx})">
-                    <span class="material-symbols-outlined text-[20px]">close</span>
-                </button>
-                <h3 class="font-bold text-xs text-on-surface mb-4">{% trans "Item" %} #${maxIdx + 1} {% trans "Details" %}</h3>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                    <div>
-                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Brand" %}</label>
-                        <select class="theme-select" id="brand-select-${maxIdx}" name="brand_${maxIdx}">
-                            <option>Nike</option>
-                            <option>Adidas</option>
-                            <option>Jordan</option>
-                            <option>New Balance</option>
-                            <option>Other</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Model" %}</label>
-                        <input class="theme-input model-input" id="model-input-${maxIdx}" name="model_name_${maxIdx}" placeholder="e.g. Air Force 1" type="text" required/>
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Color" %}</label>
-                        <div class="relative">
-                        <span class="color-swatch" id="color-swatch-${maxIdx}" aria-hidden="true"></span>
-                        <select class="theme-select theme-select-with-swatch" id="color-select-${maxIdx}" name="color_${maxIdx}">
-                            <option value="Black">Black (ສີດຳ)</option>
-                            <option value="White">White (ສີຂາວ)</option>
-                            <option value="Grey">Grey (ສີເທົາ)</option>
-                            <option value="Blue">Blue (ສີຟ້າ/ນ້ຳເງິນ)</option>
-                            <option value="Red">Red (ສີແດງ)</option>
-                            <option value="Green">Green (ສີຂຽວ)</option>
-                            <option value="Yellow">Yellow (ສີເຫຼືອງ)</option>
-                            <option value="Pink">Pink (ສີບົວ)</option>
-                            <option value="Brown">Brown (ສີນ້ຳຕານ)</option>
-                            <option value="Cream">Cream (ສີຄຣີມ)</option>
-                            <option value="Multicolor">Multicolor (ຫຼາກຫຼາຍສີ)</option>
-                            <option value="Other">Other (ອື່ນໆ)</option>
-                        </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block font-semibold text-xs text-on-surface-variant mb-1">{% trans "Size (US/EU)" %}</label>
-                        <select class="theme-select" id="size-select-${maxIdx}" name="size_${maxIdx}">
-                            <optgroup label="{% trans 'EU sizes' %}">
-                                <option value="36">36</option>
-                                <option value="36.5">36.5</option>
-                                <option value="37">37</option>
-                                <option value="37.5">37.5</option>
-                                <option value="38">38</option>
-                                <option value="38.5">38.5</option>
-                                <option value="39">39</option>
-                                <option value="39.5">39.5</option>
-                                <option value="40">40</option>
-                                <option value="40.5">40.5</option>
-                                <option value="41">41</option>
-                                <option value="41.5">41.5</option>
-                                <option value="42">42</option>
-                                <option value="42.5">42.5</option>
-                                <option value="43" selected>43</option>
-                                <option value="43.5">43.5</option>
-                                <option value="44">44</option>
-                                <option value="44.5">44.5</option>
-                                <option value="45">45</option>
-                                <option value="45.5">45.5</option>
-                                <option value="46">46</option>
-                                <option value="47">47</option>
-                                <option value="48">48</option>
-                            </optgroup>
-                            <optgroup label="{% trans 'US sizes' %}">
-                                <option value="US 4">US 4</option>
-                                <option value="US 4.5">US 4.5</option>
-                                <option value="US 5">US 5</option>
-                                <option value="US 5.5">US 5.5</option>
-                                <option value="US 6">US 6</option>
-                                <option value="US 6.5">US 6.5</option>
-                                <option value="US 7">US 7</option>
-                                <option value="US 7.5">US 7.5</option>
-                                <option value="US 8">US 8</option>
-                                <option value="US 8.5">US 8.5</option>
-                                <option value="US 9">US 9</option>
-                                <option value="US 9.5">US 9.5</option>
-                                <option value="US 10">US 10</option>
-                                <option value="US 10.5">US 10.5</option>
-                                <option value="US 11">US 11</option>
-                                <option value="US 11.5">US 11.5</option>
-                                <option value="US 12">US 12</option>
-                                <option value="US 13">US 13</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                </div>
-                <div class="mb-4 max-w-md">
-                    <label class="block font-semibold text-xs text-on-surface-variant mb-1">
-                        {% trans "Storage location" %}
-                    </label>
-                    <input type="hidden" class="storage-select" id="storage-select-${maxIdx}" name="storage_slot_${maxIdx}" value="" data-code="">
-                    <button type="button" onclick="openStorageModal(${maxIdx})"
-                            class="storage-picker-btn w-full flex items-center justify-between gap-2 bg-surface border border-outline-variant/50 rounded-lg px-4 py-2.5 text-sm text-on-surface hover:border-primary transition-colors">
-                        <span class="flex items-center gap-2 truncate">
-                            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">shelves</span>
-                            <span class="truncate text-on-surface-variant" id="storage-label-${maxIdx}">{% trans "Select a free storage slot (optional)" %}</span>
-                        </span>
-                        <span class="material-symbols-outlined text-[18px] text-on-surface-variant shrink-0">chevron_right</span>
-                    </button>
-                    <p class="mt-1.5 text-xs text-on-surface-variant">
-                        {% blocktrans count counter=storage_slots|length %}{{ counter }} free slot available{% plural %}{{ counter }} free slots available{% endblocktrans %}
-                    </p>
-                </div>
-                <div class="mb-4">
-                    <label class="block font-semibold text-xs text-on-surface-variant mb-2">{% trans "Service Type" %}</label>
-                    <div class="flex flex-wrap gap-2">
-                        {% for service in services %}
-                        <label class="cursor-pointer">
-                            <input class="peer sr-only service-radio-${maxIdx}" name="service_${maxIdx}" type="radio" value="{{ service.pk }}" data-name="{{ service.name|service_name }}" data-price="{{ service.price }}" {% if forloop.first %}checked{% endif %} onchange="updateCart()"/>
-                            <div class="px-4 py-2 rounded-lg border border-outline-variant/50 text-sm text-on-surface peer-checked:bg-primary-container peer-checked:border-primary peer-checked:text-on-primary-container hover:bg-surface-container/60 transition-all font-semibold">
-                                {{ service.name|service_name }} (₭ {{ service.price|money }})
-                            </div>
-                        </label>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        container.insertAdjacentHTML('beforeend', html);
-        
-        // Append index to item_indices
-        const indicesInput = document.getElementById('item_indices');
-        indicesInput.value = indicesInput.value + "," + maxIdx;
-        
-        // Add event listeners to update cart on change
-        document.getElementById(`brand-select-${maxIdx}`).addEventListener('change', updateCart);
-        document.getElementById(`model-input-${maxIdx}`).addEventListener('input', updateCart);
-        document.getElementById(`color-select-${maxIdx}`).addEventListener('change', () => {
-            updateColorSwatch(maxIdx);
-            updateCart();
-        });
-        document.getElementById(`size-select-${maxIdx}`).addEventListener('change', updateCart);
 
-        updateColorSwatch(maxIdx);
-        syncStorageSelections();
-    }
-    
-    function removeItem(idx) {
-        const indicesInput = document.getElementById('item_indices');
-        let indices = indicesInput.value.split(',').map(i => i.trim()).filter(i => i !== "");
-        
-        if (indices.length <= 1) {
-            alert('{% trans "You must keep at least one item." %}');
-            return;
-        }
-        
-        const row = document.getElementById(`item-row-${idx}`);
-        if (row) {
-            row.remove();
-        }
-        
-        indices = indices.filter(i => i !== idx.toString());
-        indicesInput.value = indices.join(',');
-        
-        syncStorageSelections();
-    }
-
-    function updateCart() {
-        const indicesStr = document.getElementById('item_indices').value;
-        const indices = indicesStr.split(',').map(i => i.trim()).filter(i => i !== "");
-        
-        let subtotal = 0;
-        let cartHtml = "";
-        
-        indices.forEach(idx => {
-            const brandSelect = document.getElementById(`brand-select-${idx}`);
-            const modelInput = document.getElementById(`model-input-${idx}`);
-            const colorSelect = document.getElementById(`color-select-${idx}`);
-            const sizeSelect = document.getElementById(`size-select-${idx}`);
-            const storageSelect = document.getElementById(`storage-select-${idx}`);
-
-            const brandName = brandSelect ? brandSelect.value : 'Sneaker';
-            const modelName = (modelInput && modelInput.value.trim()) ? modelInput.value.trim() : 'Item';
-            const colorVal = colorSelect ? colorSelect.value : '';
-            const sizeVal = sizeSelect ? sizeSelect.value : '';
-            const storageCode = storageSelect && storageSelect.value
-                ? storageSelect.dataset.code
-                : '';
-
-            const detailStr = `${brandName} ${modelName}`
-                + (colorVal ? ` (${colorVal})` : '')
-                + (sizeVal ? ` [Size: ${sizeVal}]` : '')
-                + (storageCode ? ` [Storage: ${storageCode}]` : '');
-
-            const selectedRadio = document.querySelector(`.service-radio-${idx}:checked`);
-            if (selectedRadio) {
-                const serviceName = selectedRadio.getAttribute('data-name');
-                const servicePrice = parseFloat(selectedRadio.getAttribute('data-price')) || 0;
-                
-                subtotal += servicePrice;
-                cartHtml += `
-                    <div class="flex justify-between items-start border-b border-outline-variant/10 pb-2 mb-2 last:border-b-0 last:pb-0 last:mb-0">
-                        <div>
-                            <div class="font-bold text-sm text-on-surface">${detailStr}</div>
-                            <div class="text-xs text-on-surface-variant">${serviceName}</div>
-                        </div>
-                        <div class="font-bold text-sm text-on-surface">${formatCurrency(servicePrice)}</div>
-                    </div>
-                `;
-            }
-        });
-        
-        const cartList = document.getElementById('cart-list');
-        cartList.innerHTML = cartHtml || `<div class="text-xs text-on-surface-variant italic">No items added yet.</div>`;
-        
-        const tax = Math.round(subtotal * 0.10);
-        const total = subtotal + tax;
-        
-        document.getElementById('cart-subtotal').textContent = formatCurrency(subtotal);
-        document.getElementById('cart-tax').textContent = formatCurrency(tax);
-        document.getElementById('cart-total').textContent = formatCurrency(total);
-    }
-
-    document.getElementById('brand-select-0').addEventListener('change', updateCart);
-    document.getElementById('model-input-0').addEventListener('input', updateCart);
-    document.getElementById('color-select-0').addEventListener('change', () => {
-        updateColorSwatch(0);
-        updateCart();
-    });
-    document.getElementById('size-select-0').addEventListener('change', updateCart);
-
-    // Initial run
-    updateColorSwatch(0);
-    syncStorageSelections();
-
-    // Existing customer autocomplete (Lao/English name or partial phone number)
+    /* ---- ຄົ້ນຫາລູກຄ້າເກົ່າ (ຊື່ລາວ/ອັງກິດ ຫຼື ບາງສ່ວນຂອງເບີໂທ) ---- */
     const CUSTOMER_SEARCH_URL = "{% url 'pos:customer_search' %}";
     const customerSearchInput = document.getElementById('customer-search');
     const customerResults = document.getElementById('customer-search-results');
@@ -845,9 +1327,7 @@
     let customerSearchRequest = 0;
 
     function setCustomerBadge(isExisting) {
-        customerEntryBadge.textContent = isExisting
-            ? '{{ js_existing_customer|escapejs }}'
-            : '{{ js_new_customer|escapejs }}';
+        customerEntryBadge.textContent = isExisting ? i18n.existingCustomer : i18n.newCustomer;
     }
 
     function hideCustomerResults() {
@@ -868,6 +1348,7 @@
         customerSearchInput.value = [customer.name, customer.phone].filter(Boolean).join(' · ');
         setCustomerBadge(Boolean(customer.id));
         hideCustomerResults();
+        posAutoScroll.next(1);
     }
 
     function renderCustomerResults(customers) {
@@ -875,13 +1356,13 @@
         if (!customers.length) {
             const empty = document.createElement('div');
             empty.className = 'px-4 py-3 text-xs text-on-surface-variant';
-            empty.textContent = '{{ js_no_customer_results|escapejs }}';
+            empty.textContent = i18n.noCustomerResults;
             customerResults.appendChild(empty);
         } else {
             customers.forEach((customer) => {
                 const option = document.createElement('button');
                 option.type = 'button';
-                option.className = 'flex w-full items-center justify-between gap-3 border-b border-outline-variant/30 px-4 py-3 text-left last:border-0 hover:bg-surface-container-low focus:bg-surface-container-low focus:outline-none';
+                option.className = 'flex w-full items-center justify-between gap-3 border-b border-outline-variant/40 px-4 py-3 text-left last:border-0 hover:bg-surface-container-low focus:bg-surface-container-low focus:outline-none';
                 option.setAttribute('role', 'option');
 
                 const name = document.createElement('span');
@@ -919,10 +1400,7 @@
         clearTimeout(customerSearchTimer);
         clearSelectedCustomer(false);
         const query = this.value.trim();
-        if (!query) {
-            hideCustomerResults();
-            return;
-        }
+        if (!query) { hideCustomerResults(); return; }
         customerSearchTimer = setTimeout(() => searchCustomers(query), 180);
     });
 
@@ -947,75 +1425,8 @@
             hideCustomerResults();
         }
     });
-</script>
 
-<!-- Scan Modal (ເຄື່ອງສະແກນ USB + ກ້ອງມືຖື/iPad) -->
-<div id="scan-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4" onclick="if(event.target===this)closeScanModal()">
-    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-xl w-full max-w-md overflow-hidden">
-        <div class="border-b border-outline-variant/20 px-6 py-4 bg-surface-bright flex justify-between items-center">
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">barcode_scanner</span>
-                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Scan Barcode" %}</h2>
-            </div>
-            <button type="button" onclick="closeScanModal()" class="text-on-surface-variant hover:text-status-error transition-colors">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <div class="p-6 flex flex-col gap-4">
-            <p class="text-xs text-on-surface-variant">{% trans "Point the USB scanner at the QR tag, or type the ticket / order number (e.g. TK-DEMO-004)." %}</p>
-            <input id="scan-input" type="text" autocomplete="off"
-                   class="w-full px-4 py-3 bg-surface border border-outline-variant/50 rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                   placeholder="TK-XXXXXX / ORDXXXXXX"/>
-            <div id="scan-status" class="text-xs font-semibold min-h-[1rem]"></div>
-            <div class="flex items-center gap-3">
-                <div class="flex-1 border-t border-outline-variant/30"></div>
-                <span class="text-[10px] uppercase tracking-wider text-on-surface-variant">{% trans "or" %}</span>
-                <div class="flex-1 border-t border-outline-variant/30"></div>
-            </div>
-            <button type="button" id="scan-camera-btn" onclick="toggleCameraScan()"
-                    class="w-full bg-primary-container text-on-primary-container font-bold text-sm py-2.5 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                <span class="material-symbols-outlined text-[20px]">photo_camera</span>
-                <span id="scan-camera-label">{% trans "Scan with Camera" %}</span>
-            </button>
-            <div id="camera-reader" class="hidden rounded-lg overflow-hidden"></div>
-        </div>
-    </div>
-</div>
-
-<!-- Storage Map Modal (ເລືອກບ່ອນເກັບແບບເບິ່ງຜັງ — ຄືໜ້າ /intake/storage/) -->
-<div id="storage-map-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 p-4" onclick="if(event.target===this)closeStorageModal()">
-    <div class="bg-surface-container-lowest rounded-xl border border-outline-variant/30 shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-        <div class="border-b border-outline-variant/20 px-6 py-4 bg-surface-bright flex justify-between items-center shrink-0">
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary">shelves</span>
-                <h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">{% trans "Choose Storage Slot" %}</h2>
-            </div>
-            <button type="button" onclick="closeStorageModal()" class="text-on-surface-variant hover:text-status-error transition-colors">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        <div class="px-6 py-3 border-b border-outline-variant/20 flex flex-wrap items-center gap-3 shrink-0">
-            <div class="relative flex-1 min-w-[180px]">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
-                <input id="storage-map-search" type="text" oninput="applyStorageModalSearch()"
-                       placeholder="{% trans 'Find slot / ticket...' %}"
-                       class="w-full bg-surface border border-outline-variant/50 rounded-full py-1.5 pl-9 pr-4 text-sm text-on-surface focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors">
-            </div>
-            <span id="storage-map-kpi" class="text-xs font-mono font-semibold text-on-surface-variant shrink-0"></span>
-            <button type="button" onclick="clearStorageSlot()" class="text-xs font-semibold text-status-error hover:underline shrink-0">
-                {% trans "Don't store here" %}
-            </button>
-        </div>
-        <div class="flex items-center gap-4 px-6 py-2 text-[11px] text-on-surface-variant shrink-0 border-b border-outline-variant/10">
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500 inline-block"></span>{% trans "Free" %}</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-500/20 border border-red-500 inline-block"></span>{% trans "Occupied" %}</span>
-            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-amber-500/20 border border-amber-500 inline-block"></span>{% trans "Chosen for another item" %}</span>
-        </div>
-        <div id="storage-map-modal-body" class="p-6 space-y-4 overflow-y-auto"></div>
-    </div>
-</div>
-
-<script>
+    /* ---- ສະແກນປ້າຍແທັກ / ໃບຮັບເຄື່ອງ ---- */
     const SCAN_LOOKUP_URL = "{% url 'pos:scan_lookup' %}";
     let cameraScanner = null;
     let cameraActive = false;
@@ -1057,30 +1468,21 @@
                 setScanStatus('{% trans "Not found:" %} ' + code, 'error');
                 return;
             }
-            // ຕື່ມຂໍ້ມູນລູກຄ້າໃສ່ຟອມ
-            if (data.customer) {
-                applyCustomerSelection(data.customer);
-            }
-            // ຕື່ມຂໍ້ມູນເຄື່ອງໃສ່ Item #1
+            if (data.customer) applyCustomerSelection(data.customer);
             if (data.asset) {
                 const brandSelect = document.getElementById('brand-select-0');
-                if (data.asset.brand) {
-                    if (!setMatchingSelectValue(brandSelect, data.asset.brand)) brandSelect.value = 'Other';
+                if (data.asset.brand && !setMatchingSelectValue(brandSelect, data.asset.brand)) {
+                    brandSelect.value = 'Other';
                 }
                 if (data.asset.model_name) document.getElementById('model-input-0').value = data.asset.model_name;
 
-                // Autofill Color dropdown
                 const colorSelect = document.getElementById('color-select-0');
                 if (colorSelect && data.asset.color) {
                     if (!setMatchingSelectValue(colorSelect, data.asset.color)) colorSelect.value = 'Other';
                     updateColorSwatch(0);
                 }
-
-                // Autofill Size dropdown
                 const sizeSelect = document.getElementById('size-select-0');
-                if (sizeSelect && data.asset.size) {
-                    setMatchingSelectValue(sizeSelect, data.asset.size);
-                }
+                if (sizeSelect && data.asset.size) setMatchingSelectValue(sizeSelect, data.asset.size);
                 updateCart();
             }
             setScanStatus('✓ ' + data.label + ' — ' + (data.customer.name || ''), 'ok');
@@ -1090,7 +1492,6 @@
         }
     }
 
-    // Enter ໃນຊ່ອງສະແກນ (ເຄື່ອງສະແກນ USB ຈະສົ່ງ Enter ທ້າຍລະຫັດອັດຕະໂນມັດ)
     document.getElementById('scan-input').addEventListener('keydown', function (e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -1099,7 +1500,6 @@
         }
     });
 
-    // ກ້ອງມືຖື/iPad/ຄອມ — ໂຫຼດ html5-qrcode ເມື່ອກົດໃຊ້ເທົ່ານັ້ນ
     function loadCameraLib() {
         return new Promise((resolve, reject) => {
             if (window.Html5Qrcode) return resolve();
@@ -1122,10 +1522,7 @@
             await cameraScanner.start(
                 { facingMode: 'environment' },
                 { fps: 10, qrbox: { width: 220, height: 220 } },
-                (decodedText) => {
-                    stopCameraScan();
-                    lookupScanCode(decodedText);
-                }
+                (decodedText) => { stopCameraScan(); lookupScanCode(decodedText); }
             );
             cameraActive = true;
             label.textContent = '{% trans "Stop Camera" %}';
@@ -1138,16 +1535,13 @@
 
     function stopCameraScan() {
         const label = document.getElementById('scan-camera-label');
-        if (cameraScanner && cameraActive) {
-            cameraScanner.stop().catch(() => {});
-        }
+        if (cameraScanner && cameraActive) cameraScanner.stop().catch(() => {});
         cameraScanner = null;
         cameraActive = false;
         label.textContent = '{% trans "Scan with Camera" %}';
         document.getElementById('camera-reader').classList.add('hidden');
     }
 
-    // ESC ປິດ modal
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             closeScanModal();
@@ -1155,8 +1549,8 @@
         }
     });
 
-    // Keyboard-wedge: ຍິງເຄື່ອງສະແກນ USB ໄດ້ເລີຍ ບໍ່ຕ້ອງເປີດ modal ກ່ອນ
-    // (ເຄື່ອງສະແກນພິມໄວກວ່າຄົນຫຼາຍ — ຈັບຈາກໄລຍະຫ່າງລະຫວ່າງໂຕອັກສອນ)
+    /* Keyboard-wedge: ຍິງເຄື່ອງສະແກນ USB ໄດ້ເລີຍ ບໍ່ຕ້ອງເປີດ modal ກ່ອນ
+       (ເຄື່ອງສະແກນພິມໄວກວ່າຄົນຫຼາຍ — ຈັບຈາກໄລຍະຫ່າງລະຫວ່າງໂຕອັກສອນ) */
     (function () {
         let buf = '';
         let lastTs = 0;
@@ -1169,7 +1563,6 @@
                 if (buf.length >= 5) {
                     e.preventDefault();
                     const code = buf;
-                    // ລຶບໂຕອັກສອນທີ່ເຄື່ອງສະແກນພິມຄ້າງໃນຊ່ອງທີ່ focus ຢູ່
                     const el = document.activeElement;
                     if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') && el.value.endsWith(code)) {
                         el.value = el.value.slice(0, -code.length);
@@ -1183,5 +1576,43 @@
             }
         }, true);
     })();
+
+    /* ກັນກົດສົ່ງສອງເທື່ອ — ບິນຊ້ຳເປັນບັນຫາໜັກກວ່າການລໍຖ້າ */
+    document.getElementById('pos-form').addEventListener('submit', function () {
+        this.querySelectorAll('button[type="submit"]').forEach((btn) => {
+            btn.disabled = true;
+            btn.style.opacity = '.6';
+        });
+    });
+
+    /* ຂັ້ນ 1 → 2: ພິມຊື່ + ເບີຄົບເອງ (ເລືອກຈາກລາຍການຄົ້ນຫາ ຈັດການໃນ applyCustomerSelection) */
+    [customerNameInput, customerPhoneInput].forEach((input) => {
+        input.addEventListener('change', function () {
+            if (customerNameInput.value.trim() && customerPhoneInput.value.trim()) {
+                posAutoScroll.next(1);
+            }
+        });
+    });
+
+    /* ຂັ້ນ 2 → 3: ເລືອກບໍລິການຫຼັກຂອງຄູ່ໃດຄູ່ໜຶ່ງແລ້ວ
+       ໃຊ້ delegation ເພາະລາຍການທີ 2, 3... ຖືກ clone ມາທີ່ຫຼັງ */
+    document.getElementById('items-container').addEventListener('change', function (event) {
+        if (event.target.matches('input[type="radio"][name^="service_"]')) {
+            posAutoScroll.next(2);
+        }
+    });
+
+    /* ຂັ້ນ 3 → 4: ຕິກບໍລິການເສີມ (ຫຼື ບໍ່ຕິກກໍຂ້າມໄປເອງຕອນໃສ່ສ່ວນຫຼຸດ) */
+    document.querySelectorAll('.addon-checkbox').forEach((box) => {
+        box.addEventListener('change', () => posAutoScroll.next(3));
+    });
+
+    /* ຂັ້ນ 4 → 5: ປ່ຽນ VAT ແລ້ວ = ພ້ອມເບິ່ງຍອດລວມ (ສ່ວນຫຼຸດ ຈັດການໃນ applyPromo) */
+    document.getElementById('vat-rate-select').addEventListener('change', () => {
+        posAutoScroll.next(4);
+    });
+
+    bindItemRow(0);
+    updateCart();
 </script>
 {% endblock %}

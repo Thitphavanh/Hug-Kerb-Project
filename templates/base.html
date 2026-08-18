@@ -192,6 +192,11 @@
     :root:not(.dark) .text-red-300 { color: rgb(var(--color-status-alert)) !important; }
     :root:not(.dark) .text-cyan-200 { color: rgb(var(--color-ai-cyan)) !important; }
 
+    /* ---- ເຊື່ອງເສັ້ນ scrollbar ແຕ່ຍັງເລື່ອນໄດ້ປົກກະຕິ ----
+       ໃຊ້ກັບກ່ອງທີ່ເລື່ອນໄດ້ເທົ່ານັ້ນ ບໍ່ໃຊ້ກັບທັງໜ້າ ເພື່ອບໍ່ໃຫ້ກະທົບ dropdown/modal */
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { width: 0; height: 0; display: none; }
+
     /* ---- Sidebar ພັບເຂົ້າ/ອອກ ---- */
     #sidebar { transition: width .25s ease; }
     html.sidebar-collapsed #sidebar { width: 4.75rem; }
@@ -216,7 +221,7 @@
         <h1 class="font-display-lg text-ai-cyan font-bold tracking-tight" style="font-size:24px;line-height:1.1;">Hug ເກີບ AI</h1>
         <p class="font-body-sm text-on-surface-variant mt-1">{% trans "SME Command Center" %}</p>
     </a>
-    <nav class="flex-1 px-4 space-y-1 overflow-y-auto">
+    <nav class="flex-1 px-4 space-y-1 overflow-y-auto no-scrollbar">
         <a href="{% url 'dashboard:index' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'dashboard' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
             <span class="material-symbols-outlined {% if active_nav == 'dashboard' %}fill{% endif %}">dashboard</span>
             <span class="font-label-caps tracking-widest">{% trans "Dashboard" %}</span>
@@ -257,6 +262,10 @@
         <a href="{% url 'reports:income_expense' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'reports' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
             <span class="material-symbols-outlined">assessment</span>
             <span class="font-label-caps tracking-widest">{% trans "Reports" %}</span>
+        </a>
+        <a href="{% url 'asset_intake:brands' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'brands' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
+            <span class="material-symbols-outlined">sell</span>
+            <span class="font-label-caps tracking-widest">{% trans "Brands" %}</span>
         </a>
         <a href="{% url 'reports:service_usage' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors {% if active_nav == 'service_usage' %}text-ai-cyan bg-white/5 border-r-2 border-ai-cyan{% else %}text-on-surface-variant hover:bg-white/5 hover:text-ai-cyan{% endif %}">
             <span class="material-symbols-outlined">bar_chart</span>
@@ -327,8 +336,12 @@
         </div>
     </header>
 
-    <main class="flex-1 overflow-y-auto bg-surface-deep soft-grid p-margin-mobile md:p-gutter lg:p-margin-desktop scroll-smooth">
-        <div class="max-w-container-max mx-auto space-y-gutter">
+    <main class="flex-1 overflow-y-auto no-scrollbar bg-surface-deep soft-grid p-margin-mobile md:p-gutter lg:p-margin-desktop scroll-smooth">
+        {# relative = ຈຸດສຳຄັນ: ມັດ element ທີ່ເປັນ position:absolute ໃຫ້ອ້າງອີງກ່ອງນີ້ #}
+        {# ຖ້າບໍ່ມີ input .sr-only (Tailwind ຕັ້ງເປັນ absolute) ຈະໄປອ້າງອີງໜ້າເອກະສານ #}
+        {# ຫຼຸດອອກຈາກ <main> ທີ່ scroll ເອງ ແລ້ວດັນ <html> ໃຫ້ສູງກວ່າຈໍ #}
+        {# ຜົນຄື ຊ່ອງຫວ່າງຂາວໃຫຍ່ຢູ່ລຸ່ມແອັບ ແລະ ມີ scrollbar ຊ້ອນກັນສອງອັນ #}
+        <div class="relative max-w-container-max mx-auto space-y-gutter">
             {% if messages %}
             <div class="space-y-2">
                 {% for message in messages %}
@@ -436,7 +449,7 @@
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <div class="p-6 flex flex-col gap-4 overflow-y-auto">
+        <div class="p-6 flex flex-col gap-4 overflow-y-auto no-scrollbar">
             <p class="text-xs text-on-surface-variant">
                 {% if CURRENT_LANGUAGE == 'lo' %}
                 ຍິງເຄື່ອງສະແກນ USB ໃສ່ປ້າຍ QR ຫຼື ພິມເລກປີ້ / ເລກອໍເດີ (ເຊັ່ນ TK-DEMO-004).

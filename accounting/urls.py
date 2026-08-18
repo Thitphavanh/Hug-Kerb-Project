@@ -17,6 +17,7 @@ urlpatterns = [
     path("export/daily/", views.export_daily_transactions, name="export_daily_transactions"),
     path("payment-method-report/", views.payment_method_report, name="payment_method_report"),
     path("cash-handover/", views.cash_handover, name="cash_handover"),
+    path("cash-handover/yearly/", views.yearly_cash_handover, name="yearly_cash_handover"),
     path("monthly-summary-financial/", views.monthly_summary_financial, name="monthly_summary_financial"),
     path("yearly-summary-financial/", views.yearly_summary_financial, name="yearly_summary_financial"),
     path("category-detail-print/", views.category_detail_print, name="category_detail_print"),

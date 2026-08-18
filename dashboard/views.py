@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib import messages
 from django.utils import timezone
+from django.utils.translation import gettext as _
 
 from asset_intake.models import Asset
 from digital_member.models import MemberCard
@@ -76,8 +77,44 @@ def index(request):
         "recent_orders": Order.objects.select_related("customer")[:10],
         "recent_assets": Asset.objects.select_related("customer")[:10],
         "chart_rows": chart_rows,
+        **_backup_health(),
     }
     return render(request, "dashboard/index.html", context)
+
+
+def _backup_health():
+    """ສະພາບການສຳຮອງຫຼັກຖານ — ເຕືອນສະເພາະຕອນມີບັນຫາຈິງ
+
+    ການສຳຮອງທີ່ລົ້ມແບບງຽບໆເປັນອັນຕະລາຍທີ່ສຸດ: ຮ້ານຈະຮູ້ຕໍ່ເມື່ອຕ້ອງກູ້ຫຼັກຖານ
+    ແລ້ວມັນບໍ່ມີ. ຈຶ່ງເອົາຂຶ້ນມາໄວ້ໜ້າທຳອິດທີ່ພະນັກງານເປີດທຸກເຊົ້າ.
+    """
+    from django.conf import settings
+
+    from media_backup.models import BackupRun
+    from media_backup.services import pending_backup_queryset
+
+    if (getattr(settings, "MEDIA_BACKUP_BACKEND", "none") or "none").lower() in (
+        "",
+        "none",
+        "off",
+    ):
+        return {"backup_alert": None}
+
+    last_run = BackupRun.objects.first()
+    if last_run is None:
+        return {
+            "backup_alert": _("Evidence backup has never run yet."),
+            "backup_pending": pending_backup_queryset().count(),
+        }
+
+    if last_run.status in (BackupRun.Status.FAILED, BackupRun.Status.PARTIAL):
+        return {
+            "backup_alert": _("The last evidence backup did not finish cleanly."),
+            "backup_pending": pending_backup_queryset().count(),
+            "backup_last_run": last_run,
+        }
+
+    return {"backup_alert": None, "backup_last_run": last_run}
 
 
 @login_required

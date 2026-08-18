@@ -10,6 +10,7 @@ OpenRouter API client (Scope 2.4)
 import json
 import os
 import re
+from decimal import Decimal, InvalidOperation
 
 import requests
 
@@ -27,6 +28,26 @@ MODEL_ALIASES = {
 
 class OpenRouterError(Exception):
     pass
+
+
+def to_decimal(value, default=None):
+    """ແປງຄ່າຕົວເລກຈາກ AI ເປັນ Decimal — ຄືນ default ຖ້າແປງບໍ່ໄດ້
+
+    ຮູບແບບຄຳຕອບຂອງ AI ບໍ່ແນ່ນອນ: ບາງເທື່ອສົ່ງເປັນ string ("1,200,000"),
+    ບາງເທື່ອສົ່ງ null ຫຼື "N/A". ຖ້າໂຍນເຂົ້າ DecimalField ຊື່ໆຈະ error
+    ແລ້ວການປະເມີນທັງໜ່ວຍລົ້ມ ທັງທີ່ຄ່າອື່ນໃຊ້ໄດ້ຢູ່ — ຈຶ່ງກັ່ນຢູ່ຈຸດດຽວນີ້.
+    """
+    if value is None or isinstance(value, bool):
+        return default
+    if isinstance(value, str):
+        value = value.replace(",", "").replace("%", "").strip()
+        if not value:
+            return default
+    try:
+        parsed = Decimal(str(value))
+    except (InvalidOperation, TypeError, ValueError):
+        return default
+    return parsed if parsed.is_finite() else default
 
 
 def _resolve_max_tokens(max_tokens=None):

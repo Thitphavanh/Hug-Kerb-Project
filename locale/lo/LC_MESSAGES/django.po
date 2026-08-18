@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Hug ເກີບ AI\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-14 07:24+0700\n"
+"POT-Creation-Date: 2026-08-18 07:29+0700\n"
 "PO-Revision-Date: 2026-07-09 00:00+0700\n"
 "Last-Translator: Hug ເກີບ AI\n"
 "Language-Team: Lao\n"
@@ -12,312 +12,355 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: accounting/forms.py:17 accounting/forms.py:72 accounting/forms.py:151
-#: accounting/services.py:174 accounting/services.py:199
-#: accounting/templates/accounting/dashboard.html:37
-#: accounting/templates/accounting/dashboard.html:77
-#: accounting/templates/accounting/report.html:86 accounting/views.py:197
+#: accounting/forms.py:19 accounting/forms.py:88 accounting/forms.py:167
+#: accounting/services.py:217 accounting/services.py:245
+#: accounting/templates/accounting/dashboard.html:53
+#: accounting/templates/accounting/dashboard.html:93
+#: accounting/templates/accounting/report.html:123 accounting/views.py:242
 #: reports/templates/reports/income_expense.html:8
 msgid "Income"
 msgstr "ລາຍຮັບ"
 
-#: accounting/forms.py:17 accounting/forms.py:73 accounting/forms.py:152
-#: accounting/services.py:174 accounting/services.py:228
-#: accounting/templates/accounting/dashboard.html:38
-#: accounting/templates/accounting/dashboard.html:78
-#: accounting/templates/accounting/report.html:86 accounting/views.py:197
+#: accounting/forms.py:19 accounting/forms.py:89 accounting/forms.py:168
+#: accounting/services.py:217 accounting/services.py:281
+#: accounting/templates/accounting/dashboard.html:54
+#: accounting/templates/accounting/dashboard.html:94
+#: accounting/templates/accounting/report.html:123 accounting/views.py:242
 msgid "Expense"
 msgstr "ລາຍຈ່າຍ"
 
 # Accounting transaction form
-#: accounting/forms.py:23 accounting/forms.py:55 accounting/forms.py:163
-#: accounting/templates/accounting/dashboard.html:49
-#: accounting/templates/accounting/dashboard.html:93
-#: accounting/templates/accounting/settings.html:28
+#: accounting/forms.py:25 accounting/forms.py:71 accounting/forms.py:179
+#: accounting/templates/accounting/dashboard.html:65
+#: accounting/templates/accounting/dashboard.html:119
+#: accounting/templates/accounting/settings.html:28 accounting/views.py:380
 msgid "Category"
 msgstr "ໝວດ"
 
-#: accounting/forms.py:52 accounting/forms.py:115
-#: accounting/templates/accounting/cash_handover.html:12
-#: accounting/templates/accounting/cash_handover.html:17
-#: accounting/templates/accounting/dashboard.html:30
+#: accounting/forms.py:68 accounting/forms.py:131
+#: accounting/templates/accounting/cash_handover.html:18
+#: accounting/templates/accounting/cash_handover.html:23
+#: accounting/templates/accounting/dashboard.html:46
+#: accounting/templates/accounting/yearly_cash_handover.html:148
 msgid "Date"
 msgstr "ວັນທີ"
 
-#: accounting/forms.py:53
+#: accounting/forms.py:69 accounting/views.py:377
 msgid "Time"
 msgstr "ເວລາ"
 
-#: accounting/forms.py:54 accounting/forms.py:143
-#: accounting/templates/accounting/dashboard.html:34
+#: accounting/forms.py:70 accounting/forms.py:159
+#: accounting/templates/accounting/dashboard.html:50
 msgid "Transaction type"
 msgstr "ປະເພດລາຍການ"
 
-#: accounting/forms.py:56
+#: accounting/forms.py:72 accounting/views.py:379
 msgid "Description"
 msgstr "ລາຍລະອຽດ"
 
-#: accounting/forms.py:57 accounting/templates/accounting/dashboard.html:93
+#: accounting/forms.py:73 accounting/templates/accounting/dashboard.html:119
 #: pos/services.py:93
 msgid "Amount"
 msgstr "ຈຳນວນເງິນ"
 
-#: accounting/forms.py:58 accounting/forms.py:116 accounting/forms.py:172
-#: accounting/templates/accounting/cash_handover.html:12
-#: accounting/templates/accounting/cash_handover.html:17
-#: accounting/templates/accounting/dashboard.html:42
-#: accounting/templates/accounting/report.html:86
-#: accounting/templates/accounting/settings.html:28 accounting/views.py:197
-#: pos/templates/pos/checkout.html:222
+#: accounting/forms.py:74 accounting/forms.py:132 accounting/forms.py:188
+#: accounting/templates/accounting/cash_handover.html:18
+#: accounting/templates/accounting/cash_handover.html:23
+#: accounting/templates/accounting/dashboard.html:58
+#: accounting/templates/accounting/report.html:123
+#: accounting/templates/accounting/settings.html:28
+#: accounting/templates/accounting/yearly_cash_handover.html:47
+#: accounting/views.py:242 accounting/views.py:381 accounting/views.py:474
+#: pos/templates/pos/checkout.html:266
 msgid "Currency"
 msgstr "ສະກຸນເງິນ"
 
-#: accounting/forms.py:59 pos/templates/pos/checkout.html:207
-#: pos/templates/pos/checkout.html:208
+#: accounting/forms.py:75 pos/templates/pos/checkout.html:251
+#: pos/templates/pos/checkout.html:252
 msgid "Payment method"
 msgstr "ຊ່ອງທາງຊຳລະ"
 
-#: accounting/forms.py:60
+#: accounting/forms.py:76
 msgid "Reference number"
 msgstr "ເລກອ້າງອີງ"
 
-#: accounting/forms.py:61
+#: accounting/forms.py:77
 msgid "Receipt or attachment"
 msgstr "ໃບບິນ ຫຼື ໄຟລ໌ຫຼັກຖານ"
 
-#: accounting/forms.py:62
+#: accounting/forms.py:78
 #: asset_intake/templates/asset_intake/intake_list.html:43
-#: inventory/templates/inventory/index.html:50 inventory/views.py:50
+#: inventory/templates/inventory/index.html:62 inventory/views.py:91
 msgid "Status"
 msgstr "ສະຖານະ"
 
-#: accounting/forms.py:63 accounting/forms.py:120
+#: accounting/forms.py:79 accounting/forms.py:136
 msgid "Notes"
 msgstr "ໝາຍເຫດ"
 
-#: accounting/forms.py:76 accounting/forms.py:127 accounting/forms.py:180
+#: accounting/forms.py:92 accounting/forms.py:143 accounting/forms.py:196
 msgid "Thai baht (THB)"
 msgstr "ເງິນບາດໄທ (THB)"
 
-#: accounting/forms.py:77 accounting/forms.py:128 accounting/forms.py:181
+#: accounting/forms.py:93 accounting/forms.py:144 accounting/forms.py:197
 msgid "Lao kip (LAK)"
 msgstr "ເງິນກີບລາວ (LAK)"
 
-#: accounting/forms.py:78 accounting/forms.py:129 accounting/forms.py:182
+#: accounting/forms.py:94 accounting/forms.py:145 accounting/forms.py:198
 msgid "US dollar (USD)"
 msgstr "ເງິນໂດລາສະຫະລັດ (USD)"
 
-#: accounting/forms.py:81 accounting/services.py:21 accounting/services.py:234
-#: pos/models.py:279
+#: accounting/forms.py:97 accounting/services.py:31 accounting/services.py:287
+#: accounting/services.py:313 accounting/templates/accounting/dashboard.html:34
+#: accounting/templates/accounting/dashboard.html:98
+#: accounting/templates/accounting/report.html:54 pos/models.py:279
 msgid "Cash"
 msgstr "ເງິນສົດ"
 
-#: accounting/forms.py:82 accounting/services.py:22 pos/models.py:280
+#: accounting/forms.py:98 accounting/services.py:32 pos/models.py:280
 msgid "Bank transfer"
 msgstr "ໂອນເງິນ"
 
-#: accounting/forms.py:83 accounting/services.py:23 pos/models.py:281
+#: accounting/forms.py:99 accounting/services.py:33 pos/models.py:281
 msgid "QR payment"
 msgstr "ສະແກນ QR"
 
-#: accounting/forms.py:84 accounting/services.py:24
+#: accounting/forms.py:100 accounting/services.py:34 accounting/services.py:375
+#: accounting/services.py:398
 msgid "Other"
 msgstr "ອື່ນໆ"
 
-#: accounting/forms.py:87 accounting/services.py:30 accounting/services.py:217
-#: accounting/services.py:239
+#: accounting/forms.py:103 accounting/services.py:40 accounting/services.py:265
+#: accounting/services.py:292
 msgid "Confirmed"
 msgstr "ຢືນຢັນແລ້ວ"
 
-#: accounting/forms.py:88 accounting/services.py:31
+#: accounting/forms.py:104 accounting/services.py:41
 msgid "Draft"
 msgstr "ສະບັບຮ່າງ"
 
-#: accounting/forms.py:89 accounting/services.py:32
+#: accounting/forms.py:105 accounting/services.py:42
 msgid "Void"
 msgstr "ຍົກເລີກ"
 
-#: accounting/forms.py:117
+#: accounting/forms.py:133
 msgid "Opening balance"
 msgstr "ເງິນທອນຕົ້ນມື້"
 
-#: accounting/forms.py:118
+#: accounting/forms.py:134
 msgid "Counted amount"
 msgstr "ຍອດນັບໄດ້"
 
-#: accounting/forms.py:119
+#: accounting/forms.py:135
 msgid "Receiver"
 msgstr "ຜູ້ຮັບ"
 
-#: accounting/forms.py:142 inventory/templates/inventory/index.html:48
-#: inventory/views.py:45
+#: accounting/forms.py:158 inventory/templates/inventory/index.html:60
+#: inventory/views.py:86
 msgid "Name"
 msgstr "ຊື່"
 
-#: accounting/forms.py:144
+#: accounting/forms.py:160 asset_intake/forms.py:63
 #: asset_intake/templates/asset_intake/intake_detail.html:101
-#: asset_intake/templates/asset_intake/intake_detail.html:737
-#: pos/templates/pos/create_order.html:182
-#: pos/templates/pos/create_order.html:626
+#: asset_intake/templates/asset_intake/intake_detail.html:741
+#: pos/templates/pos/create_order.html:328
+#: pos/templates/pos/create_order.html:632
 msgid "Color"
 msgstr "ສີ (Color)"
 
-#: accounting/forms.py:158 accounting/templates/accounting/settings.html:28
+#: accounting/forms.py:174 accounting/templates/accounting/settings.html:28
+#: accounting/templates/accounting/yearly_cash_handover.html:100
 msgid "Month"
 msgstr "ເດືອນ"
 
-#: accounting/forms.py:173
+#: accounting/forms.py:189
 msgid "Budget amount"
 msgstr "ງົບປະມານ"
 
-#: accounting/models.py:122
+#: accounting/models.py:139
 msgid "Category does not match transaction type."
 msgstr "ໝວດບໍ່ກົງກັບປະເພດລາຍການ"
 
-#: accounting/services.py:38
+#: accounting/services.py:48
 msgid "Supplies and cleaning products"
 msgstr "ອຸປະກອນ ແລະ ນ້ຳຢາ"
 
-#: accounting/services.py:39
+#: accounting/services.py:49
 msgid "Rent"
 msgstr "ຄ່າເຊົ່າ"
 
-#: accounting/services.py:40
+#: accounting/services.py:50
 msgid "Utilities"
 msgstr "ຄ່ານ້ຳ/ໄຟ/ອິນເຕີເນັດ"
 
-#: accounting/services.py:41
+#: accounting/services.py:51
 msgid "Salaries and wages"
 msgstr "ເງິນເດືອນ/ຄ່າແຮງງານ"
 
-#: accounting/services.py:42
+#: accounting/services.py:52
 msgid "Marketing and advertising"
 msgstr "ການຕະຫຼາດ/ໂຄສະນາ"
 
-#: accounting/services.py:43
+#: accounting/services.py:53
 msgid "Other expenses"
 msgstr "ລາຍຈ່າຍອື່ນໆ"
 
 # Dynamic transaction labels
-#: accounting/services.py:183
+#: accounting/services.py:226
 msgid "Manual"
 msgstr "ປ້ອນເອງ"
 
-#: accounting/services.py:191 pos/templates/pos/checkout.html:74
+#: accounting/services.py:237 pos/templates/pos/checkout.html:118
 #: pos/templates/pos/handover.html:31 pos/templates/pos/open_orders.html:108
 #: pos/templates/pos/quotation.html:8
 msgid "Walk-in customer"
 msgstr "ລູກຄ້າທົ່ວໄປ"
 
-#: accounting/services.py:199 pos/models.py:285
-#: pos/templates/pos/checkout.html:164
+#: accounting/services.py:245 pos/models.py:285
+#: pos/templates/pos/checkout.html:208
 msgid "Refund"
 msgstr "ຄືນເງິນ"
 
-#: accounting/services.py:201
-#, fuzzy, python-format
-#| msgid "Payment for %(order)s — %(customer)s"
+#: accounting/services.py:247
+#, python-format
 msgid "Refund for %(order)s — %(customer)s"
-msgstr "ຮັບຊຳລະ %(order)s — %(customer)s"
+msgstr "ຄືນເງິນ %(order)s — %(customer)s"
 
-#: accounting/services.py:203
+#: accounting/services.py:249
 #, python-format
 msgid "Payment for %(order)s — %(customer)s"
 msgstr "ຮັບຊຳລະ %(order)s — %(customer)s"
 
-#: accounting/services.py:208
+#: accounting/services.py:256
+msgid "POS refund"
+msgstr "ຄືນເງິນ POS"
+
+#: accounting/services.py:256
 msgid "POS income"
 msgstr "ລາຍຮັບຈາກ POS"
 
-#: accounting/services.py:237
+#: accounting/services.py:290
 msgid "POS expense"
 msgstr "ລາຍຈ່າຍຈາກ POS"
+
+#: accounting/services.py:314 accounting/templates/accounting/dashboard.html:35
+#: accounting/templates/accounting/dashboard.html:102
+#: accounting/templates/accounting/report.html:55
+msgid "Bank account"
+msgstr "ບັນຊີທະນາຄານ"
+
+#: accounting/services.py:315
+msgid "Other channels"
+msgstr "ຊ່ອງທາງອື່ນໆ"
 
 #: accounting/templates/accounting/_nav.html:4
 msgid "Daily ledger"
 msgstr "ບັນຊີປະຈຳວັນ"
 
-#: accounting/templates/accounting/_nav.html:7 templates/base.html:259
+#: accounting/templates/accounting/_nav.html:7 templates/base.html:264
 msgid "Reports"
 msgstr "ລາຍງານ"
 
 #: accounting/templates/accounting/_nav.html:10
+#: accounting/templates/accounting/report.html:48
+msgid "Statement by channel"
+msgstr "ໃບແຈ້ງຍອດແຍກຕາມຊ່ອງທາງ"
+
+#: accounting/templates/accounting/_nav.html:13
 #: accounting/templates/accounting/cash_handover.html:4
 msgid "Cash handover"
 msgstr "ສົ່ງມອບເງິນ"
 
-#: accounting/templates/accounting/_nav.html:13
+#: accounting/templates/accounting/_nav.html:16
 msgid "Categories & budgets"
 msgstr "ໝວດ ແລະ ງົບປະມານ"
 
-#: accounting/templates/accounting/cash_handover.html:8
+#: accounting/templates/accounting/cash_handover.html:9
+#: accounting/templates/accounting/yearly_cash_handover.html:25
 msgid "End-of-day control"
 msgstr "ຄວບຄຸມທ້າຍມື້"
 
-#: accounting/templates/accounting/cash_handover.html:8
+#: accounting/templates/accounting/cash_handover.html:9
 msgid "Cash handover and reconciliation"
 msgstr "ສົ່ງມອບ ແລະ ກວດນັບເງິນ"
 
-#: accounting/templates/accounting/cash_handover.html:8
+#: accounting/templates/accounting/cash_handover.html:9
 msgid "Compare system cash with the amount physically counted."
 msgstr "ກວດທຽບຍອດເງິນສົດໃນລະບົບກັບຍອດທີ່ນັບໄດ້ຈິງ"
 
 #: accounting/templates/accounting/cash_handover.html:12
+#: accounting/templates/accounting/yearly_cash_handover.html:4
+#: accounting/templates/accounting/yearly_cash_handover.html:26
+msgid "Yearly cash handover"
+msgstr "ໃບສົ່ງມອບເງິນປະຈຳປີ"
+
+#: accounting/templates/accounting/cash_handover.html:18
+#: accounting/templates/accounting/yearly_cash_handover.html:54
 msgid "Load totals"
 msgstr "ໂຫຼດຍອດ"
 
-#: accounting/templates/accounting/cash_handover.html:13
+#: accounting/templates/accounting/cash_handover.html:19
 msgid "Expected cash"
 msgstr "ເງິນສົດຕາມລະບົບ"
 
-#: accounting/templates/accounting/cash_handover.html:13
+#: accounting/templates/accounting/cash_handover.html:19
 msgid "Cash received"
 msgstr "ຮັບເງິນສົດ"
 
-#: accounting/templates/accounting/cash_handover.html:13
+#: accounting/templates/accounting/cash_handover.html:19
 msgid "Cash paid out"
 msgstr "ຈ່າຍເງິນສົດ"
 
-#: accounting/templates/accounting/cash_handover.html:13
+#: accounting/templates/accounting/cash_handover.html:19
 msgid ""
 "Legacy POS expenses are treated as cash because the previous expense model "
 "has no payment-method field."
 msgstr "ລາຍຈ່າຍເກົ່າຈາກ POS ຖືກນັບເປັນເງິນສົດ ເນື່ອງຈາກໂມເດວເກົ່າບໍ່ມີຊ່ອງທາງຊຳລະ"
 
-#: accounting/templates/accounting/cash_handover.html:15
+#: accounting/templates/accounting/cash_handover.html:21
 msgid "Edit handover"
 msgstr "ແກ້ໄຂໃບສົ່ງມອບ"
 
-#: accounting/templates/accounting/cash_handover.html:15
+#: accounting/templates/accounting/cash_handover.html:21
 msgid "Create handover"
 msgstr "ສ້າງໃບສົ່ງມອບ"
 
-#: accounting/templates/accounting/cash_handover.html:15
+#: accounting/templates/accounting/cash_handover.html:21
 #: pos/templates/pos/handover.html:138
 msgid "Confirm handover"
 msgstr "ຢືນຢັນການສົ່ງມອບ"
 
-#: accounting/templates/accounting/cash_handover.html:17
+#: accounting/templates/accounting/cash_handover.html:23
 msgid "Handover history"
 msgstr "ປະຫວັດການສົ່ງມອບ"
 
-#: accounting/templates/accounting/cash_handover.html:17
+#: accounting/templates/accounting/cash_handover.html:23
+#: accounting/templates/accounting/yearly_cash_handover.html:64
+#: accounting/templates/accounting/yearly_cash_handover.html:102
+#: accounting/templates/accounting/yearly_cash_handover.html:149
 msgid "System total"
 msgstr "ຕາມລະບົບ"
 
-#: accounting/templates/accounting/cash_handover.html:17
+#: accounting/templates/accounting/cash_handover.html:23
+#: accounting/templates/accounting/yearly_cash_handover.html:68
+#: accounting/templates/accounting/yearly_cash_handover.html:103
+#: accounting/templates/accounting/yearly_cash_handover.html:150
 msgid "Counted"
 msgstr "ນັບໄດ້"
 
-#: accounting/templates/accounting/cash_handover.html:17
+#: accounting/templates/accounting/cash_handover.html:23
+#: accounting/templates/accounting/yearly_cash_handover.html:72
+#: accounting/templates/accounting/yearly_cash_handover.html:104
+#: accounting/templates/accounting/yearly_cash_handover.html:151
 msgid "Difference"
 msgstr "ສ່ວນຕ່າງ"
 
-#: accounting/templates/accounting/cash_handover.html:17
+#: accounting/templates/accounting/cash_handover.html:23
+#: accounting/templates/accounting/yearly_cash_handover.html:152
 msgid "Giver → Receiver"
 msgstr "ຜູ້ສົ່ງ → ຜູ້ຮັບ"
 
-#: accounting/templates/accounting/cash_handover.html:17
+#: accounting/templates/accounting/cash_handover.html:23
 msgid "No handover history yet."
 msgstr "ຍັງບໍ່ມີປະຫວັດ"
 
@@ -346,129 +389,144 @@ msgstr "ເພີ່ມລາຍການ"
 msgid "View report"
 msgstr "ເບິ່ງລາຍງານ"
 
-#: accounting/templates/accounting/dashboard.html:36
+#: accounting/templates/accounting/dashboard.html:24
+msgid "Share on WhatsApp"
+msgstr "ສົ່ງຜ່ານ WhatsApp"
+
+#: accounting/templates/accounting/dashboard.html:28
+msgid "Export the day"
+msgstr "ສົ່ງອອກຂໍ້ມູນມື້ນີ້"
+
+#: accounting/templates/accounting/dashboard.html:33
+#: accounting/templates/accounting/report.html:53 accounting/views.py:374
+msgid "All payment methods"
+msgstr "ຊ່ອງທາງຊຳລະທັງໝົດ"
+
+#: accounting/templates/accounting/dashboard.html:52
 msgid "All"
 msgstr "ທັງໝົດ"
 
-#: accounting/templates/accounting/dashboard.html:44
+#: accounting/templates/accounting/dashboard.html:60
 msgid "All currencies"
 msgstr "ທຸກສະກຸນ"
 
-#: accounting/templates/accounting/dashboard.html:51
+#: accounting/templates/accounting/dashboard.html:67
 msgid "All categories"
 msgstr "ທຸກໝວດ"
 
-#: accounting/templates/accounting/dashboard.html:56
-#: accounting/templates/accounting/dashboard.html:59
+#: accounting/templates/accounting/dashboard.html:72
+#: accounting/templates/accounting/dashboard.html:75
 #: pos/templates/pos/open_orders.html:63
 msgid "Search"
 msgstr "ຄົ້ນຫາ"
 
-#: accounting/templates/accounting/dashboard.html:58
+#: accounting/templates/accounting/dashboard.html:74
 msgid "Description or reference number..."
 msgstr "ລາຍການ ຫຼື ເລກອ້າງອີງ..."
 
-#: accounting/templates/accounting/dashboard.html:72
+#: accounting/templates/accounting/dashboard.html:88
 msgid "Daily net balance"
 msgstr "ຍອດສຸດທິປະຈຳວັນ"
 
-#: accounting/templates/accounting/dashboard.html:87
+#: accounting/templates/accounting/dashboard.html:113
 msgid "Daily transactions"
 msgstr "ລາຍການປະຈຳວັນ"
 
-#: accounting/templates/accounting/dashboard.html:87
+#: accounting/templates/accounting/dashboard.html:113
 #, python-format
 msgid "%(counter)s transaction"
 msgid_plural "%(counter)s transactions"
 msgstr[0] "%(counter)s ລາຍການ"
 
-#: accounting/templates/accounting/dashboard.html:87
+#: accounting/templates/accounting/dashboard.html:113
 msgid "POS entries are read-only"
 msgstr "ລາຍການ POS ແກ້ໄຂບໍ່ໄດ້"
 
-#: accounting/templates/accounting/dashboard.html:93
+#: accounting/templates/accounting/dashboard.html:119
 msgid "Time / transaction"
 msgstr "ເວລາ / ລາຍການ"
 
-#: accounting/templates/accounting/dashboard.html:93
+#: accounting/templates/accounting/dashboard.html:119 accounting/views.py:378
 msgid "Source"
 msgstr "ແຫຼ່ງ"
 
-#: accounting/templates/accounting/dashboard.html:93
+#: accounting/templates/accounting/dashboard.html:119 accounting/views.py:382
 msgid "Method"
 msgstr "ຊ່ອງທາງ"
 
-#: accounting/templates/accounting/dashboard.html:93
+#: accounting/templates/accounting/dashboard.html:119
 #: accounting/templates/accounting/settings.html:28
 #: asset_intake/templates/asset_intake/intake_list.html:45
 msgid "Actions"
 msgstr "ຈັດການ"
 
-#: accounting/templates/accounting/dashboard.html:98
+#: accounting/templates/accounting/dashboard.html:124
 msgid "No reference number"
 msgstr "ບໍ່ມີເລກອ້າງອີງ"
 
-#: accounting/templates/accounting/dashboard.html:106
-#: crm/templates/crm/index.html:246 pos/templates/pos/quotation_sign.html:267
+#: accounting/templates/accounting/dashboard.html:132
+#: crm/templates/crm/index.html:246
 msgid "Edit"
 msgstr "ແກ້ໄຂ"
 
-#: accounting/templates/accounting/dashboard.html:107
+#: accounting/templates/accounting/dashboard.html:133
 msgid "Are you sure you want to delete this transaction?"
 msgstr "ຢືນຢັນລົບລາຍການນີ້?"
 
-#: accounting/templates/accounting/dashboard.html:108
+#: accounting/templates/accounting/dashboard.html:134
 #: crm/templates/crm/index.html:254
-#: inventory/templates/inventory/index.html:189
+#: inventory/templates/inventory/index.html:284
 msgid "Delete"
 msgstr "ລຶບ"
 
-#: accounting/templates/accounting/dashboard.html:113
+#: accounting/templates/accounting/dashboard.html:139
 msgid "No transactions found"
 msgstr "ບໍ່ພົບລາຍການ"
 
-#: accounting/templates/accounting/dashboard.html:113
+#: accounting/templates/accounting/dashboard.html:139
 msgid "Try changing the filters or adding a new transaction."
 msgstr "ລອງປ່ຽນຕົວກອງ ຫຼື ເພີ່ມລາຍການໃໝ່"
 
-#: accounting/templates/accounting/dashboard.html:122
+#: accounting/templates/accounting/dashboard.html:148
 msgid "This month overview"
 msgstr "ພາບລວມເດືອນນີ້"
 
-#: accounting/templates/accounting/dashboard.html:122
+#: accounting/templates/accounting/dashboard.html:148
 #, python-format
 msgid "Through %(date)s"
 msgstr "ເຖິງ %(date)s"
 
-#: accounting/templates/accounting/dashboard.html:127
-#: accounting/templates/accounting/report.html:82
+#: accounting/templates/accounting/dashboard.html:153
+#: accounting/templates/accounting/report.html:119
 msgid "In"
 msgstr "ເຂົ້າ"
 
-#: accounting/templates/accounting/dashboard.html:127
-#: accounting/templates/accounting/report.html:82
+#: accounting/templates/accounting/dashboard.html:153
+#: accounting/templates/accounting/report.html:119
 msgid "Out"
 msgstr "ອອກ"
 
-#: accounting/templates/accounting/dashboard.html:134
+#: accounting/templates/accounting/dashboard.html:160
 msgid "Budget control"
 msgstr "ຄວບຄຸມງົບ"
 
-#: accounting/templates/accounting/dashboard.html:134
+#: accounting/templates/accounting/dashboard.html:160
 msgid "Monthly expense categories"
 msgstr "ໝວດລາຍຈ່າຍປະຈຳເດືອນ"
 
-#: accounting/templates/accounting/dashboard.html:134
+#: accounting/templates/accounting/dashboard.html:160
 msgid "Set budget"
 msgstr "ຕັ້ງງົບ"
 
-#: accounting/templates/accounting/dashboard.html:138
+#: accounting/templates/accounting/dashboard.html:164
 msgid "No monthly budget has been set."
 msgstr "ຍັງບໍ່ໄດ້ຕັ້ງງົບປະຈຳເດືອນ"
 
 # Accounting reports, cash handover, and settings
 #: accounting/templates/accounting/report.html:4
 #: accounting/templates/accounting/report.html:11
+#: accounting/templates/accounting/report_pdf.html:6
+#: accounting/templates/accounting/report_pdf.html:31
 msgid "Financial report"
 msgstr "ລາຍງານການເງິນ"
 
@@ -487,67 +545,73 @@ msgid "ບົດສະຫຼູບການເງິນປະຈຳເດືອ�
 msgstr "ບົດສະຫຼູບການເງິນປະຈຳເດືອນ"
 
 #: accounting/templates/accounting/report.html:27
-#: accounting/templates/accounting/report.html:54
+#: accounting/templates/accounting/report.html:72
 msgid "ທັງໝົດ (All)"
 msgstr "ທັງໝົດ (All)"
 
-#: accounting/templates/accounting/report.html:48
+#: accounting/templates/accounting/report.html:66
 msgid "ບົດສະຫຼູບການເງິນປະຈຳປີ"
 msgstr "ບົດສະຫຼູບການເງິນປະຈຳປີ"
 
-#: accounting/templates/accounting/report.html:70
-msgid "Export CSV"
-msgstr "ສົ່ງອອກ CSV"
+#: accounting/templates/accounting/report.html:97
+#: inventory/templates/inventory/index.html:13
+#: reports/templates/reports/income_expense.html:57
+msgid "Export"
+msgstr "ສົ່ງອອກ"
 
-#: accounting/templates/accounting/report.html:76
+#: accounting/templates/accounting/report.html:113
 msgid "Start date"
 msgstr "ຈາກວັນທີ"
 
-#: accounting/templates/accounting/report.html:77
+#: accounting/templates/accounting/report.html:114
 msgid "End date"
 msgstr "ເຖິງວັນທີ"
 
-#: accounting/templates/accounting/report.html:78
+#: accounting/templates/accounting/report.html:115
 msgid "Group by"
 msgstr "ການຈັດກຸ່ມ"
 
-#: accounting/templates/accounting/report.html:78
+#: accounting/templates/accounting/report.html:115
+#: accounting/templates/accounting/report_pdf.html:34
 msgid "Daily"
 msgstr "ລາຍວັນ"
 
-#: accounting/templates/accounting/report.html:78
+#: accounting/templates/accounting/report.html:115
+#: accounting/templates/accounting/report_pdf.html:34
 msgid "Monthly"
 msgstr "ລາຍເດືອນ"
 
-#: accounting/templates/accounting/report.html:78
+#: accounting/templates/accounting/report.html:115
+#: accounting/templates/accounting/report_pdf.html:34
 msgid "Yearly"
 msgstr "ລາຍປີ"
 
-#: accounting/templates/accounting/report.html:79
+#: accounting/templates/accounting/report.html:116
 msgid "Generate report"
 msgstr "ສ້າງລາຍງານ"
 
-#: accounting/templates/accounting/report.html:82
+#: accounting/templates/accounting/report.html:119 accounting/views.py:477
 msgid "Net balance"
 msgstr "ຍອດສຸດທິ"
 
-#: accounting/templates/accounting/report.html:85
+#: accounting/templates/accounting/report.html:122
 msgid "Cashflow breakdown"
 msgstr "ລາຍລະອຽດກະແສເງິນ"
 
-#: accounting/templates/accounting/report.html:86 accounting/views.py:197
+#: accounting/templates/accounting/report.html:123 accounting/views.py:242
 msgid "Period"
 msgstr "ຊ່ວງເວລາ"
 
-#: accounting/templates/accounting/report.html:86
+#: accounting/templates/accounting/report.html:123
 msgid "Cashflow"
 msgstr "ກະແສເງິນ"
 
-#: accounting/templates/accounting/report.html:86 accounting/views.py:197
+#: accounting/templates/accounting/report.html:123 accounting/views.py:242
 msgid "Net"
 msgstr "ສຸດທິ"
 
-#: accounting/templates/accounting/report.html:86
+#: accounting/templates/accounting/report.html:123
+#: accounting/templates/accounting/report_pdf.html:53
 msgid "No data for this period."
 msgstr "ບໍ່ມີຂໍ້ມູນໃນຊ່ວງນີ້"
 
@@ -602,6 +666,7 @@ msgstr "ໝວດລາຍຮັບ"
 
 #: accounting/templates/accounting/settings.html:24
 #: accounting/templates/accounting/settings.html:25
+#: asset_intake/templates/asset_intake/brand_list.html:56
 msgid "Active"
 msgstr "ເປີດໃຊ້"
 
@@ -637,23 +702,23 @@ msgid ""
 msgstr "ລາຍຮັບຈາກ POS ຈະເຂົ້າລະບົບອັດຕະໂນມັດ ບໍ່ຕ້ອງປ້ອນຊ້ຳ"
 
 #: accounting/templates/accounting/transaction_form.html:10
-#: pos/templates/pos/quotation_sign.html:373
+#: media_backup/services.py:139
 msgid "Back"
-msgstr "ກັບຄືນ"
+msgstr "ຮູບດ້ານຫຼັງ"
 
 #: accounting/templates/accounting/transaction_form.html:14
 msgid "Transaction details"
 msgstr "ຂໍ້ມູນລາຍການ"
 
 #: accounting/templates/accounting/transaction_form.html:27
-#: asset_intake/templates/asset_intake/intake_detail.html:750
+#: asset_intake/templates/asset_intake/intake_detail.html:754
 #: asset_intake/templates/asset_intake/storage_map.html:46
 #: crm/templates/crm/index.html:360 crm/templates/crm/index.html:399
-#: inventory/templates/inventory/index.html:141
-#: inventory/templates/inventory/index.html:192
-#: inventory/templates/inventory/index.html:241
-#: pos/templates/pos/checkout.html:290
-#: pos/templates/pos/quotation_sign.html:206
+#: inventory/templates/inventory/index.html:189
+#: inventory/templates/inventory/index.html:236
+#: inventory/templates/inventory/index.html:287
+#: inventory/templates/inventory/index.html:336
+#: pos/templates/pos/checkout.html:335
 msgid "Cancel"
 msgstr "ຍົກເລີກ"
 
@@ -661,45 +726,259 @@ msgstr "ຍົກເລີກ"
 msgid "Save transaction"
 msgstr "ບັນທຶກລາຍການ"
 
-#: accounting/views.py:114
+#: accounting/templates/accounting/yearly_cash_handover.html:27
+msgid ""
+"Every daily handover of the year on one sheet, with the days that did not "
+"balance."
+msgstr "ລວມການສົ່ງມອບເງິນລາຍວັນທັງປີໄວ້ໜ້າດຽວ ພ້ອມຊີ້ວັນທີ່ຍອດບໍ່ກົງ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:31
+msgid "Print"
+msgstr "ພິມ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:39
+msgid "Year"
+msgstr "ປີ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:57
+msgid "Daily handover"
+msgstr "ສົ່ງມອບເງິນລາຍວັນ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:77
+msgid "Counted more than the system"
+msgstr "ນັບໄດ້ຫຼາຍກວ່າຍອດຕາມລະບົບ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:78
+msgid "Counted less than the system"
+msgstr "ນັບໄດ້ໜ້ອຍກວ່າຍອດຕາມລະບົບ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:79
+msgid "Balanced"
+msgstr "ຍອດກົງກັນ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:83
+#: accounting/templates/accounting/yearly_cash_handover.html:101
+msgid "Days recorded"
+msgstr "ຈຳນວນວັນທີ່ບັນທຶກ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:86
+msgid "day(s) did not balance"
+msgstr "ວັນທີ່ຍອດບໍ່ກົງ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:94
+msgid "Month by month"
+msgstr "ແຍກຕາມເດືອນ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:124
+#: asset_intake/templates/asset_intake/storage_map.html:19
+#: crm/templates/crm/index.html:497 pos/templates/pos/checkout.html:193
+#: pos/templates/pos/handover.html:117
+msgid "Total"
+msgstr "ລວມທັງໝົດ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:141
+msgid "Days that did not balance"
+msgstr "ວັນທີ່ຍອດບໍ່ກົງ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:142
+msgid "Every day where the counted cash differs from the system total."
+msgstr "ທຸກວັນທີ່ເງິນນັບໄດ້ບໍ່ກົງກັບຍອດຕາມລະບົບ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:175
+msgid "Handed over by"
+msgstr "ຜູ້ສົ່ງມອບ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:182
+msgid "Received by"
+msgstr "ຜູ້ຮັບ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:190
+msgid "Printed on"
+msgstr "ພິມວັນທີ"
+
+#: accounting/templates/accounting/yearly_cash_handover.html:191
+msgid "Covers"
+msgstr "ໄລຍະ"
+
+#: accounting/views.py:132
+msgid "Hug ເກີບ AI daily ledger summary"
+msgstr "ສະຫຼູບບັນຊີປະຈຳວັນ Hug ເກີບ AI"
+
+#: accounting/views.py:159
 msgid "Transaction saved successfully."
 msgstr "ບັນທຶກລາຍການສຳເລັດແລ້ວ"
 
-#: accounting/views.py:119
+#: accounting/views.py:164
 msgid "Add accounting transaction"
 msgstr "ເພີ່ມລາຍການບັນຊີ"
 
-#: accounting/views.py:131
+#: accounting/views.py:176
 msgid "Transaction updated successfully."
 msgstr "ແກ້ໄຂລາຍການສຳເລັດແລ້ວ"
 
-#: accounting/views.py:136
+#: accounting/views.py:181
 msgid "Edit accounting transaction"
 msgstr "ແກ້ໄຂລາຍການບັນຊີ"
 
-#: accounting/views.py:146
+#: accounting/views.py:191
 msgid "Transaction deleted successfully."
 msgstr "ລົບລາຍການສຳເລັດແລ້ວ"
 
-#: accounting/views.py:251
+#: accounting/views.py:232
+msgid "Hug ເກີບ AI financial report"
+msgstr "ລາຍງານການເງິນ Hug ເກີບ AI"
+
+#: accounting/views.py:273
+msgid "Excel export needs the openpyxl package. Download CSV instead."
+msgstr "ການສົ່ງອອກ Excel ຕ້ອງການແພັກເກັດ openpyxl. ໃຫ້ດາວໂຫຼດເປັນ CSVແທນ."
+
+#: accounting/views.py:302
+msgid "Word export needs the python-docx package. Download CSV instead."
+msgstr "ການສົ່ງອອກ Word ຕ້ອງການແພັກເກັດ python-docx. ໃຫ້ດາວໂຫຼດເປັນ CSV ແທນ."
+
+#: accounting/views.py:383
+msgid "Income (+)"
+msgstr "ລາຍຮັບ (+)"
+
+#: accounting/views.py:384
+msgid "Expense (-)"
+msgstr "ລາຍຈ່າຍ (-)"
+
+#: accounting/views.py:385
+msgid "Recorded by"
+msgstr "ຜູ້ບັນທຶກ"
+
+#: accounting/views.py:420
+msgid "Excel export needs the openpyxl package — exported as CSV instead."
+msgstr "ການສົ່ງອອກ Excel ຕ້ອງການແພັກເກັດ openpyxl — ຈຶ່ງສົ່ງອອກເປັນ CSV ແທນ."
+
+#: accounting/views.py:473
+msgid "Summary"
+msgstr "ສະຫຼູບ"
+
+#: accounting/views.py:475
+msgid "Total income"
+msgstr "ລາຍຮັບລວມ"
+
+#: accounting/views.py:476
+msgid "Total expense"
+msgstr "ລາຍຈ່າຍລວມ"
+
+#: accounting/views.py:553
 msgid "Handover saved successfully."
 msgstr "ບັນທຶກການສົ່ງມອບເງິນສຳເລັດແລ້ວ"
 
-#: accounting/views.py:286
+# Dynamic transaction labels
+#: accounting/views.py:577
+msgid "January"
+msgstr "ມັງກອນ"
+
+#: accounting/views.py:577
+msgid "February"
+msgstr "ກຸມພາ"
+
+#: accounting/views.py:577
+msgid "March"
+msgstr "ມີນາ"
+
+#: accounting/views.py:577
+msgid "April"
+msgstr "ເມສາ"
+
+#: accounting/views.py:578
+msgid "May"
+msgstr "ພຶດສະພາ"
+
+#: accounting/views.py:578
+msgid "June"
+msgstr "ມິຖຸນາ"
+
+#: accounting/views.py:578
+msgid "July"
+msgstr "ກໍລະກົດ"
+
+#: accounting/views.py:578
+msgid "August"
+msgstr "ສິງຫາ"
+
+#: accounting/views.py:579
+msgid "September"
+msgstr "ກັນຍາ"
+
+#: accounting/views.py:579
+msgid "October"
+msgstr "ຕຸລາ"
+
+#: accounting/views.py:579
+msgid "November"
+msgstr "ພະຈິກ"
+
+#: accounting/views.py:579
+msgid "December"
+msgstr "ທັນວາ"
+
+#: accounting/views.py:666
 msgid "Category added successfully."
 msgstr "ເພີ່ມໝວດບັນຊີສຳເລັດແລ້ວ"
 
-#: accounting/views.py:298
+#: accounting/views.py:678
 msgid "Budget saved successfully."
 msgstr "ບັນທຶກງົບປະມານສຳເລັດແລ້ວ"
 
-#: accounting/views.py:346
+#: accounting/views.py:726
 msgid "Category status updated successfully."
 msgstr "ອັບເດດສະຖານະໝວດສຳເລັດແລ້ວ"
 
-#: accounting/views.py:354
+#: accounting/views.py:734
 msgid "Budget deleted successfully."
 msgstr "ລົບງົບປະມານສຳເລັດແລ້ວ"
+
+#: asset_intake/forms.py:18 pos/templates/pos/quotation.html:66
+#: reports/templates/reports/income_expense.html:186
+msgid "Customer name"
+msgstr "ຊື່ລູກຄ້າ"
+
+#: asset_intake/forms.py:25 pos/templates/pos/create_order.html:278
+msgid "e.g. John Doe"
+msgstr "e.g. ສົມຊາຍ ສີຫາລາດ"
+
+#: asset_intake/forms.py:30
+msgid "Customer phone"
+msgstr "ເບີໂທລູກຄ້າ"
+
+#: asset_intake/forms.py:43
+#: asset_intake/templates/asset_intake/intake_detail.html:732
+#: pos/templates/pos/create_order.html:316
+#: pos/templates/pos/create_order.html:621
+msgid "Brand"
+msgstr "ຍີ່ຫໍ້ (Brand)"
+
+#: asset_intake/forms.py:50 pos/templates/pos/create_order.html:322
+#: pos/templates/pos/create_order.html:627
+msgid "Model"
+msgstr "ລຸ້ນ"
+
+#: asset_intake/forms.py:74
+#: asset_intake/templates/asset_intake/intake_detail.html:105
+#: asset_intake/templates/asset_intake/intake_detail.html:745
+#: pos/templates/pos/handover.html:89
+msgid "Size"
+msgstr "ເບີ"
+
+#: asset_intake/forms.py:85
+msgid "Condition at intake"
+msgstr "ສະພາບຕອນຮັບເຄື່ອງ"
+
+#: asset_intake/forms.py:92
+msgid ""
+"Describe existing stains, scratches, yellowing, or special customer "
+"requests..."
+msgstr "ລະບຸຮອຍເປື້ອນ, ຮອຍຂີດຂ່ວນ, ພື້ນເຫຼືອງ ຫຼື ຄວາມຕ້ອງການພິເສດຂອງລູກຄ້າ..."
+
+#: asset_intake/forms.py:97
+#: asset_intake/templates/asset_intake/intake_detail.html:109
+msgid "Pickup date"
+msgstr "ວັນທີນັດຮັບ"
 
 #: asset_intake/models.py:112
 msgid "Received (intake)"
@@ -713,14 +992,90 @@ msgstr "ກຳລັງທຳຄວາມສະອາດ"
 msgid "Repair in progress"
 msgstr "ກຳລັງສ້ອມແປງ"
 
-#: asset_intake/models.py:115 asset_intake/views.py:202
-#: asset_intake/views.py:378
+#: asset_intake/models.py:115 asset_intake/views.py:203
+#: asset_intake/views.py:384
 msgid "Ready for pickup"
 msgstr "ສຳເລັດ/ລໍຖ້າຮັບ"
 
 #: asset_intake/models.py:116 pos/templates/pos/handover.html:92
 msgid "Handed over"
 msgstr "ສົ່ງມອບແລ້ວ"
+
+#: asset_intake/templates/asset_intake/brand_list.html:4
+#: asset_intake/templates/asset_intake/brand_list.html:20
+msgid "Brands and models"
+msgstr "ຍີ່ຫໍ້ ແລະ ລຸ້ນເກີບ"
+
+#: asset_intake/templates/asset_intake/brand_list.html:21
+msgid "The list staff pick from when receiving shoes and opening a bill."
+msgstr "ລາຍການທີ່ພະນັກງານເລືອກ ຕອນຮັບເກີບ ແລະ ຕອນເປີດບິນ."
+
+#: asset_intake/templates/asset_intake/brand_list.html:23
+msgid "Back to intake"
+msgstr "ກັບຄືນໜ້າຮັບເຄື່ອງ"
+
+#: asset_intake/templates/asset_intake/brand_list.html:31
+msgid "New brand"
+msgstr "ຍີ່ຫໍ້ໃໝ່"
+
+#: asset_intake/templates/asset_intake/brand_list.html:33
+msgid "e.g. Puma, Asics, Onitsuka Tiger"
+msgstr "ເຊັ່ນ Puma, Asics, Onitsuka Tiger"
+
+#: asset_intake/templates/asset_intake/brand_list.html:36
+msgid "Sort order"
+msgstr "ລຳດັບ"
+
+#: asset_intake/templates/asset_intake/brand_list.html:40
+msgid "Add brand"
+msgstr "ເພີ່ມຍີ່ຫໍ້"
+
+#: asset_intake/templates/asset_intake/brand_list.html:58
+#: asset_intake/templates/asset_intake/intake_detail.html:130
+#: asset_intake/templates/asset_intake/intake_detail.html:681
+#: inventory/templates/inventory/index.html:190
+#: inventory/templates/inventory/index.html:237
+#: inventory/templates/inventory/index.html:288
+msgid "Save"
+msgstr "ບັນທຶກ"
+
+#: asset_intake/templates/asset_intake/brand_list.html:63
+#, python-format
+msgid "%(counter)s model"
+msgid_plural "%(counter)s models"
+msgstr[0] "ລຸ້ນ %(counter)s"
+
+#: asset_intake/templates/asset_intake/brand_list.html:70
+msgid "Remove this model?"
+msgstr "ລຶບລຸ້ນນີ້ບໍ່?"
+
+#: asset_intake/templates/asset_intake/brand_list.html:72
+msgid "Remove model"
+msgstr "ລຶບລຸ້ນ"
+
+#: asset_intake/templates/asset_intake/brand_list.html:78
+msgid "No models yet — staff can still type one in."
+msgstr "ຍັງບໍ່ມີລຸ້ນ — ພະນັກງານຍັງພິມເອງໄດ້."
+
+#: asset_intake/templates/asset_intake/brand_list.html:87
+msgid "Add a model, e.g. Air Force 1"
+msgstr "ເພີ່ມລຸ້ນ ເຊັ່ນ Air Force 1"
+
+#: asset_intake/templates/asset_intake/brand_list.html:88
+msgid "Add model"
+msgstr "ເພີ່ມລຸ້ນ"
+
+#: asset_intake/templates/asset_intake/brand_list.html:91
+msgid "Remove this brand and all its models? Past items keep their record."
+msgstr "ລຶບຍີ່ຫໍ້ນີ້ ພ້ອມລຸ້ນທັງໝົດບໍ່? ເກີບທີ່ຮັບໄປແລ້ວຍັງເກັບຂໍ້ມູນເດີມໄວ້."
+
+#: asset_intake/templates/asset_intake/brand_list.html:93
+msgid "Delete brand"
+msgstr "ລຶບຍີ່ຫໍ້"
+
+#: asset_intake/templates/asset_intake/brand_list.html:98
+msgid "No brands yet. Add the first one above."
+msgstr "ຍັງບໍ່ມີຍີ່ຫໍ້. ເພີ່ມອັນທຳອິດຢູ່ຂ້າງເທິງ."
 
 # Asset intake detail / AI Smart Grading
 #: asset_intake/templates/asset_intake/intake_detail.html:5
@@ -789,16 +1144,6 @@ msgstr "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶ
 msgid "Delete intake"
 msgstr "ລຶບລາຍການຮັບເຄື່ອງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:105
-#: asset_intake/templates/asset_intake/intake_detail.html:741
-#: pos/templates/pos/handover.html:89
-msgid "Size"
-msgstr "ເບີ"
-
-#: asset_intake/templates/asset_intake/intake_detail.html:109
-msgid "Pickup date"
-msgstr "ວັນທີນັດຮັບ"
-
 #: asset_intake/templates/asset_intake/intake_detail.html:113
 msgid "Created at"
 msgstr "ສ້າງເມື່ອ"
@@ -806,13 +1151,6 @@ msgstr "ສ້າງເມື່ອ"
 #: asset_intake/templates/asset_intake/intake_detail.html:123
 msgid "Not assigned to a technician"
 msgstr "ຍັງບໍ່ໄດ້ມອບວຽກໃຫ້ຊ່າງ"
-
-#: asset_intake/templates/asset_intake/intake_detail.html:130
-#: asset_intake/templates/asset_intake/intake_detail.html:677
-#: inventory/templates/inventory/index.html:142
-#: inventory/templates/inventory/index.html:193
-msgid "Save"
-msgstr "ບັນທຶກ"
 
 # Buy-back photo checklist and valuation workflow
 #: asset_intake/templates/asset_intake/intake_detail.html:140
@@ -858,7 +1196,7 @@ msgid "After media"
 msgstr "ຮູບ/ວິດີໂອຫຼັງເຮັດ"
 
 #: asset_intake/templates/asset_intake/intake_detail.html:290
-#: pos/templates/pos/quotation.html:131
+#: pos/templates/pos/quotation.html:130
 msgid "AI assessment"
 msgstr "ຜົນການປະເມີນ AI"
 
@@ -887,7 +1225,7 @@ msgid "Work progress"
 msgstr "ຄວາມຄືບໜ້າວຽກ"
 
 #: asset_intake/templates/asset_intake/intake_detail.html:378
-#: asset_intake/views.py:518 asset_intake/views.py:639
+#: asset_intake/views.py:520 asset_intake/views.py:654
 msgid "In progress"
 msgstr "ກຳລັງເຮັດ"
 
@@ -923,9 +1261,9 @@ msgstr "ລາຄາຊັກໂດຍປະມານ"
 msgid ""
 "This is an approximate price from the shop service table. Staff must inspect "
 "the physical pair and confirm the final price."
-msgstr "ລາຄານີ້ເປັນລາຄາປະເມີນຈາກຕາຕະລາງລາຄາຂອງຮ້ານ. ພະນັກງານຕ້ອງກວດເກີບຕົວຈິງກ່ອນ ແລ້ວຈຶ່ງຢືນຢັນລາຄາສຸດທ້າຍ."
-"ນີ້ແມ່ນລາຄາໂດຍປະມານຈາກຕາຕະລາງບໍລິການຂອງຮ້ານ. ພະນັກງານຕ້ອງກວດເບິ່ງເກີບຕົວຈິງ ແລະ "
-"ຢືນຢັນລາຄາສຸດທ້າຍ."
+msgstr ""
+"ລາຄານີ້ເປັນລາຄາປະເມີນຈາກຕາຕະລາງລາຄາຂອງຮ້ານ. ພະນັກງານຕ້ອງກວດເກີບຕົວຈິງກ່ອນ "
+"ແລ້ວຈຶ່ງຢືນຢັນລາຄາສຸດທ້າຍ."
 
 #: asset_intake/templates/asset_intake/intake_detail.html:452
 msgid "Resell price valuation"
@@ -943,158 +1281,222 @@ msgstr "ລາຄາຕະຫຼາດພື້ນຖານ"
 msgid "Condition adjustment"
 msgstr "ການປັບລາຄາຕາມສະພາບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:481
+#: asset_intake/templates/asset_intake/intake_detail.html:477
 msgid "Rarity premium"
 msgstr "ມູນຄ່າເພີ່ມຈາກຄວາມຫາຍາກ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:489
+#: asset_intake/templates/asset_intake/intake_detail.html:481
 msgid "Refurbishment cost"
 msgstr "ຄ່າຟື້ນຟູ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:493
+#: asset_intake/templates/asset_intake/intake_detail.html:485
 msgid "Risk reserve"
 msgstr "ເງິນສຳຮອງຄວາມສ່ຽງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:497
+#: asset_intake/templates/asset_intake/intake_detail.html:489
 msgid "Target shop margin"
 msgstr "ກຳໄລເປົ້າໝາຍຂອງຮ້ານ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:505
+#: asset_intake/templates/asset_intake/intake_detail.html:501
 msgid "Recommended shop buy-back offer"
 msgstr "ລາຄາຮັບຊື້ທີ່ AI ແນະນຳ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:517
+#: asset_intake/templates/asset_intake/intake_detail.html:512
+msgid "AI did not return a buy-back offer — set the price manually."
+msgstr "AI ບໍ່ໄດ້ສົ່ງລາຄາຮັບຊື້ກັບມາ — ໃຫ້ພະນັກງານຕັ້ງລາຄາເອງ."
+
+#: asset_intake/templates/asset_intake/intake_detail.html:521
 msgid ""
 "AI estimate only. Staff must inspect the physical pair and confirm the final "
 "offer."
 msgstr "ເປັນລາຄາປະເມີນຈາກ AI ເທົ່ານັ້ນ ພະນັກງານຕ້ອງກວດເກີບຕົວຈິງ ແລະຢືນຢັນລາຄາສຸດທ້າຍ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:522
+#: asset_intake/templates/asset_intake/intake_detail.html:526
 msgid "AI confidence score"
 msgstr "ຄະແນນຄວາມໝັ້ນໃຈຂອງ AI"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:533
+#: asset_intake/templates/asset_intake/intake_detail.html:537
 msgid "No valuation has been generated yet."
 msgstr "ຍັງບໍ່ມີຜົນການປະເມີນລາຄາ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:538
+#: asset_intake/templates/asset_intake/intake_detail.html:542
 msgid "Run valuation"
 msgstr "ເລີ່ມປະເມີນລາຄາ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:544
+#: asset_intake/templates/asset_intake/intake_detail.html:548
 msgid "Complete photos and AI assessment first"
 msgstr "ກະລຸນາເຮັດຮູບ ແລະປະເມີນ AI ໃຫ້ສຳເລັດກ່ອນ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:557
+#: asset_intake/templates/asset_intake/intake_detail.html:561
 msgid "Revalue asset"
 msgstr "ປະເມີນລາຄາໃໝ່"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:571
+#: asset_intake/templates/asset_intake/intake_detail.html:575
 msgid "AI promotional content"
 msgstr "ເນື້ອຫາໂປຣໂມຊັນຈາກ AI"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:580
+#: asset_intake/templates/asset_intake/intake_detail.html:584
 msgid "Generate"
 msgstr "ສ້າງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:599
+#: asset_intake/templates/asset_intake/intake_detail.html:603
 msgid ""
 "Create a promotion for this brand next month because demand is increasing."
 msgstr "ຈັດໂປຣໂມຊັນສຳລັບແບຣນນີ້ໃນເດືອນໜ້າ ເນື່ອງຈາກຄວາມຕ້ອງການເພີ່ມຂຶ້ນ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:609
+#: asset_intake/templates/asset_intake/intake_detail.html:613
 #: asset_intake/templates/asset_intake/kanban_board.html:63
-#: pos/templates/pos/create_order.html:254
-#: pos/templates/pos/create_order.html:698
+#: pos/templates/pos/create_order.html:400
+#: pos/templates/pos/create_order.html:685
 msgid "Storage location"
 msgstr "ບ່ອນເກັບເກີບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:616
+#: asset_intake/templates/asset_intake/intake_detail.html:620
 msgid "Shelf"
 msgstr "ຊັ້ນວາງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:616
+#: asset_intake/templates/asset_intake/intake_detail.html:620
 #: pos/templates/pos/handover.html:90
 msgid "Slot"
 msgstr "ຊ່ອງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:620
+#: asset_intake/templates/asset_intake/intake_detail.html:624
 msgid "Move"
 msgstr "ຍ້າຍບ່ອນ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:624
+#: asset_intake/templates/asset_intake/intake_detail.html:628
 msgid "Release"
 msgstr "ຄືນບ່ອນ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:632
+#: asset_intake/templates/asset_intake/intake_detail.html:636
 msgid "No slot assigned yet — pick one so it's easy to find at pickup."
 msgstr "ຍັງບໍ່ໄດ້ເລືອກບ່ອນເກັບ — ເລືອກໄວ້ເພື່ອຊອກງ່າຍຕອນລູກຄ້າມາຮັບ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:636
+#: asset_intake/templates/asset_intake/intake_detail.html:640
 msgid "Choose slot"
 msgstr "ເລືອກບ່ອນເກັບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:640
+#: asset_intake/templates/asset_intake/intake_detail.html:644
 msgid "Delivered — slot already released."
 msgstr "ສົ່ງມອບແລ້ວ — ຄືນບ່ອນເກັບແລ້ວ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:649
+#: asset_intake/templates/asset_intake/intake_detail.html:653
 msgid "Service jobs for this pair"
 msgstr "ວຽກບໍລິການຂອງຄູ່ນີ້"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:651
+#: asset_intake/templates/asset_intake/intake_detail.html:655
 msgid "Open board"
 msgstr "ເປີດກະດານ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:680
+#: asset_intake/templates/asset_intake/intake_detail.html:684
 msgid ""
 "No service jobs yet — they are created when an order is opened in the POS."
 msgstr "ຍັງບໍ່ມີວຽກບໍລິການ — ຈະຖືກສ້າງເມື່ອເປີດບິນຢູ່ໜ້າຂາຍໜ້າຮ້ານ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:688
+#: asset_intake/templates/asset_intake/intake_detail.html:692
 msgid ""
 "Press this once the customer has paid and collected the pair. This notifies "
 "the customer and frees the storage slot."
 msgstr "ກົດເມື່ອລູກຄ້າຈ່າຍເງິນ ແລະ ຮັບເກີບຄືນແລ້ວ. ລະບົບຈະແຈ້ງລູກຄ້າ ແລະ ຄືນບ່ອນເກັບໃຫ້ຫວ່າງ."
 
-#: asset_intake/templates/asset_intake/intake_detail.html:690
+#: asset_intake/templates/asset_intake/intake_detail.html:694
 msgid "Who collected it? (name)"
 msgstr "ຜູ້ມາຮັບເຄື່ອງ (ຊື່)"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:695
+#: asset_intake/templates/asset_intake/intake_detail.html:699
 msgid "Mark as delivered"
 msgstr "ສົ່ງມອບແລ້ວ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:707
+#: asset_intake/templates/asset_intake/intake_detail.html:711
 msgid "Save draft"
 msgstr "ບັນທຶກຮ່າງ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:711
+#: asset_intake/templates/asset_intake/intake_detail.html:715
 msgid "Publish to inventory"
 msgstr "ນຳເຂົ້າສາງສິນຄ້າ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:720
+#: asset_intake/templates/asset_intake/intake_detail.html:724
 msgid "Edit Intake Shoe Details"
 msgstr "ແກ້ໄຂຂໍ້ມູນເກີບຝາກ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:728
-#: pos/templates/pos/create_order.html:168
-#: pos/templates/pos/create_order.html:612
-msgid "Brand"
-msgstr "ຍີ່ຫໍ້ (Brand)"
-
-#: asset_intake/templates/asset_intake/intake_detail.html:732
+#: asset_intake/templates/asset_intake/intake_detail.html:736
 msgid "Model Name"
 msgstr "ລຸ້ນ / ສີ (Model Name)"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:746
+#: asset_intake/templates/asset_intake/intake_detail.html:750
 msgid "Condition / Notes"
 msgstr "ໝາຍເຫດ/ສະພາບ"
 
-#: asset_intake/templates/asset_intake/intake_detail.html:751
+#: asset_intake/templates/asset_intake/intake_detail.html:755
 #: crm/templates/crm/index.html:400
 msgid "Save Changes"
 msgstr "ບັນທຶກການແກ້ໄຂ"
+
+# Asset Intake Form (/intake/new/)
+#: asset_intake/templates/asset_intake/intake_form.html:4
+#: asset_intake/templates/asset_intake/intake_form.html:9
+msgid "Asset Intake"
+msgstr "ຮັບເຄື່ອງໃໝ່"
+
+#: asset_intake/templates/asset_intake/intake_form.html:10
+msgid "Capture customer, sneaker, and image evidence for AI grading."
+msgstr "ບັນທຶກຂໍ້ມູນລູກຄ້າ, ຂໍ້ມູນເກີບ ແລະ ຮູບພາບຫຼັກຖານສຳລັບການປະເມີນ AI"
+
+#: asset_intake/templates/asset_intake/intake_form.html:14
+msgid "Back to queue"
+msgstr "ກັບຄືນຄິວ"
+
+#: asset_intake/templates/asset_intake/intake_form.html:32
+#: pos/templates/pos/create_order.html:254
+msgid "Customer Details"
+msgstr "ຂໍ້ມູນລູກຄ້າ"
+
+#: asset_intake/templates/asset_intake/intake_form.html:35
+#: asset_intake/templates/asset_intake/intake_form.html:167
+msgid "New Customer"
+msgstr "ລູກຄ້າໃໝ່"
+
+#: asset_intake/templates/asset_intake/intake_form.html:74
+msgid "Sneaker Details"
+msgstr "ຂໍ້ມູນເກີບ"
+
+#: asset_intake/templates/asset_intake/intake_form.html:92
+msgid "Pick from the list or type a new model."
+msgstr "ເລືອກຈາກລາຍການ ຫຼື ພິມລຸ້ນໃໝ່ເອງກໍໄດ້."
+
+#: asset_intake/templates/asset_intake/intake_form.html:139
+msgid "Asset Photos"
+msgstr "ຮູບພາບເກີບ"
+
+#: asset_intake/templates/asset_intake/intake_form.html:142
+msgid "Upload Sneaker Photos"
+msgstr "ອັບໂຫຼດຮູບເກີບ"
+
+#: asset_intake/templates/asset_intake/intake_form.html:143
+msgid ""
+"Use clear lighting. Include upper, sole, heel, laces, and insole if possible."
+msgstr "ຖ່າຍໃນບ່ອນທີ່ມີແສງພຽງພໍ. ໃຫ້ເຫັນໜ້າເກີບ, ພື້ນ, ສົ້ນ, ສາຍເກີບ ແລະ ແຜ່ນຮອງພື້ນຖ້າເປັນໄປໄດ້."
+
+#: asset_intake/templates/asset_intake/intake_form.html:144
+#: asset_intake/templates/asset_intake/intake_form.html:362
+msgid "JPG, PNG, multiple files"
+msgstr "JPG, PNG, ຫຼາຍຮູບພ້ອມກັນ"
+
+#: asset_intake/templates/asset_intake/intake_form.html:149
+msgid "Save Intake"
+msgstr "ບັນທຶກຮັບເຄື່ອງ"
+
+#: asset_intake/templates/asset_intake/intake_form.html:166
+msgid "Existing Customer"
+msgstr "ລູກຄ້າເກົ່າ"
+
+#: asset_intake/templates/asset_intake/intake_form.html:168
+msgid "No matching customer found"
+msgstr "ບໍ່ພົບຂໍ້ມູນລູກຄ້າ"
+
+#: asset_intake/templates/asset_intake/intake_form.html:169
+msgid "files selected"
+msgstr "ຮູບທີ່ເລືອກ"
 
 # Intake queue
 #: asset_intake/templates/asset_intake/intake_list.html:4
@@ -1122,7 +1524,7 @@ msgid "All statuses"
 msgstr "ທຸກສະຖານະ"
 
 #: asset_intake/templates/asset_intake/intake_list.html:31
-#: asset_intake/views.py:517 asset_intake/views.py:638
+#: asset_intake/views.py:519 asset_intake/views.py:653
 msgid "Waiting"
 msgstr "ລໍຖ້າ"
 
@@ -1240,26 +1642,20 @@ msgstr "ບ່ອນເກັບເກີບຂອງລູກຄ້າ"
 msgid "Green = free, red = occupied. Click an occupied slot to open its job."
 msgstr "ສີຂຽວ = ຫວ່າງ, ສີແດງ = ເຕັມ. ກົດຊ່ອງສີແດງເພື່ອເປີດວຽກຂອງເກີບຄູ່ນັ້ນ."
 
-#: asset_intake/templates/asset_intake/storage_map.html:19
-#: crm/templates/crm/index.html:497 pos/templates/pos/checkout.html:149
-#: pos/templates/pos/create_order.html:330 pos/templates/pos/handover.html:117
-msgid "Total"
-msgstr "ລວມທັງໝົດ"
-
 #: asset_intake/templates/asset_intake/storage_map.html:23
 #: asset_intake/templates/asset_intake/storage_map.html:68
 #: asset_intake/templates/asset_intake/storage_map.html:135
 #: asset_intake/templates/asset_intake/storage_map.html:142
 #: asset_intake/templates/asset_intake/storage_map.html:144
-#: pos/templates/pos/create_order.html:1010
+#: pos/templates/pos/create_order.html:802
 msgid "Free"
 msgstr "ຫວ່າງ"
 
 #: asset_intake/templates/asset_intake/storage_map.html:27
 #: asset_intake/templates/asset_intake/storage_map.html:72
 #: asset_intake/templates/asset_intake/storage_map.html:121
-#: pos/templates/pos/create_order.html:527
-#: pos/templates/pos/create_order.html:1011
+#: pos/templates/pos/create_order.html:803
+#: pos/templates/pos/create_order.html:1247
 msgid "Occupied"
 msgstr "ເຕັມ"
 
@@ -1293,14 +1689,14 @@ msgid "or add slots in Admin."
 msgstr "ຫຼື ເພີ່ມບ່ອນເກັບໃນ Admin."
 
 #: asset_intake/templates/asset_intake/storage_map.html:101
-#: pos/templates/pos/create_order.html:479
-#: pos/templates/pos/create_order.html:490
+#: pos/templates/pos/create_order.html:1200
+#: pos/templates/pos/create_order.html:1210
 msgid "free"
 msgstr "ວ່າງ"
 
 #: asset_intake/templates/asset_intake/storage_map.html:132
 #: asset_intake/templates/asset_intake/storage_map.html:135
-#: pos/templates/pos/create_order.html:544
+#: pos/templates/pos/create_order.html:1264
 msgid "Store here"
 msgstr "ເກັບບ່ອນນີ້"
 
@@ -1313,7 +1709,7 @@ msgid "Not found on the map — this pair may not have a storage slot yet."
 msgstr "ບໍ່ພົບໃນຜັງ — ເກີບຄູ່ນີ້ອາດຍັງບໍ່ໄດ້ເລືອກບ່ອນເກັບ."
 
 #: asset_intake/templates/asset_intake/storage_map.html:417
-#: pos/templates/pos/create_order.html:1117
+#: pos/templates/pos/create_order.html:1517
 msgid "Starting camera..."
 msgstr "ກຳລັງເປີດກ້ອງ..."
 
@@ -1325,234 +1721,286 @@ msgstr "ປິດກ້ອງ"
 msgid "Camera unavailable — check browser permission."
 msgstr "ໃຊ້ກ້ອງບໍ່ໄດ້ — ກວດສິດອະນຸຍາດຂອງ browser."
 
-#: asset_intake/views.py:27
+#: asset_intake/views.py:28
 msgid "Upper cleanliness and stains"
 msgstr "ຄວາມສະອາດ ແລະ ຮອຍເປື້ອນຂອງໜ້າເກີບ"
 
-#: asset_intake/views.py:28
+#: asset_intake/views.py:29
 msgid "Laces condition"
 msgstr "ສະພາບສາຍເກີບ"
 
-#: asset_intake/views.py:29
+#: asset_intake/views.py:30
 msgid "Upper material tears or cracks"
 msgstr "ຮອຍຈີກ ຫຼື ຮອຍແຕກຂອງວັດສະດຸໜ້າເກີບ"
 
-#: asset_intake/views.py:30
+#: asset_intake/views.py:31
 msgid "Upper / body condition"
 msgstr "ສະພາບໜ້າເກີບ / ຕົວເກີບ"
 
-#: asset_intake/views.py:31
+#: asset_intake/views.py:32
 msgid "Fading or discoloration"
 msgstr "ສີຊີດຈາງ ຫຼື ປ່ຽນສີ"
 
-#: asset_intake/views.py:32
+#: asset_intake/views.py:33
 msgid "Sole condition"
 msgstr "ສະພາບພື້ນເກີບ"
 
-#: asset_intake/views.py:33
+#: asset_intake/views.py:34
 msgid "Outsole wear"
 msgstr "ການສຶກຫຼໍ່ຂອງພື້ນນອກ"
 
-#: asset_intake/views.py:34
+#: asset_intake/views.py:35
 msgid "Insole condition"
 msgstr "ສະພາບພື້ນໃນ"
 
-#: asset_intake/views.py:35
+#: asset_intake/views.py:36
 msgid "Midsole cracks, compression, or deterioration"
 msgstr "Midsole ແຕກ, ຍຸບ ຫຼື ເສື່ອມສະພາບ"
 
-#: asset_intake/views.py:36
+#: asset_intake/views.py:37
 msgid "Color condition"
 msgstr "ສະພາບສີ"
 
-#: asset_intake/views.py:37
+#: asset_intake/views.py:38
 msgid "Sole yellowing (oxidation)"
 msgstr "ພື້ນເຫຼືອງ (Oxidation)"
 
-#: asset_intake/views.py:38
+#: asset_intake/views.py:39
 msgid "Insole condition and odor"
 msgstr "ສະພາບພື້ນໃນ ແລະ ກິ່ນ"
 
-#: asset_intake/views.py:39
+#: asset_intake/views.py:40
 msgid "Laces completeness and condition"
 msgstr "ຄວາມຄົບຖ້ວນ ແລະ ສະພາບສາຍເກີບ"
 
 # AI checklist labels stored in the database
-#: asset_intake/views.py:40
+#: asset_intake/views.py:41
 msgid "Box and accessories completeness"
 msgstr "ຄວາມຄົບຖ້ວນຂອງກ່ອງ ແລະ ອຸປະກອນເສີມ"
 
-#: asset_intake/views.py:41
+#: asset_intake/views.py:42
 msgid "Preliminary authenticity check"
 msgstr "ການກວດສອບຄວາມແທ້ເບື້ອງຕົ້ນ"
 
-#: asset_intake/views.py:122
+#: asset_intake/views.py:123
 msgid "Light dirt"
 msgstr "ເປື້ອນໜ້ອຍ"
 
-#: asset_intake/views.py:126
+#: asset_intake/views.py:127
 msgid "Moderate dirt"
 msgstr "ເປື້ອນປານກາງ"
 
-#: asset_intake/views.py:130
+#: asset_intake/views.py:131
 msgid "Heavy dirt"
 msgstr "ເປື້ອນຫຼາຍ"
 
-#: asset_intake/views.py:144
+#: asset_intake/views.py:145
 msgid "Front / toe box"
 msgstr "ດ້ານໜ້າ / Toe box"
 
-#: asset_intake/views.py:145
+#: asset_intake/views.py:146
 msgid "Show both shoes, toe boxes, laces, and overall shape."
 msgstr "ໃຫ້ເຫັນເກີບທັງສອງ, ຫົວເກີບ, ສາຍເກີບ ແລະຮູບຊົງລວມ"
 
-#: asset_intake/views.py:150
+#: asset_intake/views.py:151
 msgid "Heel / rear"
 msgstr "ສົ້ນເກີບ / ດ້ານຫຼັງ"
 
-#: asset_intake/views.py:151
+#: asset_intake/views.py:152
 msgid "Show heel logos, stitching, and rear sole wear."
 msgstr "ໃຫ້ເຫັນ Logo ສົ້ນເກີບ, ຮອຍຫຍິບ ແລະການສຶກຂອງພື້ນດ້ານຫຼັງ"
 
-#: asset_intake/views.py:156
+#: asset_intake/views.py:157
 msgid "Side profile"
 msgstr "ດ້ານຂ້າງ"
 
-#: asset_intake/views.py:157
+#: asset_intake/views.py:158
 msgid "Show materials, Swoosh, stitching, and midsole."
 msgstr "ໃຫ້ເຫັນວັດສະດຸ, Swoosh, ຮອຍຫຍິບ ແລະ Midsole"
 
-#: asset_intake/views.py:162
+#: asset_intake/views.py:163 media_backup/services.py:144
 msgid "Outsole"
-msgstr "ພື້ນນອກ"
+msgstr "ຮູບພື້ນເກີບ"
 
-#: asset_intake/views.py:163
+#: asset_intake/views.py:164
 msgid "Show the complete tread and wear on both soles."
 msgstr "ໃຫ້ເຫັນດອກຢາງ ແລະການສຶກຂອງພື້ນເກີບທັງສອງຂ້າງ"
 
-#: asset_intake/views.py:168
+#: asset_intake/views.py:169
 msgid "Size label / SKU"
 msgstr "ປ້າຍ Size / SKU"
 
-#: asset_intake/views.py:169
+#: asset_intake/views.py:170
 msgid "Make the SKU, size, dates, and QR code readable."
 msgstr "ຖ່າຍໃຫ້ອ່ານ SKU, Size, ວັນຜະລິດ ແລະ QR code ໄດ້ຊັດເຈນ"
 
-#: asset_intake/views.py:174
+#: asset_intake/views.py:175
 msgid "Inner side / insole"
 msgstr "ດ້ານໃນ / Insole"
 
-#: asset_intake/views.py:175
+#: asset_intake/views.py:176
 msgid "Show the inner side, insole logo, and inner stitching."
 msgstr "ໃຫ້ເຫັນດ້ານໃນ, Logo ພື້ນໃນ ແລະຮອຍຫຍິບດ້ານໃນ"
 
-#: asset_intake/views.py:180
+#: asset_intake/views.py:181
 msgid "Box and accessories"
 msgstr "ກ່ອງ ແລະອຸປະກອນເສີມ"
 
-#: asset_intake/views.py:181
+#: asset_intake/views.py:182
 msgid "Show the box label, receipt, spare laces, and accessories."
 msgstr "ໃຫ້ເຫັນປ້າຍກ່ອງ, ໃບຊື້, ສາຍເກີບສຳຮອງ ແລະອຸປະກອນເສີມ"
 
-#: asset_intake/views.py:186
+#: asset_intake/views.py:187
 msgid "Defect close-up"
 msgstr "ຮູບໃກ້ຂອງຕຳໜິ"
 
-#: asset_intake/views.py:187
+#: asset_intake/views.py:188
 msgid "Add a close-up of any stain, tear, crack, or repair."
 msgstr "ເພີ່ມຮູບໃກ້ຂອງຄາບເປື້ອນ, ຮອຍຈີກ, ຮອຍແຕກ ຫຼືຮອຍສ້ອມ"
 
-#: asset_intake/views.py:199 asset_intake/views.py:375
+#: asset_intake/views.py:200 asset_intake/views.py:381
 msgid "Received"
 msgstr "ຮັບເຂົ້າ"
 
-#: asset_intake/views.py:200 asset_intake/views.py:376
+#: asset_intake/views.py:201 asset_intake/views.py:382
 msgid "Cleaning"
 msgstr "ກຳລັງຊັກ"
 
-#: asset_intake/views.py:201 asset_intake/views.py:377
+#: asset_intake/views.py:202 asset_intake/views.py:383
 msgid "Repairing"
 msgstr "ກຳລັງສ້ອມແປງ"
 
-#: asset_intake/views.py:203 asset_intake/views.py:379
+#: asset_intake/views.py:204 asset_intake/views.py:385
 msgid "Completed"
 msgstr "ສົ່ງມອບແລ້ວ"
 
-#: asset_intake/views.py:285
+#: asset_intake/views.py:249
+#, python-format
+msgid "Intake saved successfully — Ticket #%(ticket)s"
+msgstr "ຮັບເຄື່ອງສຳເລັດ — ເລກໃບຮັບ %(ticket)s"
+
+#: asset_intake/views.py:291
 msgid "Files uploaded successfully."
 msgstr "ອັບໂຫຼດໄຟລ໌ສຳເລັດ."
 
-#: asset_intake/views.py:294
+#: asset_intake/views.py:300
 msgid "Invalid status."
 msgstr "ສະຖານະບໍ່ຖືກຕ້ອງ."
 
-#: asset_intake/views.py:309
+#: asset_intake/views.py:315
 msgid "Item handed over to the customer."
 msgstr "ສົ່ງມອບເຄື່ອງໃຫ້ລູກຄ້າແລ້ວ."
 
-#: asset_intake/views.py:313
+#: asset_intake/views.py:319
 msgid "Status updated successfully."
 msgstr "ອັບເດດສະຖານະສຳເລັດ."
 
-#: asset_intake/views.py:320
+#: asset_intake/views.py:326
 msgid "Work assigned to the technician successfully."
 msgstr "ມອບວຽກໃຫ້ຊ່າງສຳເລັດ."
 
-#: asset_intake/views.py:343
+#: asset_intake/views.py:349
 msgid "Like new"
 msgstr "ຄືໃໝ່"
 
-#: asset_intake/views.py:346
+#: asset_intake/views.py:352
 msgid "Minor scuffs"
 msgstr "ມີຮອຍເລັກນ້ອຍ"
 
-#: asset_intake/views.py:349
+#: asset_intake/views.py:355
 msgid "Worn"
 msgstr "ມີການສຶກຫຼໍ່"
 
-#: asset_intake/views.py:368
+#: asset_intake/views.py:374
 msgid "Pending"
 msgstr "ລໍຖ້າກວດ"
 
-#: asset_intake/views.py:443
+#: asset_intake/views.py:444
 msgid "High demand"
 msgstr "ຄວາມຕ້ອງການສູງ"
 
-#: asset_intake/views.py:444
+#: asset_intake/views.py:445
 msgid "Normal demand"
 msgstr "ຄວາມຕ້ອງການປົກກະຕິ"
 
-#: asset_intake/views.py:445
+#: asset_intake/views.py:446
 msgid "Low demand"
 msgstr "ຄວາມຕ້ອງການຕ່ຳ"
 
-#: asset_intake/views.py:519 asset_intake/views.py:640
+#: asset_intake/views.py:521 asset_intake/views.py:655
 msgid "Done"
 msgstr "ແລ້ວ"
 
-#: asset_intake/views.py:520
+#: asset_intake/views.py:522
 msgid "Skipped"
 msgstr "ຂ້າມ"
 
-#: asset_intake/views.py:760
+#: asset_intake/views.py:629
+msgid ""
+"One of the photos is damaged and cannot be opened. Please upload the before "
+"and after photos again."
+msgstr "ຮູບໜຶ່ງເສຍ ເປີດບໍ່ໄດ້. ກະລຸນາອັບໂຫຼດຮູບກ່ອນຊັກ ແລະ ຫຼັງຊັກໃໝ່."
+
+#: asset_intake/views.py:775
 msgid "Updated:"
 msgstr "ອັບເດດແລ້ວ:"
 
-#: asset_intake/views.py:826
+#: asset_intake/views.py:841
 msgid "This item was already delivered — no storage slot needed."
 msgstr "ເຄື່ອງນີ້ສົ່ງມອບແລ້ວ — ບໍ່ຕ້ອງໃຊ້ບ່ອນເກັບ."
 
-#: asset_intake/views.py:830
+#: asset_intake/views.py:845
 msgid "That slot is already occupied. Please pick a green one."
 msgstr "ຊ່ອງນັ້ນມີເກີບເກັບຢູ່ແລ້ວ ກະລຸນາເລືອກຊ່ອງສີຂຽວ."
 
-#: asset_intake/views.py:835
+#: asset_intake/views.py:850
 msgid "Storage slot saved:"
 msgstr "ບັນທຶກບ່ອນເກັບແລ້ວ:"
 
-#: asset_intake/views.py:848
+#: asset_intake/views.py:863
 msgid "Storage slot released."
 msgstr "ຄືນບ່ອນເກັບແລ້ວ."
+
+#: asset_intake/views.py:902 asset_intake/views.py:920
+msgid "Enter a brand name."
+msgstr "ກະລຸນາໃສ່ຊື່ຍີ່ຫໍ້."
+
+#: asset_intake/views.py:904 asset_intake/views.py:922
+msgid "That brand already exists."
+msgstr "ຍີ່ຫໍ້ນີ້ມີຢູ່ແລ້ວ."
+
+#: asset_intake/views.py:910
+msgid "Brand added:"
+msgstr "ເພີ່ມຍີ່ຫໍ້ແລ້ວ:"
+
+#: asset_intake/views.py:928
+msgid "Brand updated."
+msgstr "ອັບເດດຍີ່ຫໍ້ແລ້ວ."
+
+#: asset_intake/views.py:943
+#, python-format
+msgid "Brand removed from the list. %(count)d past item(s) keep their record."
+msgstr "ລຶບຍີ່ຫໍ້ອອກຈາກລາຍການແລ້ວ. ເກີບ %(count)d ຄູ່ທີ່ຮັບໄປແລ້ວຍັງເກັບຂໍ້ມູນເດີມໄວ້."
+
+#: asset_intake/views.py:947
+msgid "Brand removed."
+msgstr "ລຶບຍີ່ຫໍ້ແລ້ວ."
+
+#: asset_intake/views.py:957
+msgid "Enter a model name."
+msgstr "ກະລຸນາໃສ່ຊື່ລຸ້ນ."
+
+#: asset_intake/views.py:959
+msgid "That model already exists for this brand."
+msgstr "ລຸ້ນນີ້ມີຢູ່ໃນຍີ່ຫໍ້ນີ້ແລ້ວ."
+
+#: asset_intake/views.py:962
+msgid "Model added:"
+msgstr "ເພີ່ມລຸ້ນແລ້ວ:"
+
+#: asset_intake/views.py:971
+msgid "Model removed."
+msgstr "ລຶບລຸ້ນແລ້ວ."
 
 #: core/urls.py:13
 msgid "Hug ເກີບ — Shop Management"
@@ -1595,15 +2043,13 @@ msgid "Customer Name"
 msgstr "ຊື່ລູກຄ້າ"
 
 #: crm/templates/crm/index.html:52 crm/templates/crm/index.html:344
-#: crm/templates/crm/index.html:383 pos/templates/pos/create_order.html:141
+#: crm/templates/crm/index.html:383 pos/templates/pos/create_order.html:281
 msgid "Phone Number"
 msgstr "ເບີໂທຕິດຕໍ່"
 
 #: crm/templates/crm/index.html:53
-#, fuzzy
-#| msgid "Stamp history"
 msgid "Stamps"
-msgstr "ປະຫວັດ Stamp"
+msgstr "ສະແຕມ"
 
 #: crm/templates/crm/index.html:54
 msgid "Points"
@@ -1635,32 +2081,24 @@ msgid "No customer data"
 msgstr "ບໍ່ມີຂໍ້ມູນລູກຄ້າ"
 
 #: crm/templates/crm/index.html:113
-#, fuzzy
-#| msgid "Stamp card"
 msgid "Stamp Loyalty Card"
-msgstr "ບັດສະສົມ Stamp"
+msgstr "ບັດສະສົມສະແຕມ"
 
 #: crm/templates/crm/index.html:126
-#, fuzzy
-#| msgid "Accumulated Points"
 msgid "Accumulated Total"
-msgstr "ຄະແນນສະສົມ"
+msgstr "ຍອດສະສົມລວມ"
 
 #: crm/templates/crm/index.html:127
-#, fuzzy
-#| msgid "Rewards"
 msgid "Rewards Unlocked"
-msgstr "ສິດສ່ວນຫຼຸດ"
+msgstr "ລາງວັນທີ່ປົດລັອກແລ້ວ"
 
 #: crm/templates/crm/index.html:152 crm/templates/crm/index.html:513
 msgid "Stamp collected"
 msgstr "ປະທັບ Stamp ແລ້ວ"
 
 #: crm/templates/crm/index.html:164
-#, fuzzy
-#| msgid "Select services to view the summary."
 msgid "Select a customer to view stamp card"
-msgstr "ເລືອກບໍລິການເພື່ອເບິ່ງສະຫຼຸບລາຍການ"
+msgstr "ເລືອກລູກຄ້າເພື່ອເບິ່ງບັດສະສົມສະແຕມ"
 
 #: crm/templates/crm/index.html:173
 msgid "Visits so far"
@@ -1707,7 +2145,7 @@ msgid "Service History"
 msgstr "ປະຫວັດບໍລິການ"
 
 #: crm/templates/crm/index.html:269
-#: dashboard/templates/dashboard/index.html:117
+#: dashboard/templates/dashboard/index.html:132
 msgid "View All"
 msgstr "ເບິ່ງທັງໝົດ"
 
@@ -1728,7 +2166,7 @@ msgid "Add New Membership Customer"
 msgstr "ເພີ່ມລູກຄ້າສະມາຊິກໃໝ່"
 
 #: crm/templates/crm/index.html:340 crm/templates/crm/index.html:379
-#: pos/templates/pos/create_order.html:137
+#: pos/templates/pos/create_order.html:276
 msgid "Full Name"
 msgstr "ຊື່ ແລະ ນາມສະກຸນ"
 
@@ -1776,7 +2214,8 @@ msgstr "ອີເມວ"
 msgid "Stamp card"
 msgstr "ບັດສະສົມ Stamp"
 
-#: crm/templates/crm/index.html:417
+#: crm/templates/crm/index.html:417 pos/templates/pos/create_order.html:755
+#: pos/templates/pos/create_order.html:786
 msgid "Close"
 msgstr "ປິດ"
 
@@ -1904,44 +2343,64 @@ msgid "people"
 msgstr "ຄົນ"
 
 #: dashboard/templates/dashboard/index.html:68
+msgid "Evidence backup"
+msgstr "ການສຳຮອງຫຼັກຖານ"
+
+#: dashboard/templates/dashboard/index.html:71
+#, python-format
+msgid ""
+"%(count)s evidence file is not backed up yet. Run: manage.py backup_media"
+msgid_plural ""
+"%(count)s evidence files are not backed up yet. Run: manage.py backup_media"
+msgstr[0] "ຫຼັກຖານ %(count)s ໄຟລ໌ ຍັງບໍ່ໄດ້ສຳຮອງ. ໃຫ້ແລ່ນ: manage.py backup_media"
+
+#: dashboard/templates/dashboard/index.html:83
 msgid "AI Inventory Alert"
 msgstr "ແຈ້ງເຕືອນສາງໂດຍ AI"
 
-#: dashboard/templates/dashboard/index.html:83
+#: dashboard/templates/dashboard/index.html:98
 msgid "Business Performance Overview"
 msgstr "ພາບລວມຜົນປະກອບການ"
 
-#: dashboard/templates/dashboard/index.html:84
+#: dashboard/templates/dashboard/index.html:99
 msgid "Sales vs AI Pricing Estimate"
 msgstr "ຍອດຂາຍ ທຽບກັບ ລາຄາປະເມີນຈາກ AI"
 
-#: dashboard/templates/dashboard/index.html:87
+#: dashboard/templates/dashboard/index.html:102
 msgid "This week"
 msgstr "ອາທິດນີ້"
 
-#: dashboard/templates/dashboard/index.html:94
+#: dashboard/templates/dashboard/index.html:109
 msgid "7-day DB data"
 msgstr "ຂໍ້ມູນ DB 7 ວັນ"
 
-#: dashboard/templates/dashboard/index.html:105
+#: dashboard/templates/dashboard/index.html:120
 msgid "No payments or valuations yet."
 msgstr "ຍັງບໍ່ມີຂໍ້ມູນການຊຳລະເງິນ ຫຼື ປະເມີນລາຄາ."
 
-#: dashboard/templates/dashboard/index.html:109
+#: dashboard/templates/dashboard/index.html:124
 msgid "Sales"
 msgstr "ຍອດຂາຍ"
 
-#: dashboard/templates/dashboard/index.html:110
+#: dashboard/templates/dashboard/index.html:125
 msgid "AI Pricing Est."
 msgstr "ປະເມີນລາຄາ AI"
 
-#: dashboard/templates/dashboard/index.html:116
+#: dashboard/templates/dashboard/index.html:131
 msgid "Recent Activities"
 msgstr "ກິດຈະກຳຫຼ້າສຸດ"
 
-#: dashboard/templates/dashboard/index.html:132
+#: dashboard/templates/dashboard/index.html:147
 msgid "No activities yet."
 msgstr "ຍັງບໍ່ມີກິດຈະກຳ."
+
+#: dashboard/views.py:106
+msgid "Evidence backup has never run yet."
+msgstr "ຍັງບໍ່ເຄີຍແລ່ນການສຳຮອງຫຼັກຖານເທື່ອ."
+
+#: dashboard/views.py:112
+msgid "The last evidence backup did not finish cleanly."
+msgstr "ການສຳຮອງຫຼັກຖານຮອບລ່າສຸດເຮັດບໍ່ຄົບ."
 
 #: home/templates/home/index.html:4 templates/base.html:10
 msgid "Hug ເກີບ AI — SME Command Center"
@@ -1955,8 +2414,9 @@ msgstr "ສູນຄວບຄຸມ Hug ເກີບ AI"
 msgid ""
 "Back-office system for shoe care shops: POS, Inventory, CRM, AI Grading, "
 "Resell Pricing, and Reports."
-msgstr "ລະບົບຫຼັງບ້ານສຳລັບຮ້ານດູແລເກີບ: ຂາຍໜ້າຮ້ານ, ສາງສິນຄ້າ, ຖານຂໍ້ມູນລູກຄ້າ, AI ປະເມີນສະພາບ, ຕີລາຄາຂາຍຕໍ່ ແລະ ລາຍງານ."
-"ລະບົບຫຼັງບ້ານສຳລັບຮ້ານດູແລເກີບ: POS, ສາງ, CRM, ກວດສະພາບ AI, ປະເມີນລາຄາຂາຍຕໍ່ ແລະ ລາຍງານ."
+msgstr ""
+"ລະບົບຫຼັງບ້ານສຳລັບຮ້ານດູແລເກີບ: ຂາຍໜ້າຮ້ານ, ສາງສິນຄ້າ, ຖານຂໍ້ມູນລູກຄ້າ, AI ປະເມີນສະພາບ, "
+"ຕີລາຄາຂາຍຕໍ່ ແລະ ລາຍງານ."
 
 #: home/templates/home/index.html:20
 msgid "Orders"
@@ -1971,7 +2431,7 @@ msgid "Customers"
 msgstr "ລູກຄ້າ"
 
 #: home/templates/home/index.html:32
-#: inventory/templates/inventory/index.html:62 inventory/views.py:54
+#: inventory/templates/inventory/index.html:76 inventory/views.py:95
 msgid "Low stock"
 msgstr "ສະຕັອກຕ່ຳ"
 
@@ -1980,7 +2440,7 @@ msgid "Open Dashboard"
 msgstr "ເປີດແດຊບອດ"
 
 #: home/templates/home/index.html:37 pos/templates/pos/open_orders.html:32
-#: pos/templates/pos/open_orders.html:141 templates/base.html:277
+#: pos/templates/pos/open_orders.html:141 templates/base.html:286
 msgid "Create Order"
 msgstr "ສ້າງອໍເດີ"
 
@@ -1993,7 +2453,7 @@ msgid "Process services, issue receipts, and start AI scans."
 msgstr "ດຳເນີນງານບໍລິການ, ອອກໃບບິນ ແລະ ເລີ່ມສະແກນ AI."
 
 #: home/templates/home/index.html:50 inventory/templates/inventory/index.html:9
-#: templates/base.html:234
+#: templates/base.html:239
 msgid "Inventory"
 msgstr "ສາງສິນຄ້າ"
 
@@ -2009,7 +2469,7 @@ msgstr "CRM ແລະ ສະມາຊິກ"
 msgid "Manage customers, digital cards, and service history."
 msgstr "ຈັດການລູກຄ້າ, ບັດດິຈິຕອນ ແລະ ປະຫວັດບໍລິການ."
 
-#: home/templates/home/index.html:60 templates/base.html:242
+#: home/templates/home/index.html:60 templates/base.html:247
 msgid "AI Grading"
 msgstr "ກວດສະພາບ AI"
 
@@ -2025,7 +2485,7 @@ msgstr "ລາຍງານການເງິນ"
 msgid "Review income, expenses, cashflow, and RFM insights."
 msgstr "ກວດລາຍຮັບ, ລາຍຈ່າຍ, ກະແສເງິນ ແລະ insight RFM."
 
-#: home/templates/home/index.html:70 templates/base.html:272
+#: home/templates/home/index.html:70 templates/base.html:281
 msgid "Admin"
 msgstr "ຜູ້ດູແລ"
 
@@ -2070,11 +2530,6 @@ msgstr "ສາງສິນຄ້າ — Hug ເກີບ AI"
 msgid "Manage materials, stock velocity, and audit history."
 msgstr "ຈັດການວັດສະດຸ, ຄວາມໄວສະຕັອກ ແລະ ປະຫວັດ audit."
 
-#: inventory/templates/inventory/index.html:13
-#: reports/templates/reports/income_expense.html:57
-msgid "Export"
-msgstr "ສົ່ງອອກ"
-
 #: inventory/templates/inventory/index.html:14
 msgid "Add Material"
 msgstr "ເພີ່ມວັດສະດຸ"
@@ -2097,202 +2552,328 @@ msgstr[0] "ມີວັດສະດຸ %(count)s ລາຍການຢູ່ລ�
 msgid "Stock levels are healthy based on current thresholds."
 msgstr "ສະຕັອກຢູ່ໃນລະດັບປົກກະຕິຕາມ threshold ປັດຈຸບັນ."
 
-#: inventory/templates/inventory/index.html:32
-#: inventory/templates/inventory/index.html:242
+#: inventory/templates/inventory/index.html:35
+#, python-format
+msgid ""
+"%(count)s service has no material recipe yet, so paid orders deduct nothing "
+"from stock."
+msgid_plural ""
+"%(count)s services have no material recipe yet, so paid orders deduct "
+"nothing from stock."
+msgstr[0] "ບໍລິການ %(count)s ລາຍການ ຍັງບໍ່ມີສູດອຸປະກອນ ບິນທີ່ຊຳລະແລ້ວຈຶ່ງບໍ່ຫັກສະຕັອກ."
+
+#: inventory/templates/inventory/index.html:41
+#, python-format
+msgid ""
+"%(count)s material has gone negative — more was used than recorded as "
+"received. Count the shelf and post an adjustment."
+msgid_plural ""
+"%(count)s materials have gone negative — more was used than recorded as "
+"received. Count the shelf and post an adjustment."
+msgstr[0] ""
+"ວັດສະດຸ %(count)s ລາຍການຕິດລົບ — ເບີກອອກຫຼາຍກວ່າທີ່ບັນທຶກຮັບເຂົ້າ. "
+"ໃຫ້ນັບຂອງຈິງແລ້ວລົງລາຍການປັບຍອດ."
+
+#: inventory/templates/inventory/index.html:44
+#: inventory/templates/inventory/index.html:337
 msgid "Record Movement"
 msgstr "ບັນທຶກການເຄື່ອນໄຫວ"
 
-#: inventory/templates/inventory/index.html:40
+#: inventory/templates/inventory/index.html:52
 msgid "Material List"
 msgstr "ລາຍການວັດສະດຸ"
 
-#: inventory/templates/inventory/index.html:41
+#: inventory/templates/inventory/index.html:53
 msgid "ITEMS"
 msgstr "ລາຍການ"
 
-#: inventory/templates/inventory/index.html:49
+#: inventory/templates/inventory/index.html:61
 msgid "Stock"
 msgstr "ສະຕັອກ"
 
-#: inventory/templates/inventory/index.html:64 inventory/views.py:54
+#: inventory/templates/inventory/index.html:74
+msgid "Negative"
+msgstr "ຕິດລົບ"
+
+#: inventory/templates/inventory/index.html:78 inventory/views.py:95
 msgid "In stock"
 msgstr "ມີສະຕັອກ"
 
-#: inventory/templates/inventory/index.html:70
+#: inventory/templates/inventory/index.html:84
 msgid "No inventory materials yet."
 msgstr "ຍັງບໍ່ມີວັດສະດຸໃນສາງ."
 
-#: inventory/templates/inventory/index.html:79
+#: inventory/templates/inventory/index.html:93
 msgid "Movement History"
 msgstr "ປະຫວັດການເຄື່ອນໄຫວ"
 
-#: inventory/templates/inventory/index.html:80
+#: inventory/templates/inventory/index.html:94
 msgid "Audit Trail"
 msgstr "ປະຫວັດ Audit"
 
-#: inventory/templates/inventory/index.html:91
+#: inventory/templates/inventory/index.html:105
 msgid "Reference"
 msgstr "ອ້າງອີງ"
 
-#: inventory/templates/inventory/index.html:94
+#: inventory/templates/inventory/index.html:108
 msgid "No stock movement yet."
 msgstr "ຍັງບໍ່ມີການເຄື່ອນໄຫວສະຕັອກ."
 
-#: inventory/templates/inventory/index.html:105
+#: inventory/templates/inventory/index.html:118
+#: inventory/templates/inventory/index.html:161
+msgid "Material use per service"
+msgstr "ອຸປະກອນທີ່ແຕ່ລະບໍລິການໃຊ້"
+
+#: inventory/templates/inventory/index.html:119
+msgid ""
+"Set how much of each material one service consumes. Stock is deducted "
+"automatically when an order is paid in full."
+msgstr "ຕັ້ງວ່າບໍລິການ 1 ຄັ້ງ ໃຊ້ອຸປະກອນແຕ່ລະຢ່າງເທົ່າໃດ. ລະບົບຈະຫັກສະຕັອກໃຫ້ເອງເມື່ອບິນຊຳລະຄົບ."
+
+#: inventory/templates/inventory/index.html:121
+msgid "Add to recipe"
+msgstr "ເພີ່ມເຂົ້າສູດ"
+
+#: inventory/templates/inventory/index.html:130
+msgid "No recipe"
+msgstr "ຍັງບໍ່ມີສູດ"
+
+#: inventory/templates/inventory/index.html:139
+msgid "Remove this material from the recipe?"
+msgstr "ຖອດອຸປະກອນນີ້ອອກຈາກສູດບໍ?"
+
+#: inventory/templates/inventory/index.html:141
+msgid "Remove"
+msgstr "ລຶບ"
+
+#: inventory/templates/inventory/index.html:146
+msgid "Paid orders for this service deduct nothing yet."
+msgstr "ບິນຂອງບໍລິການນີ້ຍັງບໍ່ຫັກສະຕັອກຫຍັງເລີຍ."
+
+#: inventory/templates/inventory/index.html:151
+msgid "No active services yet."
+msgstr "ຍັງບໍ່ມີບໍລິການທີ່ເປີດໃຊ້."
+
+#: inventory/templates/inventory/index.html:169
+#: reports/templates/reports/service_usage.html:70
+msgid "Service"
+msgstr "ບໍລິການ"
+
+#: inventory/templates/inventory/index.html:177
+msgid "Material"
+msgstr "ວັດສະດຸ"
+
+#: inventory/templates/inventory/index.html:185
+msgid "Quantity used per service"
+msgstr "ຈຳນວນທີ່ໃຊ້ຕໍ່ 1 ບໍລິການ"
+
+#: inventory/templates/inventory/index.html:200
 msgid "Add New Material/Equipment"
 msgstr "ເພີ່ມວັດສະດຸ/ອຸປະກອນໃໝ່"
 
-#: inventory/templates/inventory/index.html:113
-#: inventory/templates/inventory/index.html:160
+#: inventory/templates/inventory/index.html:208
+#: inventory/templates/inventory/index.html:255
 msgid "Material/Equipment Name"
 msgstr "ຊື່ອຸປະກອນ/ວັດສະດຸ"
 
-#: inventory/templates/inventory/index.html:114
+#: inventory/templates/inventory/index.html:209
 msgid "e.g. Shoe Brush"
 msgstr "e.g. ແປງຖູເກີບ"
 
-#: inventory/templates/inventory/index.html:117
-#: inventory/templates/inventory/index.html:164
+#: inventory/templates/inventory/index.html:212
+#: inventory/templates/inventory/index.html:259
 msgid "SKU Code"
 msgstr "ລະຫັດ SKU"
 
-#: inventory/templates/inventory/index.html:118
+#: inventory/templates/inventory/index.html:213
 msgid "e.g. BRUSH-01"
 msgstr "e.g. BRUSH-01"
 
-#: inventory/templates/inventory/index.html:122
-#: inventory/templates/inventory/index.html:169 inventory/views.py:47
+#: inventory/templates/inventory/index.html:217
+#: inventory/templates/inventory/index.html:264 inventory/views.py:88
 msgid "Unit"
 msgstr "ຫົວໜ່ວຍ"
 
-#: inventory/templates/inventory/index.html:123
+#: inventory/templates/inventory/index.html:218
 msgid "pcs"
 msgstr "ອັນ"
 
-#: inventory/templates/inventory/index.html:126
+#: inventory/templates/inventory/index.html:221
 msgid "Initial Quantity"
 msgstr "ຈຳນວນເລີ່ມຕົ້ນ"
 
-#: inventory/templates/inventory/index.html:132
-#: inventory/templates/inventory/index.html:179
+#: inventory/templates/inventory/index.html:227
+#: inventory/templates/inventory/index.html:274
 msgid "Reorder Level (Min)"
 msgstr "ຈຸດສັ່ງຊື້ຄືນ (Min)"
 
-#: inventory/templates/inventory/index.html:136
-#: inventory/templates/inventory/index.html:183
+#: inventory/templates/inventory/index.html:231
+#: inventory/templates/inventory/index.html:278
 msgid "Cost per Unit"
 msgstr "ຕົ້ນທຶນຕໍ່ໜ່ວຍ"
 
-#: inventory/templates/inventory/index.html:152
+#: inventory/templates/inventory/index.html:247
 msgid "Edit Material/Equipment"
 msgstr "ແກ້ໄຂວັດສະດຸ/ອຸປະກອນ"
 
-#: inventory/templates/inventory/index.html:173
+#: inventory/templates/inventory/index.html:268
 msgid "Remaining Stock"
 msgstr "ຈຳນວນຄົງເຫຼືອ"
 
-#: inventory/templates/inventory/index.html:208
+#: inventory/templates/inventory/index.html:303
 msgid "Record Stock Movement"
 msgstr "ບັນທຶກການເຄື່ອນໄຫວສະຕັອກ"
 
-#: inventory/templates/inventory/index.html:216
+#: inventory/templates/inventory/index.html:311
 msgid "Select Material/Equipment"
 msgstr "ເລືອກອຸປະກອນ/ວັດສະດຸ"
 
-#: inventory/templates/inventory/index.html:219
+#: inventory/templates/inventory/index.html:314
 msgid "remaining"
 msgstr "ຄົງເຫຼືອ"
 
-#: inventory/templates/inventory/index.html:224
+#: inventory/templates/inventory/index.html:319
 msgid "Movement Type"
 msgstr "ປະເພດການເຄື່ອນໄຫວ"
 
-#: inventory/templates/inventory/index.html:226
+#: inventory/templates/inventory/index.html:321
 msgid "Stock In (+)"
 msgstr "ຮັບເຂົ້າ (+)"
 
-#: inventory/templates/inventory/index.html:227
+#: inventory/templates/inventory/index.html:322
 msgid "Stock Out (-)"
 msgstr "ເບີກອອກ (-)"
 
-#: inventory/templates/inventory/index.html:228
+#: inventory/templates/inventory/index.html:323
 msgid "Adjustment (+/-)"
 msgstr "ປັບຍອດ (+/-)"
 
-#: inventory/templates/inventory/index.html:232
+#: inventory/templates/inventory/index.html:327
 msgid "Quantity"
 msgstr "ຈຳນວນ"
 
-#: inventory/templates/inventory/index.html:233
+#: inventory/templates/inventory/index.html:328
 msgid "e.g. 10"
 msgstr "ຕົວຢ່າງ: 10"
 
-#: inventory/templates/inventory/index.html:234
+#: inventory/templates/inventory/index.html:329
 msgid ""
 "Note: Stock In/Out should always be positive. The system calculates signs "
 "automatically."
 msgstr "ໝາຍເຫດ: ຮັບເຂົ້າ/ເບີກອອກ ໃຫ້ໃສ່ຈຳນວນບວກສະເໝີ. ລະບົບຈະຄຳນວນເຄື່ອງໝາຍ +/- ໃຫ້ເອງ."
-"ໝາຍເຫດ: ຈຳນວນຮັບເຂົ້າ/ເບີກອອກຕ້ອງເປັນຄ່າບວກສະເໝີ. ລະບົບຈະຄຳນວນເຄື່ອງໝາຍໃຫ້ອັດຕະໂນມັດ."
 
-#: inventory/templates/inventory/index.html:237
+#: inventory/templates/inventory/index.html:332
 msgid "Note/Reason"
 msgstr "ໝາຍເຫດ/ເຫດຜົນ"
 
-#: inventory/templates/inventory/index.html:238
+#: inventory/templates/inventory/index.html:333
 msgid "e.g. Received from Supplier / Used for customer shoe care"
 msgstr "e.g. ຮັບສິນຄ້າຈາກ Supplier / ເບີກໃຊ້ຊັກເກີບລູກຄ້າ"
 
-#: inventory/templates/inventory/index.html:267
+#: inventory/templates/inventory/index.html:362
 msgid "Are you sure you want to delete this material item?"
 msgstr "ທ່ານແນ່ໃຈບໍ່ວ່າຕ້ອງການລຶບວັດສະດຸຊິ້ນນີ້?"
 
-#: inventory/views.py:16
+#: inventory/views.py:32
 msgid "Stock in"
 msgstr "ຮັບເຂົ້າ"
 
-#: inventory/views.py:17
+#: inventory/views.py:33
 msgid "Stock out"
 msgstr "ເບີກອອກ"
 
-#: inventory/views.py:18
+#: inventory/views.py:34
 msgid "Adjustment"
 msgstr "ປັບຍອດ"
 
-#: inventory/views.py:46
+#: inventory/views.py:87
 msgid "Stock on hand"
 msgstr "ຈຳນວນຄົງເຫຼືອ"
 
-#: inventory/views.py:48
+#: inventory/views.py:89
 msgid "Reorder level"
 msgstr "ຈຸດສັ່ງຊື້ຄືນ"
 
-#: inventory/views.py:49
+#: inventory/views.py:90
 msgid "Cost price"
 msgstr "ລາຄາຕົ້ນທຶນ"
 
-#: media_backup/services.py:27
+#: inventory/views.py:184
+msgid "Quantity used must be at least 1."
+msgstr "ຈຳນວນທີ່ໃຊ້ຕ້ອງຢ່າງໜ້ອຍ 1."
+
+#: inventory/views.py:195
+msgid "Material added to the service recipe."
+msgstr "ເພີ່ມອຸປະກອນເຂົ້າສູດບໍລິການແລ້ວ."
+
+#: inventory/views.py:197
+msgid "Updated the quantity for this material."
+msgstr "ອັບເດດຈຳນວນອຸປະກອນນີ້ແລ້ວ."
+
+#: inventory/views.py:207
+msgid "Material removed from the service recipe."
+msgstr "ຖອດອຸປະກອນອອກຈາກສູດບໍລິການແລ້ວ."
+
+#: media_backup/services.py:43
 #, python-format
 msgid "Only the first %(limit)d files were uploaded — select fewer at a time."
 msgstr "ອັບໂຫຼດໃຫ້ພຽງ %(limit)d ໄຟລ໌ທຳອິດ — ກະລຸນາເລືອກເທື່ອລະໜ້ອຍລົງ."
 
-#: media_backup/validators.py:49
+#: media_backup/services.py:138
+msgid "Front"
+msgstr "ຮູບດ້ານໜ້າ"
+
+#: media_backup/services.py:140
+msgid "Left side"
+msgstr "ຮູບດ້ານຊ້າຍ"
+
+#: media_backup/services.py:141
+msgid "Right side"
+msgstr "ຮູບດ້ານຂວາ"
+
+#: media_backup/services.py:142
+msgid "Upper / body"
+msgstr "ຮູບໜ້າເກີບ / ຕົວເກີບ"
+
+#: media_backup/services.py:143
+msgid "Laces"
+msgstr "ຮູບສາຍເກີບ"
+
+#: media_backup/services.py:145
+msgid "Insole"
+msgstr "ຮູບພື້ນໃນ"
+
+#: media_backup/services.py:146
+msgid "Sole yellowing"
+msgstr "ຮູບພື້ນເຫຼືອງ (Oxidation)"
+
+#: media_backup/validators.py:50
 #, python-format
 msgid ""
 "%(name)s: this file type is not supported. Use a photo (JPG, PNG, WEBP, "
 "HEIC) or a video (MP4, MOV, WEBM)."
-msgstr "%(name)s: ບໍ່ຮອງຮັບໄຟລ໌ຊະນິດນີ້. ໃຫ້ໃຊ້ຮູບ (JPG, PNG, WEBP, HEIC) ຫຼື ວິດີໂອ (MP4, MOV, WEBM)."
+msgstr ""
+"%(name)s: ບໍ່ຮອງຮັບໄຟລ໌ຊະນິດນີ້. ໃຫ້ໃຊ້ຮູບ (JPG, PNG, WEBP, HEIC) ຫຼື ວິດີໂອ (MP4, MOV, "
+"WEBM)."
 
-#: media_backup/validators.py:63
+#: media_backup/validators.py:64 media_backup/validators.py:108
 #, python-format
 msgid "%(name)s: the file contents do not match its extension."
 msgstr "%(name)s: ເນື້ອໃນໄຟລ໌ບໍ່ກົງກັບນາມສະກຸນຂອງມັນ."
 
-#: media_backup/validators.py:71
+#: media_backup/validators.py:78
 #, python-format
 msgid ""
 "%(name)s is %(size).1f MB — larger than the %(limit)d MB limit. Shorten the "
 "video or take the photo at a lower resolution."
-msgstr "%(name)s ມີຂະໜາດ %(size).1f MB — ໃຫຍ່ກວ່າເພດານ %(limit)d MB. ໃຫ້ຕັດວິດີໂອໃຫ້ສັ້ນລົງ ຫຼື ຖ່າຍຮູບຄວາມລະອຽດຕ່ຳລົງ."
+msgstr ""
+"%(name)s ມີຂະໜາດ %(size).1f MB — ໃຫຍ່ກວ່າເພດານ %(limit)d MB. ໃຫ້ຕັດວິດີໂອໃຫ້ສັ້ນລົງ ຫຼື "
+"ຖ່າຍຮູບຄວາມລະອຽດຕ່ຳລົງ."
+
+#: media_backup/validators.py:99
+#, python-format
+msgid "%(name)s: attach a photo (JPG, PNG, WEBP, HEIC) or a PDF."
+msgstr "%(name)s: ໃຫ້ແນບເປັນຮູບ (JPG, PNG, WEBP, HEIC) ຫຼື ໄຟລ໌ PDF."
 
 #: pos/models.py:12
 msgid "THB (Baht)"
@@ -2376,7 +2957,7 @@ msgstr "ບິນນີ້ຖືກຍົກເລີກແລ້ວ ຮັບ�
 msgid "The amount must be greater than zero."
 msgstr "ຈຳນວນເງິນຕ້ອງຫຼາຍກວ່າສູນ."
 
-#: pos/services.py:103 pos/views.py:686
+#: pos/services.py:103 pos/views.py:753
 msgid "This order is already fully paid."
 msgstr "ບິນນີ້ຊຳລະຄົບແລ້ວ."
 
@@ -2385,8 +2966,9 @@ msgstr "ບິນນີ້ຊຳລະຄົບແລ້ວ."
 msgid ""
 "The amount is larger than the balance due (%(balance)s). Enter what the "
 "customer hands over in the tendered field instead."
-msgstr "ຈຳນວນເງິນຫຼາຍກວ່າຍອດຄ້າງຊຳລະ (%(balance)s). ຖ້າລູກຄ້າຍື່ນເງິນມາຫຼາຍກວ່າ ໃຫ້ໃສ່ໃນຊ່ອງ \"ເງິນທີ່ຮັບມາ\" ແທນ."
-"ຈຳນວນເງິນຫຼາຍກວ່າຍອດຄ້າງ (%(balance)s). ໃຫ້ປ້ອນເງິນທີ່ລູກຄ້າຍື່ນມາໃນຊ່ອງ \"ຮັບເງິນມາ\" ແທນ."
+msgstr ""
+"ຈຳນວນເງິນຫຼາຍກວ່າຍອດຄ້າງຊຳລະ (%(balance)s). ຖ້າລູກຄ້າຍື່ນເງິນມາຫຼາຍກວ່າ ໃຫ້ໃສ່ໃນຊ່ອງ "
+"\"ເງິນທີ່ຮັບມາ\" ແທນ."
 
 #: pos/services.py:116
 #, python-format
@@ -2394,16 +2976,14 @@ msgid "You cannot refund more than the %(paid)s already received."
 msgstr "ຄືນເງິນເກີນຈຳນວນທີ່ຮັບມາແລ້ວ (%(paid)s) ບໍ່ໄດ້."
 
 #: pos/services.py:123
-#, fuzzy
-#| msgid "Counted amount"
 msgid "Tendered amount"
-msgstr "ຍອດນັບໄດ້"
+msgstr "ເງິນທີ່ຮັບມາ"
 
 #: pos/services.py:126
 msgid "The tendered amount is less than the amount being paid."
 msgstr "ເງິນທີ່ຮັບມາໜ້ອຍກວ່າຈຳນວນທີ່ຈະຈ່າຍ."
 
-#: pos/services.py:284 pos/views.py:809
+#: pos/services.py:284 pos/views.py:876
 #, python-format
 msgid "Cannot hand over: %(balance)s is still due on this order."
 msgstr "ສົ່ງມອບບໍ່ໄດ້: ບິນນີ້ຍັງຄ້າງ %(balance)s."
@@ -2413,125 +2993,127 @@ msgid "This item does not belong to this order."
 msgstr "ເຄື່ອງຊິ້ນນີ້ບໍ່ໄດ້ຢູ່ໃນບິນນີ້."
 
 #: pos/services.py:306
-#, fuzzy, python-format
-#| msgid "Cannot hand over: %(balance)s is still due on this order."
+#, python-format
 msgid "Cannot hand over: %(balance)s is still due on bill %(order)s."
-msgstr "ສົ່ງມອບບໍ່ໄດ້: ບິນນີ້ຍັງຄ້າງ %(balance)s."
+msgstr "ສົ່ງມອບບໍ່ໄດ້: ບິນ %(order)s ຍັງຄ້າງ %(balance)s."
 
-#: pos/templates/pos/checkout.html:4 pos/templates/pos/checkout.html:70
+#: pos/templates/pos/checkout.html:4 pos/templates/pos/checkout.html:107
+#: pos/templates/pos/checkout.html:114
 msgid "Checkout"
 msgstr "ຄິດເງິນ"
 
-#: pos/templates/pos/checkout.html:79 pos/templates/pos/open_orders.html:4
-#: pos/templates/pos/open_orders.html:26 pos/templates/pos/open_orders.html:38
-#: templates/base.html:230
-msgid "Open bills"
-msgstr "ບິນຄ້າງ"
-
-#: pos/templates/pos/checkout.html:82
-msgid "Invoice"
-msgstr "ໃບບິນ"
-
-#: pos/templates/pos/checkout.html:92
+#: pos/templates/pos/checkout.html:105 pos/templates/pos/checkout.html:136
 msgid "Bill"
 msgstr "ບິນ"
 
-#: pos/templates/pos/checkout.html:130
+#: pos/templates/pos/checkout.html:109 pos/templates/pos/checkout.html:348
+#: pos/templates/pos/handover.html:4 pos/templates/pos/handover.html:27
+msgid "Hand over items"
+msgstr "ສົ່ງມອບເຄື່ອງ"
+
+#: pos/templates/pos/checkout.html:123 pos/templates/pos/open_orders.html:4
+#: pos/templates/pos/open_orders.html:26 pos/templates/pos/open_orders.html:38
+#: templates/base.html:235
+msgid "Open bills"
+msgstr "ບິນຄ້າງ"
+
+#: pos/templates/pos/checkout.html:126
+msgid "Invoice"
+msgstr "ໃບບິນ"
+
+#: pos/templates/pos/checkout.html:174
 msgid "This bill has no service lines yet."
 msgstr "ບິນນີ້ຍັງບໍ່ມີລາຍການບໍລິການ."
 
-#: pos/templates/pos/checkout.html:136 pos/templates/pos/create_order.html:322
-#: pos/templates/pos/quotation.html:185
+#: pos/templates/pos/checkout.html:180 pos/templates/pos/create_order.html:558
+#: pos/templates/pos/quotation.html:184
 msgid "Subtotal"
 msgstr "ລວມຍ່ອຍ"
 
-#: pos/templates/pos/checkout.html:140 pos/templates/pos/quotation.html:13
+#: pos/templates/pos/checkout.html:184 pos/templates/pos/create_order.html:521
+#: pos/templates/pos/create_order.html:562
+#: pos/templates/pos/create_order.html:1095 pos/templates/pos/quotation.html:13
 msgid "Discount"
 msgstr "ສ່ວນຫຼຸດ"
 
-#: pos/templates/pos/checkout.html:158
+#: pos/templates/pos/checkout.html:202
 msgid "Payments received"
 msgstr "ຮັບເງິນແລ້ວ"
 
-#: pos/templates/pos/checkout.html:173
+#: pos/templates/pos/checkout.html:217
 msgid "Void this payment line? This cannot be undone."
 msgstr "ຍົກເລີກແຖວການຊຳລະນີ້ບໍ? ຍົກເລີກແລ້ວກັບຄືນບໍ່ໄດ້."
 
-#: pos/templates/pos/checkout.html:176
+#: pos/templates/pos/checkout.html:220
 msgid "Void payment"
 msgstr "ຍົກເລີກການຊຳລະ"
 
-#: pos/templates/pos/checkout.html:186 pos/templates/pos/handover.html:112
+#: pos/templates/pos/checkout.html:230 pos/templates/pos/handover.html:112
 msgid "Balance due"
 msgstr "ຍອດຄ້າງ"
 
-#: pos/templates/pos/checkout.html:232
+#: pos/templates/pos/checkout.html:276
 msgid "Rate to"
 msgstr "ອັດຕາເປັນ"
 
-#: pos/templates/pos/checkout.html:243
+#: pos/templates/pos/checkout.html:287
 msgid "Amount tendered"
 msgstr "ຮັບເງິນມາ"
 
-#: pos/templates/pos/checkout.html:245
+#: pos/templates/pos/checkout.html:289
 msgid "Due"
 msgstr "ຕ້ອງຈ່າຍ"
 
-#: pos/templates/pos/checkout.html:256
+#: pos/templates/pos/checkout.html:300
 msgid "Exact"
 msgstr "ພໍດີ"
 
-#: pos/templates/pos/checkout.html:267
+#: pos/templates/pos/checkout.html:311
 msgid "Delete last digit"
 msgstr "ລຶບຕົວເລກສຸດທ້າຍ"
 
-#: pos/templates/pos/checkout.html:274
+#: pos/templates/pos/checkout.html:318
 msgid "Change due"
 msgstr "ເງິນທອນ"
 
-#: pos/templates/pos/checkout.html:285 pos/templates/pos/checkout.html:407
+#: pos/templates/pos/checkout.html:330 pos/templates/pos/checkout.html:452
 #: pos/templates/pos/handover.html:49
 msgid "Take payment"
 msgstr "ຮັບເງິນ"
 
-#: pos/templates/pos/checkout.html:289
+#: pos/templates/pos/checkout.html:334
 msgid "Park this bill"
 msgstr "ພັກບິນໄວ້"
 
-#: pos/templates/pos/checkout.html:297
+#: pos/templates/pos/checkout.html:342
 msgid "Fully paid"
 msgstr "ຊຳລະຄົບແລ້ວ"
 
-#: pos/templates/pos/checkout.html:298
+#: pos/templates/pos/checkout.html:343
 msgid "Nothing left to collect on this bill."
 msgstr "ບິນນີ້ບໍ່ມີຍອດຄ້າງແລ້ວ."
 
-#: pos/templates/pos/checkout.html:303 pos/templates/pos/handover.html:4
-#: pos/templates/pos/handover.html:27
-msgid "Hand over items"
-msgstr "ສົ່ງມອບເຄື່ອງ"
-
-#: pos/templates/pos/checkout.html:307 pos/templates/pos/handover.html:143
+#: pos/templates/pos/checkout.html:351 pos/templates/pos/handover.html:143
 msgid "Receipt options"
 msgstr "ຕົວເລືອກໃບບິນ"
 
-#: pos/templates/pos/checkout.html:386
+#: pos/templates/pos/checkout.html:431
 msgid "Enter the exchange rate to continue."
 msgstr "ປ້ອນອັດຕາແລກປ່ຽນກ່ອນ."
 
-#: pos/templates/pos/checkout.html:396
+#: pos/templates/pos/checkout.html:441
 msgid "Amount is larger than the balance due."
 msgstr "ຈຳນວນເງິນຫຼາຍກວ່າຍອດຄ້າງ."
 
-#: pos/templates/pos/checkout.html:403
+#: pos/templates/pos/checkout.html:448
 msgid "Remaining after this payment"
 msgstr "ຍອດຄ້າງຫຼັງຮັບເງິນນີ້"
 
-#: pos/templates/pos/checkout.html:406
+#: pos/templates/pos/checkout.html:451
 msgid "Take partial payment"
 msgstr "ຮັບເງິນບາງສ່ວນ"
 
-#: pos/templates/pos/checkout.html:459
+#: pos/templates/pos/checkout.html:504
 msgid "Saving..."
 msgstr "ກຳລັງບັນທຶກ..."
 
@@ -2548,217 +3130,301 @@ msgid "Existing customer"
 msgstr "ລູກຄ້າເກົ່າ"
 
 #: pos/templates/pos/create_order.html:10
-#: pos/templates/pos/create_order.html:123
+#: pos/templates/pos/create_order.html:257
 msgid "New CRM Entry"
 msgstr "ເພີ່ມລູກຄ້າໃໝ່ (CRM)"
 
-#: pos/templates/pos/create_order.html:100
+#: pos/templates/pos/create_order.html:11 pos/templates/pos/quotation.html:9
+msgid "Select services to view the summary."
+msgstr "ເລືອກບໍລິການເພື່ອເບິ່ງສະຫຼຸບລາຍການ"
+
+#: pos/templates/pos/create_order.html:12 pos/templates/pos/quotation.html:10
+msgid "Code applied successfully!"
+msgstr "ນຳໃຊ້ລະຫັດສຳເລັດແລ້ວ!"
+
+#: pos/templates/pos/create_order.html:13 pos/templates/pos/quotation.html:12
+msgid "Invalid discount code."
+msgstr "ລະຫັດສ່ວນຫຼຸດບໍ່ຖືກຕ້ອງ"
+
+#: pos/templates/pos/create_order.html:14 pos/templates/pos/quotation.html:11
+msgid "off"
+msgstr "ຫຼຸດ"
+
+# POS storage selection
+#: pos/templates/pos/create_order.html:15
+#: pos/templates/pos/create_order.html:406
+#: pos/templates/pos/create_order.html:691
+msgid "Select a free storage slot (optional)"
+msgstr "ເລືອກຊ່ອງເກັບທີ່ຫວ່າງ (ບໍ່ບັງຄັບ)"
+
+#: pos/templates/pos/create_order.html:229
 msgid "Point of Sale"
 msgstr "ຂາຍໜ້າຮ້ານ"
 
-#: pos/templates/pos/create_order.html:101
-msgid "Process new service orders and manage intake."
-msgstr "ສ້າງອໍເດີບໍລິການໃໝ່ ແລະ ຈັດການຮັບເຄື່ອງ."
+#: pos/templates/pos/create_order.html:230
+msgid "New order"
+msgstr "ເປີດບິນໃໝ່"
 
-#: pos/templates/pos/create_order.html:104
-#: pos/templates/pos/create_order.html:958 templates/base.html:302
-#: templates/base.html:433 templates/base.html:471
+#: pos/templates/pos/create_order.html:231
+msgid "Intake, services, discount and bill — everything on one page."
+msgstr "ຮັບເຄື່ອງ, ເລືອກບໍລິການ, ສ່ວນຫຼຸດ ແລະ ໃບບິນ — ຈົບໃນໜ້າດຽວ"
+
+#: pos/templates/pos/create_order.html:235
+#: pos/templates/pos/create_order.html:237
+#: pos/templates/pos/create_order.html:752 templates/base.html:311
+#: templates/base.html:446 templates/base.html:484
 msgid "Scan Barcode"
 msgstr "ສະແກນບາໂຄດ"
 
-#: pos/templates/pos/create_order.html:121
-msgid "Customer Details"
-msgstr "ຂໍ້ມູນລູກຄ້າ"
-
-#: pos/templates/pos/create_order.html:128
+#: pos/templates/pos/create_order.html:263
 msgid "Find an existing customer"
 msgstr "ຄົ້ນຫາລູກຄ້າເກົ່າ"
 
 # POS existing-customer autocomplete
-#: pos/templates/pos/create_order.html:131
+#: pos/templates/pos/create_order.html:266
 msgid "Search existing customer by name or phone..."
 msgstr "ຄົ້ນຫາລູກຄ້າເກົ່າດ້ວຍຊື່ ຫຼື ເບີໂທ..."
 
-#: pos/templates/pos/create_order.html:134
+#: pos/templates/pos/create_order.html:273
 msgid "Type a Lao name or part of a phone number, then select a customer."
 msgstr "ພິມຊື່ພາສາລາວ ຫຼື ເບີໂທບາງສ່ວນ ແລ້ວເລືອກລູກຄ້າ"
 
-#: pos/templates/pos/create_order.html:138
-msgid "e.g. John Doe"
-msgstr "e.g. ສົມຊາຍ ສີຫາລາດ"
-
-#: pos/templates/pos/create_order.html:152
+#: pos/templates/pos/create_order.html:293
 msgid "Item Intake"
 msgstr "ຮັບລາຍການ"
 
-#: pos/templates/pos/create_order.html:155
+#: pos/templates/pos/create_order.html:297
 msgid "Add Another Item"
 msgstr "ເພີ່ມລາຍການອື່ນ"
 
-#: pos/templates/pos/create_order.html:165
-msgid "Item #1 Details"
-msgstr "ລາຍລະອຽດເກີບທີ 1"
+#: pos/templates/pos/create_order.html:300
+msgid "Pick one main service for each pair received."
+msgstr "ເລືອກບໍລິການຫຼັກ 1 ຢ່າງ ຕໍ່ເກີບ 1 ຄູ່"
 
-#: pos/templates/pos/create_order.html:178
-#: pos/templates/pos/create_order.html:622
-msgid "Model"
-msgstr "ລຸ້ນ"
+#: pos/templates/pos/create_order.html:307
+#: pos/templates/pos/create_order.html:612
+msgid "Item"
+msgstr "ເກີບ / ລາຍການ"
 
-#: pos/templates/pos/create_order.html:202
-#: pos/templates/pos/create_order.html:646
+#: pos/templates/pos/create_order.html:309
+#: pos/templates/pos/create_order.html:614
+msgid "Remove item"
+msgstr "ລຶບລາຍການ"
+
+#: pos/templates/pos/create_order.html:348
+#: pos/templates/pos/create_order.html:652
 msgid "Size (US/EU)"
 msgstr "ຂະໜາດ (US/EU)"
 
-#: pos/templates/pos/create_order.html:204
-#: pos/templates/pos/create_order.html:648
+#: pos/templates/pos/create_order.html:350
+#: pos/templates/pos/create_order.html:654
 msgid "EU sizes"
 msgstr "ຂະໜາດ EU"
 
-#: pos/templates/pos/create_order.html:229
-#: pos/templates/pos/create_order.html:673
+#: pos/templates/pos/create_order.html:375
+#: pos/templates/pos/create_order.html:669
 msgid "US sizes"
 msgstr "ຂະໜາດ US"
 
-# POS storage selection
-#: pos/templates/pos/create_order.html:261
-#: pos/templates/pos/create_order.html:582
-#: pos/templates/pos/create_order.html:705
-msgid "Select a free storage slot (optional)"
-msgstr "ເລືອກຊ່ອງເກັບທີ່ຫວ່າງ (ບໍ່ບັງຄັບ)"
-
-#: pos/templates/pos/create_order.html:266
-#: pos/templates/pos/create_order.html:710
+#: pos/templates/pos/create_order.html:411
 #, python-format
 msgid "%(counter)s free slot available"
 msgid_plural "%(counter)s free slots available"
 msgstr[0] "ມີຊ່ອງເກັບຫວ່າງ %(counter)s ຊ່ອງ"
 
-#: pos/templates/pos/create_order.html:270
-#: pos/templates/pos/create_order.html:714
+#: pos/templates/pos/create_order.html:416
+#: pos/templates/pos/create_order.html:698
 msgid "Service Type"
 msgstr "ປະເພດບໍລິການ"
 
-#: pos/templates/pos/create_order.html:290
+#: pos/templates/pos/create_order.html:437
+#: pos/templates/pos/create_order.html:719
+msgid "Photos before service"
+msgstr "ຮູບກ່ອນເຮັດ"
+
+#: pos/templates/pos/create_order.html:438
+#: pos/templates/pos/create_order.html:720
+msgid "Tap each box to take or choose that photo. All optional."
+msgstr "ກົດແຕ່ລະຊ່ອງເພື່ອຖ່າຍ ຫຼື ເລືອກຮູບນັ້ນ. ບໍ່ບັງຄັບທຸກຊ່ອງ."
+
+#: pos/templates/pos/create_order.html:450
+#: pos/templates/pos/create_order.html:732
+msgid "Other photos"
+msgstr "ຮູບອື່ນໆ"
+
+#: pos/templates/pos/create_order.html:455
+#: pos/templates/pos/create_order.html:737
+#, python-format
+msgid "JPG, PNG, video (max %(limit)s MB)"
+msgstr "JPG, PNG, ວິດີໂອ (ສູງສຸດ %(limit)s MB)"
+
+#: pos/templates/pos/create_order.html:456
+#: pos/templates/pos/create_order.html:459
+#: pos/templates/pos/create_order.html:738
+#: pos/templates/pos/create_order.html:741
+msgid ""
+"Taken before washing, repair, or AI assessment — kept as the record of how "
+"the pair arrived."
+msgstr "ຖ່າຍກ່ອນຊັກ, ກ່ອນສ້ອມແປງ ຫຼື ກ່ອນປະເມີນດ້ວຍ AI — ເກັບເປັນຫຼັກຖານສະພາບຕອນຮັບເຄື່ອງ."
+
+#: pos/templates/pos/create_order.html:469
 msgid "AI Condition Assessment Recommended"
 msgstr "ແນະນຳໃຫ້ປະເມີນສະພາບດ້ວຍ AI"
 
 # POS save-and-scan flow
-#: pos/templates/pos/create_order.html:292
+#: pos/templates/pos/create_order.html:470
 msgid "Save this order, then upload photos and analyze the new pair with AI."
 msgstr "ບັນທຶກອໍເດີນີ້ ແລ້ວອັບໂຫຼດຮູບເພື່ອວິເຄາະເກີບຄູ່ໃໝ່ດ້ວຍ AI"
 
-#: pos/templates/pos/create_order.html:296
+#: pos/templates/pos/create_order.html:475
 msgid "Save & open AI scanner"
 msgstr "ບັນທຶກ ແລະເປີດ AI Scanner"
 
-#: pos/templates/pos/create_order.html:310
+#: pos/templates/pos/create_order.html:485
+msgid "Repair and add-on services"
+msgstr "ບໍລິການສ້ອມແປງ ແລະ ບໍລິການເສີມ"
+
+#: pos/templates/pos/create_order.html:487
+msgid "Optional. Added once to this bill."
+msgstr "ເລືອກຫຼືບໍ່ກໍ່ໄດ້ — ເພີ່ມເຂົ້າບິນນີ້ຄັ້ງດຽວ"
+
+#: pos/templates/pos/create_order.html:501 pos/templates/pos/quotation.html:122
+msgid "Optional repair or restoration service for specific needs."
+msgstr "ບໍລິການສ້ອມແປງ ຫຼື ຟື້ນຟູເສີມສຳລັບບັນຫາສະເພາະ"
+
+#: pos/templates/pos/create_order.html:516 pos/templates/pos/quotation.html:150
+msgid "Promotions and discounts"
+msgstr "ໂປຣໂມຊັນ ແລະ ສ່ວນຫຼຸດ"
+
+#: pos/templates/pos/create_order.html:524 pos/templates/pos/quotation.html:153
+msgid "Enter discount code..."
+msgstr "ປ້ອນລະຫັດສ່ວນຫຼຸດ..."
+
+#: pos/templates/pos/create_order.html:525 pos/templates/pos/quotation.html:155
+msgid "Apply"
+msgstr "ນຳໃຊ້"
+
+#: pos/templates/pos/create_order.html:530
+msgid "Remove discount code"
+msgstr "ລຶບລະຫັດສ່ວນຫຼຸດ"
+
+#: pos/templates/pos/create_order.html:536
+#: pos/templates/pos/create_order.html:566 pos/templates/pos/quotation.html:192
+msgid "VAT"
+msgstr "VAT"
+
+#: pos/templates/pos/create_order.html:543
+msgid "Applied after the discount."
+msgstr "ຄິດຫຼັງຫັກສ່ວນຫຼຸດແລ້ວ"
+
+#: pos/templates/pos/create_order.html:552
 msgid "Order Summary"
 msgstr "ສະຫຼຸບອໍເດີ"
 
-#: pos/templates/pos/create_order.html:326
-#, python-format
-msgid "Tax (10%%)"
-msgstr "ພາສີ (10%%)"
+#: pos/templates/pos/create_order.html:572
+#: pos/templates/pos/create_order.html:598 pos/templates/pos/quotation.html:206
+msgid "Grand total"
+msgstr "ຍອດລວມທັງໝົດ"
 
-#: pos/templates/pos/create_order.html:340
-msgid "Confirm & Pay"
-msgstr "ຢືນຢັນ ແລະ ຊຳລະເງິນ"
+#: pos/templates/pos/create_order.html:578
+#: pos/templates/pos/create_order.html:602
+msgid "Create bill"
+msgstr "ອອກໃບບິນ"
 
-#: pos/templates/pos/create_order.html:346
-#: pos/templates/pos/create_order.html:355
+#: pos/templates/pos/create_order.html:580 pos/templates/pos/quotation.html:217
+msgid "The bill opens next, then payment."
+msgstr "ຕໍ່ໄປຈະເປີດໃບບິນ ແລ້ວຄ່ອຍໄປໜ້າຄິດເງິນ"
+
+#: pos/templates/pos/create_order.html:585
 msgid "Receipt"
 msgstr "ໃບບິນ"
 
-#: pos/templates/pos/create_order.html:350
-#: pos/templates/pos/create_order.html:359
+#: pos/templates/pos/create_order.html:588
 msgid "Slip"
 msgstr "ໃບນັດຮັບ (Slip)"
 
-#: pos/templates/pos/create_order.html:454
-msgid "Loading storage map..."
-msgstr "ກຳລັງໂຫຼດແຜນທີ່ຊັ້ນວາງ..."
-
-#: pos/templates/pos/create_order.html:460
-msgid "Could not load the storage map. Please try again."
-msgstr "ໂຫຼດແຜນທີ່ຊັ້ນວາງບໍ່ໄດ້. ກະລຸນາລອງໃໝ່."
-
-#: pos/templates/pos/create_order.html:479
-msgid "total"
-msgstr "ລວມທັງໝົດ"
-
-#: pos/templates/pos/create_order.html:507
-msgid "No storage slots configured yet."
-msgstr "ຍັງບໍ່ມີບ່ອນເກັບເກີບ"
-
-#: pos/templates/pos/create_order.html:519
-msgid "Currently selected"
-msgstr "ກຳລັງເລືອກຢູ່"
-
-#: pos/templates/pos/create_order.html:536
-msgid "Already chosen for item"
-msgstr "ເລືອກໄວ້ໃຫ້ລາຍການ"
-
-#: pos/templates/pos/create_order.html:609
-msgid "Item"
-msgstr "ເກີບ / ລາຍການ"
-
-#: pos/templates/pos/create_order.html:609
-msgid "Details"
-msgstr "ລາຍລະອຽດ"
-
-#: pos/templates/pos/create_order.html:753
-msgid "You must keep at least one item."
-msgstr "ທ່ານຕ້ອງຮັກສາລາຍການໄວ້ຢ່າງໜ້ອຍໜຶ່ງລາຍການ."
-
-#: pos/templates/pos/create_order.html:965
+#: pos/templates/pos/create_order.html:760
 msgid ""
 "Point the USB scanner at the QR tag, or type the ticket / order number (e.g. "
 "TK-DEMO-004)."
 msgstr "ຈໍ່ເຄື່ອງສະແກນ USB ໃສ່ປ້າຍ QR ຫຼື ພິມເລກໃບຮັບ / ເລກອໍເດີ (ເຊັ່ນ TK-DEMO-004)."
 
-#: pos/templates/pos/create_order.html:972 templates/base.html:453
+#: pos/templates/pos/create_order.html:765 templates/base.html:466
 msgid "or"
 msgstr "ຫຼື"
 
-#: pos/templates/pos/create_order.html:978
-#: pos/templates/pos/create_order.html:1133
-#: pos/templates/pos/create_order.html:1146
+#: pos/templates/pos/create_order.html:770
+#: pos/templates/pos/create_order.html:1530
+#: pos/templates/pos/create_order.html:1541
 msgid "Scan with Camera"
 msgstr "ສະແກນດ້ວຍກ້ອງ"
 
-#: pos/templates/pos/create_order.html:991
+#: pos/templates/pos/create_order.html:783
 msgid "Choose Storage Slot"
 msgstr "ເລືອກບ່ອນເກັບ"
 
-#: pos/templates/pos/create_order.html:1001
+#: pos/templates/pos/create_order.html:794
 msgid "Find slot / ticket..."
 msgstr "ຄົ້ນຫາຊ່ອງ / ເລກປີ້..."
 
-#: pos/templates/pos/create_order.html:1006
+#: pos/templates/pos/create_order.html:798
 msgid "Don't store here"
 msgstr "ບໍ່ຕ້ອງເກັບບ່ອນນີ້"
 
-#: pos/templates/pos/create_order.html:1012
+#: pos/templates/pos/create_order.html:804
 msgid "Chosen for another item"
 msgstr "ເລືອກໄວ້ໃຫ້ລາຍການອື່ນແລ້ວ"
 
-#: pos/templates/pos/create_order.html:1050
+#: pos/templates/pos/create_order.html:1012
+msgid "You must keep at least one item."
+msgstr "ທ່ານຕ້ອງຮັກສາລາຍການໄວ້ຢ່າງໜ້ອຍໜຶ່ງລາຍການ."
+
+#: pos/templates/pos/create_order.html:1065
+#: pos/templates/pos/quotation.html:134
+msgid "Add-on"
+msgstr "ບໍລິການເສີມ"
+
+#: pos/templates/pos/create_order.html:1175
+msgid "Loading storage map..."
+msgstr "ກຳລັງໂຫຼດແຜນທີ່ຊັ້ນວາງ..."
+
+#: pos/templates/pos/create_order.html:1181
+msgid "Could not load the storage map. Please try again."
+msgstr "ໂຫຼດແຜນທີ່ຊັ້ນວາງບໍ່ໄດ້. ກະລຸນາລອງໃໝ່."
+
+#: pos/templates/pos/create_order.html:1200
+msgid "total"
+msgstr "ລວມທັງໝົດ"
+
+#: pos/templates/pos/create_order.html:1227
+msgid "No storage slots configured yet."
+msgstr "ຍັງບໍ່ມີບ່ອນເກັບເກີບ"
+
+#: pos/templates/pos/create_order.html:1239
+msgid "Currently selected"
+msgstr "ກຳລັງເລືອກຢູ່"
+
+#: pos/templates/pos/create_order.html:1256
+msgid "Already chosen for item"
+msgstr "ເລືອກໄວ້ໃຫ້ລາຍການ"
+
+#: pos/templates/pos/create_order.html:1461
 msgid "Searching..."
 msgstr "ກຳລັງຄົ້ນຫາ..."
 
-#: pos/templates/pos/create_order.html:1057
+#: pos/templates/pos/create_order.html:1468
 msgid "Not found:"
 msgstr "ບໍ່ພົບ:"
 
-#: pos/templates/pos/create_order.html:1089
+#: pos/templates/pos/create_order.html:1491
 msgid "Lookup failed. Check connection."
 msgstr "ຄົ້ນຫາບໍ່ສຳເລັດ. ກວດການເຊື່ອມຕໍ່."
 
-#: pos/templates/pos/create_order.html:1131
+#: pos/templates/pos/create_order.html:1528
 msgid "Stop Camera"
 msgstr "ປິດກ້ອງ"
 
-#: pos/templates/pos/create_order.html:1135
+#: pos/templates/pos/create_order.html:1532
 msgid "Camera unavailable. Check permission / use HTTPS."
 msgstr "ໃຊ້ກ້ອງບໍ່ໄດ້. ກວດສິດການເຂົ້າເຖິງ ຫຼື ໃຊ້ HTTPS."
 
@@ -2838,12 +3504,10 @@ msgid "Scan barcode or QR tag"
 msgstr "ສະແກນບາໂຄດ ຫຼື ປ້າຍ QR"
 
 #: pos/templates/pos/open_orders.html:102
-#, fuzzy, python-format
-#| msgid "%(count)d day ago"
-#| msgid_plural "%(count)d days ago"
+#, python-format
 msgid "%(count)s ready"
 msgid_plural "%(count)s ready"
-msgstr[0] "%(count)d ວັນກ່ອນ"
+msgstr[0] "ພ້ອມແລ້ວ %(count)s ລາຍການ"
 
 #: pos/templates/pos/open_orders.html:111
 msgid "No items attached"
@@ -2873,22 +3537,6 @@ msgstr "ທຸກບິນຈ່າຍເງິນ ແລະ ຮັບເຄື�
 msgid "Interactive Quotation — Hug ເກີບ AI"
 msgstr "ການສະເໜີລາຄາອັດສະລິຍະ — Hug ເກີບ AI"
 
-#: pos/templates/pos/quotation.html:9
-msgid "Select services to view the summary."
-msgstr "ເລືອກບໍລິການເພື່ອເບິ່ງສະຫຼຸບລາຍການ"
-
-#: pos/templates/pos/quotation.html:10
-msgid "Code applied successfully!"
-msgstr "ນຳໃຊ້ລະຫັດສຳເລັດແລ້ວ!"
-
-#: pos/templates/pos/quotation.html:11
-msgid "off"
-msgstr "ຫຼຸດ"
-
-#: pos/templates/pos/quotation.html:12
-msgid "Invalid discount code."
-msgstr "ລະຫັດສ່ວນຫຼຸດບໍ່ຖືກຕ້ອງ"
-
 #: pos/templates/pos/quotation.html:14
 msgid "Lao kip"
 msgstr "ກີບ"
@@ -2906,236 +3554,89 @@ msgstr "ກຳນົດລາຄາບໍລິການ AI ສຳລັບລ�
 msgid "Customer information"
 msgstr "ຂໍ້ມູນລູກຄ້າ"
 
-#: pos/templates/pos/quotation.html:66
-#: reports/templates/reports/income_expense.html:186
-msgid "Customer name"
-msgstr "ຊື່ລູກຄ້າ"
-
 #: pos/templates/pos/quotation.html:70
 msgid "Document number"
 msgstr "ເລກທີເອກະສານ"
 
-#: pos/templates/pos/quotation.html:119
+#: pos/templates/pos/quotation.html:118
 msgid "Automated high-accuracy AI product condition assessment."
 msgstr "ປະເມີນສະພາບສິນຄ້າດ້ວຍ AI ແບບອັດຕະໂນມັດ ແລະ ແມ່ນຍຳສູງ"
 
-#: pos/templates/pos/quotation.html:121
+#: pos/templates/pos/quotation.html:120
 msgid "Main shoe-care service selected from the shop's fixed price list."
 msgstr "ບໍລິການດູແລເກີບຫຼັກທີ່ເລືອກຈາກຕາຕະລາງລາຄາຄົງທີ່ຂອງຮ້ານ"
 
-#: pos/templates/pos/quotation.html:123
-msgid "Optional repair or restoration service for specific needs."
-msgstr "ບໍລິການສ້ອມແປງ ຫຼື ຟື້ນຟູເສີມສຳລັບບັນຫາສະເພາະ"
-
-#: pos/templates/pos/quotation.html:133
+#: pos/templates/pos/quotation.html:132
 msgid "Primary service"
 msgstr "ບໍລິການຫຼັກ"
 
-#: pos/templates/pos/quotation.html:135
-msgid "Add-on"
-msgstr "ບໍລິການເສີມ"
-
-#: pos/templates/pos/quotation.html:151
-msgid "Promotions and discounts"
-msgstr "ໂປຣໂມຊັນ ແລະ ສ່ວນຫຼຸດ"
-
-#: pos/templates/pos/quotation.html:154
-msgid "Enter discount code..."
-msgstr "ປ້ອນລະຫັດສ່ວນຫຼຸດ..."
-
-#: pos/templates/pos/quotation.html:156
-msgid "Apply"
-msgstr "ນຳໃຊ້"
-
-#: pos/templates/pos/quotation.html:174
-#: pos/templates/pos/quotation_sign.html:263
+#: pos/templates/pos/quotation.html:173
 msgid "Order summary"
 msgstr "ສະຫຼຸບລາຍການ"
 
-#: pos/templates/pos/quotation.html:193
-msgid "VAT"
-msgstr "VAT"
-
-#: pos/templates/pos/quotation.html:207
-msgid "Grand total"
-msgstr "ຍອດລວມທັງໝົດ"
-
-#: pos/templates/pos/quotation.html:214
-msgid "Approval signature"
-msgstr "ລາຍເຊັນອະນຸມັດ"
-
-#: pos/templates/pos/quotation.html:220
-msgid "Tap to sign"
-msgstr "ແຕະເພື່ອເຊັນຊື່"
-
-#: pos/templates/pos/quotation.html:226
+#: pos/templates/pos/quotation.html:215
 msgid "Submit quotation"
 msgstr "ສົ່ງໃບສະເໜີລາຄາ"
 
-#: pos/templates/pos/quotation.html:229
-msgid "Save as draft"
-msgstr "ບັນທຶກເປັນຮ່າງ"
-
-#: pos/templates/pos/quotation_sign.html:9
-msgid "KicksVault AI — Create quotation"
-msgstr "KicksVault AI — ສ້າງໃບສະເໜີລາຄາ"
-
-#: pos/templates/pos/quotation_sign.html:192
-msgid "Create AI quotation"
-msgstr "ສ້າງໃບສະເໜີລາຄາ AI"
-
-#: pos/templates/pos/quotation_sign.html:193
-msgid "KicksVault AI — Intelligent pricing"
-msgstr "KicksVault AI — ການກຳນົດລາຄາອັດສະລິຍະ"
-
-#: pos/templates/pos/quotation_sign.html:198
-msgid "Language"
-msgstr "ພາສາ"
-
-#: pos/templates/pos/quotation_sign.html:222
-msgid "Select services"
-msgstr "ເລືອກບໍລິການ"
-
-#: pos/templates/pos/quotation_sign.html:229
-msgid "Review pricing"
-msgstr "ທົບທວນລາຄາ"
-
-#: pos/templates/pos/quotation_sign.html:236
-msgid "Approve and sign"
-msgstr "ອະນຸມັດ ແລະ ເຊັນ"
-
-#: pos/templates/pos/quotation_sign.html:245
-msgid "Final step: confirm agreement"
-msgstr "ຂັ້ນຕອນສຸດທ້າຍ: ຢືນຢັນຂໍ້ຕົກລົງ"
-
-#: pos/templates/pos/quotation_sign.html:246
-msgid "Please review the details below and sign to continue."
-msgstr "ກະລຸນາກວດສອບລາຍລະອຽດຂ້າງລຸ່ມ ແລະ ລົງລາຍເຊັນເພື່ອດຳເນີນການຕໍ່"
-
-#: pos/templates/pos/quotation_sign.html:294
-msgid "Promotional discount"
-msgstr "ສ່ວນຫຼຸດໂປຣໂມຊັນ"
-
-#: pos/templates/pos/quotation_sign.html:304
-msgid "Preliminary total due"
-msgstr "ຍອດລວມທີ່ຕ້ອງຊຳລະຂັ້ນຕົ້ນ"
-
-#: pos/templates/pos/quotation_sign.html:305
-#, python-format
-msgid "Includes VAT (10%%) of"
-msgstr "ລວມ VAT (10%%) ຈຳນວນ"
-
-#: pos/templates/pos/quotation_sign.html:321
-msgid "Sign for approval"
-msgstr "ລົງລາຍເຊັນອະນຸມັດ"
-
-#: pos/templates/pos/quotation_sign.html:324
-msgid ""
-"By signing below, you accept the service terms and the prices shown above. "
-"The final invoice will be sent to your email."
-msgstr "ການລົງລາຍເຊັນຂ້າງລຸ່ມນີ້ ໝາຍເຖິງທ່ານຍອມຮັບເງື່ອນໄຂການບໍລິການ ແລະ ລາຄາທີ່ສະແດງຂ້າງເທິງ. ໃບບິນສຸດທ້າຍຈະຖືກສົ່ງໄປທາງອີເມວຂອງທ່ານ."
-"ໂດຍການລົງລາຍເຊັນຂ້າງລຸ່ມ ທ່ານຍອມຮັບເງື່ອນໄຂບໍລິການ ແລະ ລາຄາທີ່ສະແດງຂ້າງເທິງ "
-"ໂດຍໃບແຈ້ງໜີ້ສຸດທ້າຍຈະຖືກສົ່ງໄປຫາອີເມວຂອງທ່ານ"
-
-#: pos/templates/pos/quotation_sign.html:334
-msgid "Sign your name here"
-msgstr "ເຊັນຊື່ຂອງທ່ານທີ່ນີ້"
-
-#: pos/templates/pos/quotation_sign.html:340
-msgid "Clear"
-msgstr "ລຶບລ້າງ"
-
-#: pos/templates/pos/quotation_sign.html:349
-msgid "Authorized signatory name"
-msgstr "ຊື່ຜູ້ມີອຳນາດລົງນາມ"
-
-#: pos/templates/pos/quotation_sign.html:350
-msgid "Enter your full name"
-msgstr "ປ້ອນຊື່ເຕັມຂອງທ່ານ"
-
-#: pos/templates/pos/quotation_sign.html:353
-msgid "Position"
-msgstr "ຕຳແໜ່ງ"
-
-#: pos/templates/pos/quotation_sign.html:354
-msgid "e.g. General manager"
-msgstr "ຕົວຢ່າງ: ຜູ້ຈັດການທົ່ວໄປ"
-
-#: pos/templates/pos/quotation_sign.html:364
-msgid "I have read and understand"
-msgstr "ຂ້ອຍໄດ້ອ່ານ ແລະ ເຂົ້າໃຈ"
-
-#: pos/templates/pos/quotation_sign.html:364
-msgid "the terms and conditions"
-msgstr "ຂໍ້ກຳນົດ ແລະ ເງື່ອນໄຂ"
-
-#: pos/templates/pos/quotation_sign.html:364
-msgid "of KicksVault AI."
-msgstr "ຂອງ KicksVault AI ແລ້ວ"
-
-#: pos/templates/pos/quotation_sign.html:376
-msgid "Confirm and send document"
-msgstr "ຢືນຢັນ ແລະ ສົ່ງເອກະສານ"
-
-#: pos/views.py:205 pos/views.py:261
+#: pos/views.py:275 pos/views.py:332
 msgid ""
 "The selected storage slot is no longer available. Please choose another slot."
 msgstr "ຊ່ອງ Storage ທີ່ເລືອກບໍ່ຫວ່າງແລ້ວ; ກະລຸນາເລືອກຊ່ອງໃໝ່"
 
-#: pos/views.py:603
+#: pos/views.py:670
 msgid "This payment was already recorded."
 msgstr "ການຊຳລະນີ້ຖືກບັນທຶກໄປແລ້ວ."
 
-#: pos/views.py:610
+#: pos/views.py:677
 #, python-format
 msgid "Payment recorded. Change due: %(change)s %(currency)s"
 msgstr "ບັນທຶກການຮັບເງິນແລ້ວ. ເງິນທອນ: %(change)s %(currency)s"
 
-#: pos/views.py:614 pos/views.py:716
+#: pos/views.py:681 pos/views.py:783
 msgid "Payment recorded."
 msgstr "ບັນທຶກການຮັບເງິນແລ້ວ."
 
-#: pos/views.py:635
+#: pos/views.py:702
 msgid "Payment voided."
 msgstr "ຍົກເລີກການຊຳລະແລ້ວ."
 
-#: pos/views.py:650
+#: pos/views.py:717
 msgid "This bill has no customer attached."
 msgstr "ບິນນີ້ບໍ່ມີລູກຄ້າຜູກໄວ້."
 
-#: pos/views.py:663
+#: pos/views.py:730
 msgid "Stamp card image sent on WhatsApp."
 msgstr "ສົ່ງຮູບບັດ Stamp ທາງ WhatsApp ແລ້ວ."
 
-#: pos/views.py:667
+#: pos/views.py:734
 #, python-format
 msgid "Could not send automatically (%(error)s) — use the manual button."
 msgstr "ສົ່ງອັດຕະໂນມັດບໍ່ໄດ້ (%(error)s) — ໃຫ້ໃຊ້ປຸ່ມສົ່ງເອງແທນ."
 
-#: pos/views.py:696
+#: pos/views.py:763
 msgid "Quick full payment from invoice"
 msgstr "ຮັບເງິນສົດເຕັມຍອດຈາກໜ້າໃບບິນ"
 
-#: pos/views.py:711
+#: pos/views.py:778
 #, python-format
 msgid "Payment recorded — 1 stamp added (%(stamps)s/10)."
 msgstr "ບັນທຶກການຊຳລະແລ້ວ — ປະທັບ Stamp 1 ດວງ (%(stamps)s/10)."
 
-#: pos/views.py:741
+#: pos/views.py:808
 #, python-format
 msgid "%(label)s has no open bill — it is already paid and collected."
 msgstr "%(label)s ບໍ່ມີບິນຄ້າງ — ຈ່າຍເງິນ ແລະ ຮັບເຄື່ອງໄປແລ້ວ."
 
-#: pos/views.py:748
+#: pos/views.py:815
 #, python-format
 msgid "Nothing matched the scanned code: %(code)s"
 msgstr "ບໍ່ພົບຂໍ້ມູນທີ່ຕົງກັບລະຫັດທີ່ສະແກນ: %(code)s"
 
-#: pos/views.py:817
+#: pos/views.py:884
 msgid "Select at least one item to hand over."
 msgstr "ເລືອກຢ່າງໜ້ອຍ 1 ລາຍການເພື່ອສົ່ງມອບ."
 
-#: pos/views.py:839
+#: pos/views.py:906
 #, python-format
 msgid "%(count)s item(s) handed over."
 msgstr "ສົ່ງມອບແລ້ວ %(count)s ລາຍການ."
@@ -3229,110 +3730,74 @@ msgid "No customer data available yet."
 msgstr "ຍັງບໍ່ມີຂໍ້ມູນລູກຄ້າ"
 
 #: reports/templates/reports/service_usage.html:4
-#: reports/templates/reports/service_usage.html:25 templates/base.html:263
-#, fuzzy
-#| msgid "Service Type"
+#: reports/templates/reports/service_usage.html:25 templates/base.html:272
 msgid "Service usage"
-msgstr "ປະເພດບໍລິການ"
+msgstr "ການໃຊ້ບໍລິການ"
 
 #: reports/templates/reports/service_usage.html:26
 msgid "Which services the shop actually sells, and how often AI is used"
 msgstr "ບໍລິການໃດຂາຍດີແທ້ ແລະ AI ຖືກໃຊ້ຫຼາຍປານໃດ"
 
 #: reports/templates/reports/service_usage.html:41
-#, fuzzy
-#| msgid "Mark as delivered"
 msgid "Services delivered"
-msgstr "ສົ່ງມອບແລ້ວ"
+msgstr "ບໍລິການທີ່ສົ່ງມອບ"
 
 #: reports/templates/reports/service_usage.html:45
-#, fuzzy
-#| msgid "Service Type"
 msgid "Service revenue"
-msgstr "ປະເພດບໍລິການ"
+msgstr "ລາຍຮັບຈາກບໍລິການ"
 
 #: reports/templates/reports/service_usage.html:49
-#, fuzzy
-#| msgid "AI assessment"
 msgid "AI assessments"
-msgstr "ຜົນການປະເມີນ AI"
+msgstr "ການປະເມີນດ້ວຍ AI"
 
 #: reports/templates/reports/service_usage.html:53
-#, fuzzy
-#| msgid "Resell price valuation"
 msgid "AI price valuations"
-msgstr "ຜົນການປະເມີນລາຄາຮັບຊື້ເກີບມືສອງ"
+msgstr "ການປະເມີນລາຄາດ້ວຍ AI"
 
 #: reports/templates/reports/service_usage.html:62
-#, fuzzy
-#| msgid "Ordered services"
 msgid "Most used services"
-msgstr "ບໍລິການທີ່ສັ່ງ"
+msgstr "ບໍລິການທີ່ໃຊ້ຫຼາຍທີ່ສຸດ"
 
 #: reports/templates/reports/service_usage.html:63
 #, python-format
 msgid "Ranked by how many were delivered in the last %(period_label)s"
 msgstr "ຮຽງຕາມຈຳນວນຄັ້ງທີ່ໃຫ້ບໍລິການໃນ %(period_label)s ຜ່ານມາ"
 
-#: reports/templates/reports/service_usage.html:70
-#, fuzzy
-#| msgid "Service Type"
-msgid "Service"
-msgstr "ປະເພດບໍລິການ"
-
 #: reports/templates/reports/service_usage.html:71
-#, fuzzy
-#| msgid "Time"
 msgid "Times"
-msgstr "ເວລາ"
+msgstr "ຈຳນວນຄັ້ງ"
 
 #: reports/templates/reports/service_usage.html:72
-#, fuzzy
-#| msgid "Bill"
 msgid "Bills"
-msgstr "ບິນ"
+msgstr "ຈຳນວນບິນ"
 
 #: reports/templates/reports/service_usage.html:73
-#, fuzzy
-#| msgid "Today revenue"
 msgid "Revenue"
-msgstr "ຍອດຮັບມື້ນີ້"
+msgstr "ລາຍຮັບ"
 
 #: reports/templates/reports/service_usage.html:92
-#, fuzzy
-#| msgid "No services linked to an order yet."
 msgid "No services were delivered in this period yet."
-msgstr "ຍັງບໍ່ມີບໍລິການທີ່ຕິດກັບອໍເດີ"
+msgstr "ຍັງບໍ່ມີບໍລິການທີ່ສົ່ງມອບໃນຊ່ວງນີ້"
 
 #: reports/templates/reports/service_usage.html:98
-#, fuzzy
-#| msgid "Inactive"
 msgid "AI activity"
-msgstr "ປິດໃຊ້"
+msgstr "ການເຄື່ອນໄຫວຂອງ AI"
 
 #: reports/templates/reports/service_usage.html:99
-#, fuzzy
-#| msgid "Condition adjustment"
 msgid "Condition grades the AI returned"
-msgstr "ການປັບລາຄາຕາມສະພາບ"
+msgstr "ເກຣດສະພາບເກີບທີ່ AI ປະເມີນໃຫ້"
 
 #: reports/templates/reports/service_usage.html:107
-#, fuzzy
-#| msgid "Grading"
 msgid "Grade"
-msgstr "ກຳລັງປະເມີນ"
+msgstr "ເກຣດ"
 
 #: reports/templates/reports/service_usage.html:114
-#, fuzzy
-#| msgid "No data for this period."
 msgid "No graded assessments in this period."
-msgstr "ບໍ່ມີຂໍ້ມູນໃນຊ່ວງນີ້"
+msgstr "ບໍ່ມີການປະເມີນທີ່ໃຫ້ເກຣດໃນຊ່ວງນີ້"
 
 #: reports/templates/reports/service_usage.html:119
-#, fuzzy
-#| msgid "Resell price valuation"
 msgid "Price valuations"
-msgstr "ຜົນການປະເມີນລາຄາຮັບຊື້ເກີບມືສອງ"
+msgstr "ການປະເມີນລາຄາ"
 
 #: reports/templates/reports/service_usage.html:123
 msgid "Promo posts generated"
@@ -3482,51 +3947,55 @@ msgstr "ຜູ້ຈັດການ"
 msgid "Front desk"
 msgstr "ພະນັກງານໜ້າຮ້ານ"
 
-#: templates/base.html:217
+#: templates/base.html:222
 msgid "SME Command Center"
 msgstr "ສູນຄວບຄຸມ SME"
 
-#: templates/base.html:222
+#: templates/base.html:227
 msgid "Dashboard"
 msgstr "ແດຊບອດ"
 
-#: templates/base.html:226
+#: templates/base.html:231
 msgid "POS"
 msgstr "ຂາຍໜ້າຮ້ານ"
 
-#: templates/base.html:238
+#: templates/base.html:243
 msgid "CRM"
 msgstr "ລູກຄ້າ"
 
-#: templates/base.html:246
+#: templates/base.html:251
 msgid "Kanban Tracking"
 msgstr "ຕິດຕາມການເຮັດວຽກ"
 
-#: templates/base.html:250
+#: templates/base.html:255
 msgid "Storage"
 msgstr "ບ່ອນເກັບເກີບ"
 
-#: templates/base.html:255
+#: templates/base.html:260
 msgid "Accounting"
 msgstr "ບັນຊີລາຍຮັບ–ລາຍຈ່າຍ"
 
-#: templates/base.html:267
+#: templates/base.html:268
+msgid "Brands"
+msgstr "ຍີ່ຫໍ້"
+
+#: templates/base.html:276
 msgid "Staff"
 msgstr "ພະນັກງານ"
 
-#: templates/base.html:284
+#: templates/base.html:293
 msgid "Logout"
 msgstr "ອອກຈາກລະບົບ"
 
-#: templates/base.html:294
+#: templates/base.html:303
 msgid "Toggle sidebar"
 msgstr "ຫຍໍ້/ຂະຫຍາຍແຖບຂ້າງ"
 
-#: templates/base.html:300
+#: templates/base.html:309
 msgid "Search orders, clients, inventory..."
 msgstr "ຄົ້ນຫາອໍເດີ, ລູກຄ້າ, ສາງ..."
 
-#: templates/base.html:320 templates/registration/login.html:166
+#: templates/base.html:329 templates/registration/login.html:166
 msgid "Toggle color theme"
 msgstr "ສະຫຼັບສີໜ້າຈໍ"
 
@@ -3535,10 +4004,8 @@ msgid "Error:"
 msgstr "ຜິດພາດ:"
 
 #: templates/registration/login.html:11
-#, fuzzy
-#| msgid "Hug ເກີບ — Shop Management"
 msgid "Hug ເກີບ — Sign in"
-msgstr "Hug ເກີບ — ລະບົບບໍລິຫານຮ້ານ"
+msgstr "Hug ເກີບ — ເຂົ້າສູ່ລະບົບ"
 
 #: templates/registration/login.html:182
 msgid "Shop Management System"

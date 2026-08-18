@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% load humanize i18n %}
+
+{% block title %}{% trans "Yearly cash handover" %} {{ year }} — Hug ເກີບ AI{% endblock %}
+
+{% block content %}
+<style>
+    .tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .sheet-card {
+        background: rgb(var(--color-surface-container-lowest));
+        border: 1px solid rgb(var(--color-outline-variant) / .7);
+        border-radius: 18px;
+    }
+    .kpi-value { font-variant-numeric: tabular-nums; font-weight: 700; }
+    @media print {
+        .no-print { display: none !important; }
+        .sheet-card { border-color: #cbd5e1; border-radius: 0; box-shadow: none; }
+        body { background: #fff; }
+    }
+</style>
+
+<section class="space-y-6" id="yearly-handover">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div>
+            <p class="text-xs font-bold uppercase tracking-widest text-ai-cyan">{% trans "End-of-day control" %}</p>
+            <h1 class="mt-1 text-3xl font-bold">{% trans "Yearly cash handover" %} · <span class="tnum">{{ year }}</span></h1>
+            <p class="mt-1 text-on-surface-variant">{% trans "Every daily handover of the year on one sheet, with the days that did not balance." %}</p>
+        </div>
+        <button type="button" onclick="window.print()"
+                class="no-print inline-flex items-center justify-center gap-2 self-start rounded-full border border-outline-variant px-5 py-2.5 text-sm font-bold hover:border-ai-cyan hover:text-ai-cyan transition-colors">
+            <span class="material-symbols-outlined text-[20px]">print</span>{% trans "Print" %}
+        </button>
+    </div>
+
+    <div class="no-print">{% include "accounting/_nav.html" %}</div>
+
+    <form method="get" class="no-print flex flex-wrap items-end gap-3 sheet-card p-4">
+        <label>
+            <span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "Year" %}</span>
+            <select name="year" class="rounded-lg border-outline-variant/40 bg-surface-container-lowest text-sm tnum">
+                {% for option in years %}
+                <option value="{{ option }}" {% if option == year %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>
+            <span class="mb-1 block text-xs font-bold text-on-surface-variant">{% trans "Currency" %}</span>
+            <select name="currency" class="rounded-lg border-outline-variant/40 bg-surface-container-lowest text-sm">
+                {% for code in currencies %}
+                <option {% if code == currency %}selected{% endif %}>{{ code }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <button class="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-on-primary">{% trans "Load totals" %}</button>
+        <a href="{% url 'accounting:cash_handover' %}"
+           class="rounded-full border border-outline-variant px-5 py-2.5 text-sm font-bold text-on-surface-variant hover:border-ai-cyan hover:text-ai-cyan transition-colors">
+            {% trans "Daily handover" %}
+        </a>
+    </form>
+
+    <!-- ການ໌ດສະຫຼຸບປີ: ຕາມລະບົບ / ນັບໄດ້ / ຜົນຕ່າງ -->
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <article class="sheet-card p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{% trans "System total" %}</p>
+            <p class="kpi-value mt-2 text-2xl">{{ year_expected|floatformat:0|intcomma }} <span class="text-sm font-normal text-on-surface-variant">{{ currency }}</span></p>
+        </article>
+        <article class="sheet-card p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{% trans "Counted" %}</p>
+            <p class="kpi-value mt-2 text-2xl">{{ year_counted|floatformat:0|intcomma }} <span class="text-sm font-normal text-on-surface-variant">{{ currency }}</span></p>
+        </article>
+        <article class="sheet-card p-5 {% if year_difference != 0 %}border-status-error/50{% endif %}">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{% trans "Difference" %}</p>
+            <p class="kpi-value mt-2 text-2xl {% if year_difference != 0 %}text-status-error{% else %}text-emerald-500{% endif %}">
+                {{ year_difference|floatformat:0|intcomma }}
+            </p>
+            <p class="mt-1 text-xs text-on-surface-variant">
+                {% if year_difference > 0 %}{% trans "Counted more than the system" %}
+                {% elif year_difference < 0 %}{% trans "Counted less than the system" %}
+                {% else %}{% trans "Balanced" %}{% endif %}
+            </p>
+        </article>
+        <article class="sheet-card p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{% trans "Days recorded" %}</p>
+            <p class="kpi-value mt-2 text-2xl tnum">{{ recorded_days }}</p>
+            {% if mismatches %}
+            <p class="mt-1 text-xs text-status-error">{{ mismatches|length }} {% trans "day(s) did not balance" %}</p>
+            {% endif %}
+        </article>
+    </div>
+
+    <!-- ຕາຕະລາງ 12 ເດືອນ -->
+    <article class="sheet-card overflow-hidden">
+        <div class="border-b border-outline-variant/20 px-5 py-4">
+            <h2 class="font-bold">{% trans "Month by month" %}</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[680px] text-sm">
+                <thead class="bg-surface-container-low text-left text-xs uppercase text-on-surface-variant">
+                    <tr>
+                        <th class="px-5 py-3">{% trans "Month" %}</th>
+                        <th class="px-4 py-3 text-right">{% trans "Days recorded" %}</th>
+                        <th class="px-4 py-3 text-right">{% trans "System total" %}</th>
+                        <th class="px-4 py-3 text-right">{% trans "Counted" %}</th>
+                        <th class="px-5 py-3 text-right">{% trans "Difference" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/15">
+                    {% for row in months %}
+                    <tr class="{% if not row.days %}opacity-45{% endif %}">
+                        <td class="px-5 py-3 font-bold">{{ row.label }}</td>
+                        <td class="px-4 py-3 text-right tnum">
+                            {{ row.days }}{% if row.mismatch_days %}<span class="text-status-error"> · {{ row.mismatch_days }} ⚠</span>{% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-right tnum">{{ row.expected|floatformat:0|intcomma }}</td>
+                        <td class="px-4 py-3 text-right tnum">{{ row.counted|floatformat:0|intcomma }}</td>
+                        <td class="px-5 py-3 text-right tnum font-bold {% if row.difference != 0 %}text-status-error{% elif row.days %}text-emerald-500{% endif %}">
+                            {{ row.difference|floatformat:0|intcomma }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="border-t-2 border-on-surface/70 font-bold">
+                        <td class="px-5 py-4">{% trans "Total" %} · <span class="tnum">{{ year }}</span></td>
+                        <td class="px-4 py-4 text-right tnum">{{ recorded_days }}</td>
+                        <td class="px-4 py-4 text-right tnum">{{ year_expected|floatformat:0|intcomma }}</td>
+                        <td class="px-4 py-4 text-right tnum">{{ year_counted|floatformat:0|intcomma }}</td>
+                        <td class="px-5 py-4 text-right tnum {% if year_difference != 0 %}text-status-error{% else %}text-emerald-500{% endif %}">
+                            {{ year_difference|floatformat:0|intcomma }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </article>
+
+    <!-- ວັນທີ່ຍອດບໍ່ກົງ — ຢູ່ຕໍ່ໜ້າສະເໝີ ບໍ່ຕ້ອງໄປຄົ້ນເອງ -->
+    {% if mismatches %}
+    <article class="sheet-card overflow-hidden border-status-error/40">
+        <div class="border-b border-outline-variant/20 px-5 py-4">
+            <h2 class="font-bold text-status-error">{% trans "Days that did not balance" %}</h2>
+            <p class="mt-1 text-xs text-on-surface-variant">{% trans "Every day where the counted cash differs from the system total." %}</p>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[640px] text-sm">
+                <thead class="bg-surface-container-low text-left text-xs uppercase text-on-surface-variant">
+                    <tr>
+                        <th class="px-5 py-3">{% trans "Date" %}</th>
+                        <th class="px-4 py-3 text-right">{% trans "System total" %}</th>
+                        <th class="px-4 py-3 text-right">{% trans "Counted" %}</th>
+                        <th class="px-4 py-3 text-right">{% trans "Difference" %}</th>
+                        <th class="px-5 py-3">{% trans "Giver → Receiver" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant/15">
+                    {% for item in mismatches %}
+                    <tr>
+                        <td class="px-5 py-3 font-bold tnum">{{ item.date|date:"d/m/Y" }}</td>
+                        <td class="px-4 py-3 text-right tnum">{{ item.expected_amount|floatformat:0|intcomma }}</td>
+                        <td class="px-4 py-3 text-right tnum">{{ item.counted_amount|floatformat:0|intcomma }}</td>
+                        <td class="px-4 py-3 text-right tnum font-bold text-status-error">{{ item.difference|floatformat:0|intcomma }}</td>
+                        <td class="px-5 py-3 text-on-surface-variant">{{ item.handed_by|default:"-" }} → {{ item.received_by }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </article>
+    {% endif %}
+
+    <!-- ຊ່ອງເຊັນຮັບ-ສົ່ງ ສຳລັບເອກະສານທີ່ພິມອອກ -->
+    <article class="sheet-card p-6">
+        <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{% trans "Handed over by" %}</p>
+                <div class="mt-10 border-t border-outline-variant"></div>
+                <p class="mt-2 text-xs text-on-surface-variant">
+                    {% if last_handover %}{{ last_handover.handed_by|default:"" }}{% endif %}
+                </p>
+            </div>
+            <div>
+                <p class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">{% trans "Received by" %}</p>
+                <div class="mt-10 border-t border-outline-variant"></div>
+                <p class="mt-2 text-xs text-on-surface-variant">
+                    {% if last_handover %}{{ last_handover.received_by }}{% endif %}
+                </p>
+            </div>
+        </div>
+        <p class="mt-6 text-xs text-on-surface-variant">
+            {% trans "Printed on" %} <span class="tnum">{{ today|date:"d/m/Y" }}</span>
+            {% if first_handover %} · {% trans "Covers" %}
+            <span class="tnum">{{ first_handover.date|date:"d/m/Y" }}</span> –
+            <span class="tnum">{{ last_handover.date|date:"d/m/Y" }}</span>{% endif %}
+        </p>
+    </article>
+</section>
+{% endblock %}

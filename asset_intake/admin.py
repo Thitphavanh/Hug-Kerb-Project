@@ -4,7 +4,7 @@ from django.utils.html import format_html
 
 from media_backup.models import MediaFile
 
-from .models import Asset, AssetService, StorageSlot
+from .models import Asset, AssetService, Brand, ShoeModel, StorageSlot
 
 
 class MediaFileInline(admin.TabularInline):
@@ -59,3 +59,28 @@ class StorageSlotAdmin(admin.ModelAdmin):
     @admin.display(description="ເກີບທີ່ເກັບຢູ່")
     def occupant(self, obj):
         return getattr(obj, "asset", None) or "—"
+
+
+class ShoeModelInline(admin.TabularInline):
+    model = ShoeModel
+    extra = 1
+
+
+@admin.register(Brand)
+class BrandAdmin(admin.ModelAdmin):
+    list_display = ["name", "sort_order", "model_count", "is_active"]
+    list_editable = ["sort_order", "is_active"]
+    search_fields = ["name"]
+    inlines = [ShoeModelInline]
+
+    @admin.display(description="ຈຳນວນລຸ້ນ")
+    def model_count(self, obj):
+        return obj.shoe_models.count()
+
+
+@admin.register(ShoeModel)
+class ShoeModelAdmin(admin.ModelAdmin):
+    list_display = ["name", "brand", "is_active"]
+    list_filter = ["brand", "is_active"]
+    search_fields = ["name", "brand__name"]
+    autocomplete_fields = ["brand"]

@@ -211,6 +211,41 @@ class Asset(models.Model):
             return self.Status.REPAIRING
         return self.Status.CLEANING
 
+    # ລຳດັບຂັ້ນຕອນເຕັມຮູບແບບ — progress_stages() ຈະຕັດຂັ້ນທີ່ຄູ່ນີ້ບໍ່ຜ່ານອອກ
+    STAGE_FLOW = (
+        Status.RECEIVED,
+        Status.CLEANING,
+        Status.REPAIRING,
+        Status.READY,
+        Status.RETURNED,
+    )
+
+    def progress_stages(self):
+        """ຂັ້ນຕອນທີ່ຄູ່ນີ້ຈະຜ່ານແທ້ໆ ຕາມວຽກທີ່ສັ່ງໄວ້
+
+        ຄູ່ທີ່ມາຊັກຢ່າງດຽວບໍ່ຄວນເຫັນຂັ້ນ "ກຳລັງສ້ອມແປງ" ເພາະມັນຈະບໍ່ມີວັນໄປຮອດ —
+        ໃຊ້ກົດດຽວກັບ compute_status() ຈຶ່ງບໍ່ມີຂັ້ນທີ່ສະຖານະຄິດໄລ່ໄປບໍ່ຮອດ
+        ແລະ ກົງກັບກະດານຕິດຕາມວຽກທີ່ສະແດງສະເພາະແຖວທີ່ມີວຽກຈິງ.
+        """
+        from pos.models import ServiceType
+
+        work_types = {s.work_type for s in self.services.all()}
+        visible = {self.Status.RECEIVED, self.Status.READY, self.Status.RETURNED}
+
+        if not work_types:
+            # ຍັງບໍ່ມີແຖວວຽກ → ສະຖານະຄຸມດ້ວຍມື ຈຶ່ງຕ້ອງເຫັນທຸກຂັ້ນໄວ້ເລືອກ
+            visible |= {self.Status.CLEANING, self.Status.REPAIRING}
+        else:
+            # compute_status() ຕີວຽກທີ່ບໍ່ແມ່ນສ້ອມແປງ (ຊັກ/ປະເມີນ/ອື່ນໆ) ເປັນ "ກຳລັງຊັກ"
+            if work_types - {ServiceType.WorkType.REPAIR}:
+                visible.add(self.Status.CLEANING)
+            if ServiceType.WorkType.REPAIR in work_types:
+                visible.add(self.Status.REPAIRING)
+
+        # ສະຖານະປັດຈຸບັນຕ້ອງຢູ່ໃນລາຍການສະເໝີ ບໍ່ດັ່ງນັ້ນແຖບຄວາມຄືບໜ້າຈະຊີ້ຜິດຂັ້ນ
+        visible.add(self.status)
+        return [stage for stage in self.STAGE_FLOW if stage in visible]
+
     def rollup_status(self):
         """ອັບເດດ Asset.status ຕາມ compute_status() — ບັນທຶກສະເພາະເມື່ອປ່ຽນຈິງ"""
         new_status = self.compute_status()
@@ -390,3 +425,54 @@ class AssetImage(models.Model):
     def __str__(self):
         return f"{self.asset.ticket_number} - {self.get_image_type_display()}"
 
+
+
+class Brand(models.Model):
+    """ຍີ່ຫໍ້ເກີບທີ່ຮ້ານຮັບ (Scope 2.3)
+
+    ແຕ່ກ່ອນຍີ່ຫໍ້ຖືກຝັງແຂງໄວ້ໃນ template ຂອງໜ້າ POS ແລະ ພິມເອງຢູ່ໜ້າຮັບເຄື່ອງ
+    ຜົນຄື "nike" ກັບ "Nike" ກາຍເປັນຄົນລະຍີ່ຫໍ້ ແລ້ວລາຍງານນັບແຍກກັນ.
+    ເອົາມາເປັນຂໍ້ມູນທີ່ຮ້ານແກ້ເອງໄດ້ ຈຶ່ງເພີ່ມຍີ່ຫໍ້ໃໝ່ໂດຍບໍ່ຕ້ອງແກ້ໂຄ້ດ.
+    """
+
+    name = models.CharField("ຊື່ຍີ່ຫໍ້", max_length=100, unique=True)
+    is_active = models.BooleanField("ເປີດໃຫ້ເລືອກ", default=True)
+    sort_order = models.PositiveSmallIntegerField(
+        "ລຳດັບ", default=0, help_text="ເລກນ້ອຍຂຶ້ນກ່ອນ — ຍີ່ຫໍ້ທີ່ຮັບປະຈຳໃຫ້ໃສ່ເລກນ້ອຍ"
+    )
+    created_at = models.DateTimeField("ວັນທີສ້າງ", auto_now_add=True)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        verbose_name = "ຍີ່ຫໍ້ເກີບ"
+        verbose_name_plural = "ຍີ່ຫໍ້ເກີບ"
+
+    def __str__(self):
+        return self.name
+
+
+class ShoeModel(models.Model):
+    """ລຸ້ນເກີບຂອງແຕ່ລະຍີ່ຫໍ້ — ໃຊ້ເປັນຕົວເລືອກແນະນຳຕອນຮັບເຄື່ອງ"""
+
+    brand = models.ForeignKey(
+        Brand,
+        on_delete=models.CASCADE,
+        related_name="shoe_models",
+        verbose_name="ຍີ່ຫໍ້",
+    )
+    name = models.CharField("ຊື່ລຸ້ນ", max_length=150)
+    is_active = models.BooleanField("ເປີດໃຫ້ເລືອກ", default=True)
+    created_at = models.DateTimeField("ວັນທີສ້າງ", auto_now_add=True)
+
+    class Meta:
+        ordering = ["brand__sort_order", "brand__name", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["brand", "name"], name="unique_model_per_brand"
+            )
+        ]
+        verbose_name = "ລຸ້ນເກີບ"
+        verbose_name_plural = "ລຸ້ນເກີບ"
+
+    def __str__(self):
+        return f"{self.brand.name} {self.name}"

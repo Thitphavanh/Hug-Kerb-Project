@@ -11,7 +11,6 @@ urlpatterns = [
     path("api/scan-lookup/", views.scan_lookup, name="scan_lookup"),
     path("api/storage-map/", views.storage_map_data, name="storage_map_data"),
     path("orders/<int:pk>/quotation/", views.quotation_view, name="quotation"),
-    path("orders/<int:pk>/quotation/sign/", views.quotation_sign_view, name="quotation_sign"),
     path("orders/<int:pk>/checkout/", views.checkout_view, name="checkout"),
     path("orders/<int:pk>/payments/", views.take_payment, name="take_payment"),
     path(

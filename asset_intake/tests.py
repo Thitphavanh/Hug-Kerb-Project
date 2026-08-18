@@ -118,6 +118,91 @@ class TagAndTicketViewTest(TestCase):
         self.assertContains(lao, "ຮັບເຂົ້າ")
         self.assertContains(lao, "ບັນທຶກຮ່າງ")
 
+    def test_intake_create_switches_between_english_and_lao(self):
+        self.client.force_login(self.user)
+        url = reverse("asset_intake:create")
+
+        self.client.post(reverse("set_language"), {"language": "en", "next": url})
+        english = self.client.get(url)
+        self.assertContains(english, "Asset Intake")
+        self.assertContains(
+            english, "Capture customer, sneaker, and image evidence for AI grading."
+        )
+        self.assertContains(english, "Back to queue")
+        self.assertContains(english, "Customer Details")
+        self.assertContains(english, "Customer name")
+        self.assertContains(english, "Customer phone")
+        self.assertContains(english, "Sneaker Details")
+        self.assertContains(english, "Brand")
+        self.assertContains(english, "Model")
+        self.assertContains(english, "Color")
+        self.assertContains(english, "Size")
+        self.assertContains(english, "Condition at intake")
+        self.assertContains(english, "Pickup date")
+        self.assertContains(english, "Asset Photos")
+        self.assertContains(english, "Upload Sneaker Photos")
+        self.assertContains(english, "Save Intake")
+
+        self.client.post(reverse("set_language"), {"language": "lo", "next": url})
+        lao = self.client.get(url)
+        self.assertContains(lao, "ຮັບເຄື່ອງໃໝ່")
+        self.assertContains(
+            lao, "ບັນທຶກຂໍ້ມູນລູກຄ້າ, ຂໍ້ມູນເກີບ ແລະ ຮູບພາບຫຼັກຖານສຳລັບການປະເມີນ AI"
+        )
+        self.assertContains(lao, "ກັບຄືນຄິວ")
+        self.assertContains(lao, "ຂໍ້ມູນລູກຄ້າ")
+        self.assertContains(lao, "ຊື່ລູກຄ້າ")
+        self.assertContains(lao, "ເບີໂທລູກຄ້າ")
+        self.assertContains(lao, "ຂໍ້ມູນເກີບ")
+        self.assertContains(lao, "ຍີ່ຫໍ້ (Brand)")
+        self.assertContains(lao, "ລຸ້ນ")
+        self.assertContains(lao, "ສີ (Color)")
+        self.assertContains(lao, "ເບີ")
+        self.assertContains(lao, "ສະພາບຕອນຮັບເຄື່ອງ")
+        self.assertContains(lao, "ວັນທີນັດຮັບ")
+        self.assertContains(lao, "ຮູບພາບເກີບ")
+        self.assertContains(lao, "ອັບໂຫຼດຮູບເກີບ")
+        self.assertContains(lao, "ບັນທຶກຮັບເຄື່ອງ")
+
+    def test_intake_create_post_reuses_existing_customer(self):
+        self.client.force_login(self.user)
+        url = reverse("asset_intake:create")
+        post_data = {
+            "customer_name": self.customer.name,
+            "customer_phone": self.customer.phone,
+            "brand": "Nike",
+            "model_name": "Dunk Low",
+            "color": "Panda",
+            "size": "42 EU",
+            "condition_note": "Clean",
+            "pickup_date": "2026-08-25",
+        }
+        resp = self.client.post(url, post_data)
+        self.assertEqual(resp.status_code, 302)
+        asset = Asset.objects.latest("pk")
+        self.assertEqual(asset.customer, self.customer)
+        self.assertEqual(asset.brand, "Nike")
+        self.assertEqual(asset.model_name, "Dunk Low")
+
+    def test_intake_create_post_creates_new_customer(self):
+        self.client.force_login(self.user)
+        url = reverse("asset_intake:create")
+        post_data = {
+            "customer_name": "Somxay Silahat",
+            "customer_phone": "02099998888",
+            "brand": "Adidas",
+            "model_name": "Samba",
+            "color": "White/Black",
+            "size": "43 EU",
+            "condition_note": "New",
+            "pickup_date": "2026-08-26",
+        }
+        resp = self.client.post(url, post_data)
+        self.assertEqual(resp.status_code, 302)
+        asset = Asset.objects.latest("pk")
+        self.assertEqual(asset.customer.name, "Somxay Silahat")
+        self.assertEqual(asset.customer.phone, "02099998888")
+
     def test_buyback_panel_only_shows_for_buyback_service(self):
         """ຜົນການປະເມີນລາຄາຮັບຊື້ ຄວນສະແດງສະເພາະອໍເດີທີ່ມີບໍລິການຮັບຊື້ເກີບມືສອງແທ້ໆ
         — ບໍ່ແມ່ນທຸກອໍເດີທີ່ຜ່ານ AI checklist (ຄືກັນກັບອໍເດີຊັກເກີບທຳມະດາ)."""
@@ -777,3 +862,115 @@ class IntakeDetailTemplateTest(TestCase):
         body = response.content.decode()
         self.assertNotIn("responsive", body)
         self.assertNotIn("{#", body)
+
+
+class ProgressStagesTest(TestCase):
+    """ແຖບຄວາມຄືບໜ້າຕ້ອງສະແດງສະເພາະຂັ້ນທີ່ຄູ່ນັ້ນຈະຜ່ານແທ້ໆ
+
+    ກ່ອນນີ້ hard-code ໄວ້ 5 ຂັ້ນສະເໝີ ຈຶ່ງມີ "ກຳລັງສ້ອມແປງ" ຂຶ້ນໃນຄູ່ທີ່ມາຊັກ
+    ຢ່າງດຽວ ທັງທີ່ compute_status() ຈະບໍ່ມີວັນຕັ້ງສະຖານະນັ້ນໃຫ້.
+    """
+
+    def setUp(self):
+        self.customer = Customer.objects.create(name="ທ້າວ ສົມສັກ", phone="02011112222")
+        self.wash = ServiceType.objects.create(
+            name="Basic Clean Service",
+            category=ServiceType.Category.PRIMARY,
+            work_type=ServiceType.WorkType.WASH,
+            price=90000,
+        )
+        self.repair = ServiceType.objects.create(
+            name="Sole Restoration",
+            category=ServiceType.Category.ADD_ON,
+            work_type=ServiceType.WorkType.REPAIR,
+            price=300000,
+        )
+        self.assess = ServiceType.objects.create(
+            name="Buy-back Evaluation",
+            category=ServiceType.Category.ADD_ON,
+            work_type=ServiceType.WorkType.ASSESS,
+            price=0,
+        )
+
+    def _asset(self):
+        return Asset.objects.create(customer=self.customer, brand="Nike")
+
+    def test_wash_only_pair_hides_the_repair_stage(self):
+        asset = self._asset()
+        AssetService.objects.create(asset=asset, service_type=self.wash)
+
+        self.assertEqual(
+            asset.progress_stages(),
+            [
+                Asset.Status.RECEIVED,
+                Asset.Status.CLEANING,
+                Asset.Status.READY,
+                Asset.Status.RETURNED,
+            ],
+        )
+
+    def test_repair_only_pair_hides_the_cleaning_stage(self):
+        asset = self._asset()
+        AssetService.objects.create(asset=asset, service_type=self.repair)
+
+        self.assertEqual(
+            asset.progress_stages(),
+            [
+                Asset.Status.RECEIVED,
+                Asset.Status.REPAIRING,
+                Asset.Status.READY,
+                Asset.Status.RETURNED,
+            ],
+        )
+
+    def test_pair_with_both_jobs_shows_every_stage(self):
+        asset = self._asset()
+        AssetService.objects.create(asset=asset, service_type=self.wash)
+        AssetService.objects.create(asset=asset, service_type=self.repair)
+
+        self.assertEqual(list(asset.progress_stages()), list(Asset.STAGE_FLOW))
+
+    def test_assessment_work_counts_as_the_cleaning_stage(self):
+        """compute_status() ຕີວຽກທີ່ບໍ່ແມ່ນສ້ອມແປງເປັນ CLEANING — ແຖບຕ້ອງຕາມນັ້ນ"""
+        asset = self._asset()
+        service = AssetService.objects.create(asset=asset, service_type=self.assess)
+
+        stages = asset.progress_stages()
+        self.assertIn(Asset.Status.CLEANING, stages)
+        self.assertNotIn(Asset.Status.REPAIRING, stages)
+
+        service.status = AssetService.Status.IN_PROGRESS
+        service.save()
+        asset.refresh_from_db()
+        # ສະຖານະທີ່ຄິດໄລ່ໄດ້ຕ້ອງຢູ່ໃນແຖບສະເໝີ
+        self.assertIn(asset.status, asset.progress_stages())
+
+    def test_pair_without_services_still_shows_every_stage(self):
+        """ບໍ່ມີແຖວວຽກ = ຄຸມສະຖານະດ້ວຍມື ຈຶ່ງຕ້ອງເລືອກໄດ້ທຸກຂັ້ນ"""
+        asset = self._asset()
+        self.assertEqual(list(asset.progress_stages()), list(Asset.STAGE_FLOW))
+
+    def test_current_status_is_never_dropped_from_the_stages(self):
+        """ຂໍ້ມູນເກົ່າທີ່ສະຖານະບໍ່ກົງກັບວຽກ ຕ້ອງບໍ່ເຮັດໃຫ້ແຖບຊີ້ຜິດຂັ້ນ"""
+        asset = self._asset()
+        AssetService.objects.create(asset=asset, service_type=self.wash)
+        Asset.objects.filter(pk=asset.pk).update(status=Asset.Status.REPAIRING)
+        asset.refresh_from_db()
+
+        stages = asset.progress_stages()
+        self.assertIn(Asset.Status.REPAIRING, stages)
+        self.assertEqual(stages.index(asset.status), 2)
+
+    def test_detail_page_only_renders_the_relevant_stages(self):
+        user = get_user_model().objects.create_superuser(
+            username="stage-mgr", email="s@example.com", password="test-pass-123"
+        )
+        self.client.force_login(user)
+        asset = self._asset()
+        AssetService.objects.create(asset=asset, service_type=self.wash)
+
+        response = self.client.get(reverse("asset_intake:detail", args=[asset.pk]))
+        self.assertEqual(response.status_code, 200)
+        rendered = [stage["value"] for stage in response.context["work_progress_stages"]]
+        self.assertNotIn(Asset.Status.REPAIRING, rendered)
+        self.assertIn(Asset.Status.CLEANING, rendered)

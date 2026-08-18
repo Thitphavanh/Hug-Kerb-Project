@@ -8,13 +8,14 @@ class PriceValuationAdmin(admin.ModelAdmin):
     list_display = [
         "asset",
         "suggested_price",
-        "price_min",
-        "price_max",
+        "recommended_buy_price",
+        "demand_level",
+        "confidence_score",
         "currency",
         "ai_model",
         "created_at",
     ]
-    list_filter = ["currency", "created_at"]
+    list_filter = ["currency", "demand_level", "created_at"]
     search_fields = ["asset__ticket_number", "asset__brand"]
     readonly_fields = ["created_at"]
     autocomplete_fields = ["asset", "assessment"]

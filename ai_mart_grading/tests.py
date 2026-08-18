@@ -1,5 +1,6 @@
 import base64
 import json
+from decimal import Decimal
 from io import BytesIO
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
@@ -14,7 +15,7 @@ from crm.models import Customer
 from pos.models import Order, OrderItem, ServiceType
 
 from .models import Assessment, ChecklistItem
-from .services import OpenRouterError, chat, chat_json
+from .services import OpenRouterError, chat, chat_json, to_decimal
 from .views import (
     AI_IMAGE_LIMIT,
     AI_IMAGE_MAX_SIZE,
@@ -252,3 +253,102 @@ class OpenRouterClientTests(SimpleTestCase):
         self.assertEqual(mock_post.call_count, 2)
         retry_payload = mock_post.call_args.kwargs["json"]
         self.assertEqual(retry_payload["max_tokens"], 1878)
+
+
+class AssessmentResultStorageTests(TestCase):
+    """ຄຳຕອບຂອງ AI ບໍ່ຢູ່ໃນຮູບແບບທີ່ຄາດໄວ້ສະເໝີ — ຕ້ອງບໍ່ເສຍທັງການປະເມີນ"""
+
+    def setUp(self):
+        user = get_user_model().objects.create_user("grading-staff")
+        self.client.force_login(user)
+        customer = Customer.objects.create(name="ນາງ ຄຳ", phone="02055553333")
+        self.asset = Asset.objects.create(customer=customer, brand="Nike")
+        self.item = ChecklistItem.objects.create(name="ໜ້າເກີບ", max_score=10)
+        self.url = reverse("ai_mart_grading:run_assessment", args=[self.asset.pk])
+
+    @patch("ai_mart_grading.views.chat_json")
+    def test_confidence_score_is_stored_as_a_column(self, mock_chat):
+        mock_chat.return_value = (
+            {
+                "items": [[self.item.id, 8, "ດີ"]],
+                "overall_grade": "B",
+                "total_score": 8,
+                "summary": "ສະພາບດີ",
+                "confidence_score": 92,
+            },
+            {"model": "test-model"},
+        )
+
+        self.client.post(self.url)
+
+        assessment = Assessment.objects.get()
+        self.assertEqual(assessment.status, Assessment.Status.DONE)
+        self.assertEqual(assessment.confidence_score, 92)
+
+    @patch("ai_mart_grading.views.chat_json")
+    def test_an_overlong_grade_is_narrowed_instead_of_breaking_the_save(
+        self, mock_chat
+    ):
+        """overall_grade ຍາວໄດ້ 1 ຕົວ — "A+" ເຄີຍເຮັດໃຫ້ການບັນທຶກລົ້ມທັງໜ່ວຍ"""
+        mock_chat.return_value = (
+            {
+                "items": [[self.item.id, "9.5", "ດີຫຼາຍ"]],
+                "overall_grade": "A+",
+                "total_score": "9.5",
+                "summary": "ເກືອບໃໝ່",
+            },
+            {"model": "test-model"},
+        )
+
+        self.client.post(self.url)
+
+        assessment = Assessment.objects.get()
+        self.assertEqual(assessment.status, Assessment.Status.DONE)
+        self.assertEqual(assessment.overall_grade, "A")
+        self.assertEqual(assessment.total_score, Decimal("9.5"))
+        self.assertEqual(assessment.items.get().score, Decimal("9.5"))
+
+    @patch("ai_mart_grading.views.chat_json")
+    def test_a_grade_that_is_not_a_letter_at_all_is_left_blank(self, mock_chat):
+        mock_chat.return_value = (
+            {
+                "items": [[self.item.id, 5, ""]],
+                "overall_grade": "Grade B",
+                "total_score": 5,
+            },
+            {"model": "test-model"},
+        )
+
+        self.client.post(self.url)
+
+        self.assertEqual(Assessment.objects.get().overall_grade, "")
+
+    @patch("ai_mart_grading.views.chat_json")
+    def test_an_unparsable_item_score_counts_as_zero(self, mock_chat):
+        mock_chat.return_value = (
+            {
+                "items": [[self.item.id, "N/A", "ເບິ່ງບໍ່ຊັດ"]],
+                "overall_grade": "F",
+                "total_score": None,
+            },
+            {"model": "test-model"},
+        )
+
+        self.client.post(self.url)
+
+        assessment = Assessment.objects.get()
+        self.assertEqual(assessment.items.get().score, Decimal("0"))
+        self.assertIsNone(assessment.total_score)
+
+
+class ToDecimalTests(SimpleTestCase):
+    def test_it_handles_the_shapes_ai_actually_returns(self):
+        self.assertEqual(to_decimal("1,200,000"), Decimal("1200000"))
+        self.assertEqual(to_decimal("85%"), Decimal("85"))
+        self.assertEqual(to_decimal(12.5), Decimal("12.5"))
+        self.assertIsNone(to_decimal("N/A"))
+        self.assertIsNone(to_decimal(None))
+        self.assertIsNone(to_decimal(""))
+        self.assertIsNone(to_decimal(True))
+        self.assertIsNone(to_decimal(float("nan")))
+        self.assertEqual(to_decimal("nope", 0), 0)

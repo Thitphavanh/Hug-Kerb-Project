@@ -18,7 +18,15 @@ class AssessmentItemInline(admin.TabularInline):
 
 @admin.register(Assessment)
 class AssessmentAdmin(admin.ModelAdmin):
-    list_display = ["asset", "status", "overall_grade", "total_score", "ai_model", "created_at"]
+    list_display = [
+        "asset",
+        "status",
+        "overall_grade",
+        "total_score",
+        "confidence_score",
+        "ai_model",
+        "created_at",
+    ]
     list_filter = ["status", "overall_grade", "created_at"]
     search_fields = ["asset__ticket_number", "asset__brand"]
     readonly_fields = ["created_at"]

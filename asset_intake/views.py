@@ -11,6 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import gettext as _, gettext_noop
+from django.views.decorators.http import require_POST
 
 from ai_mart_grading.models import Assessment, ChecklistItem
 from crm.models import Customer
@@ -19,7 +20,7 @@ from media_backup.services import store_uploads
 from notifications.services import build_wa_link
 
 from .forms import IntakeForm
-from .models import Asset, AssetService, StorageSlot, build_zone_rows
+from .models import Asset, AssetService, Brand, ShoeModel, StorageSlot, build_zone_rows
 from .utils import absolute_url, qr_data_uri
 
 
@@ -217,13 +218,28 @@ def intake_create(request):
         form = IntakeForm(request.POST)
         if form.is_valid():
             data = form.cleaned_data
-            customer, created = Customer.objects.get_or_create(
-                phone=data["customer_phone"],
-                defaults={"name": data["customer_name"]},
+            # ພະນັກງານເລືອກລູກຄ້າເກົ່າຈາກຊ່ອງຄົ້ນຫາ → ຜູກດ້ວຍ id ກ່ອນ
+            # ບໍ່ດັ່ງນັ້ນການແກ້ເບີໂທຈະໄປສ້າງລູກຄ້າຊ້ຳຂຶ້ນມາອີກຄົນ
+            customer = (
+                Customer.objects.filter(pk=data["customer_id"]).first()
+                if data.get("customer_id")
+                else None
             )
-            if not created and customer.name != data["customer_name"]:
+            if customer is None:
+                customer, _created = Customer.objects.get_or_create(
+                    phone=data["customer_phone"],
+                    defaults={"name": data["customer_name"]},
+                )
+
+            updates = []
+            if customer.name != data["customer_name"]:
                 customer.name = data["customer_name"]
-                customer.save(update_fields=["name"])
+                updates.append("name")
+            if customer.phone != data["customer_phone"]:
+                customer.phone = data["customer_phone"]
+                updates.append("phone")
+            if updates:
+                customer.save(update_fields=updates)
 
             asset = Asset.objects.create(
                 customer=customer,
@@ -238,12 +254,15 @@ def intake_create(request):
                 asset=asset,
                 files=request.FILES.getlist("photos"),
                 stage=MediaFile.Stage.BEFORE,
+                uploaded_by=request.user,
             )
             for error in upload_errors:
                 messages.error(request, error)
 
             messages.success(
-                request, f"ຮັບເຄື່ອງສຳເລັດ — ເລກໃບຮັບ {asset.ticket_number}"
+                request,
+                _("Intake saved successfully — Ticket #%(ticket)s")
+                % {"ticket": asset.ticket_number},
             )
             return redirect("asset_intake:detail", pk=asset.pk)
     else:
@@ -255,7 +274,14 @@ def intake_create(request):
         {
             "active_nav": "pos",
             "form": form,
-            "customers": Customer.objects.order_by("name")[:200],
+            # ຊຸດລູກຄ້າຕັ້ງຕົ້ນ ໃຫ້ຊ່ອງຄົ້ນຫາຂຶ້ນຜົນທັນທີ ກ່ອນ API ຈະຕອບ
+            "customer_seed": [
+                {"id": pk, "name": name, "phone": phone}
+                for pk, name, phone in Customer.objects.order_by("name").values_list(
+                    "pk", "name", "phone"
+                )[:300]
+            ],
+            "brand_catalogue": brand_catalogue(),
         },
     )
 
@@ -278,6 +304,7 @@ def intake_detail(request, pk):
             files=request.FILES.getlist("photos"),
             stage=stage,
             capture_angle=capture_angle,
+            uploaded_by=request.user,
         )
         for error in upload_errors:
             messages.error(request, error)
@@ -416,13 +443,8 @@ def intake_detail(request, pk):
         if item.service_type.name != AI_GRADING_SERVICE_NAME
     ]
 
-    stage_order = [
-        Asset.Status.RECEIVED,
-        Asset.Status.CLEANING,
-        Asset.Status.REPAIRING,
-        Asset.Status.READY,
-        Asset.Status.RETURNED,
-    ]
+    # ສະແດງສະເພາະຂັ້ນທີ່ຄູ່ນີ້ຈະຜ່ານແທ້ໆ — ຄູ່ທີ່ມາຊັກຢ່າງດຽວບໍ່ຕ້ອງເຫັນ "ກຳລັງສ້ອມແປງ"
+    stage_order = asset.progress_stages()
     current_stage_index = (
         stage_order.index(asset.status) if asset.status in stage_order else 0
     )
@@ -446,10 +468,11 @@ def intake_detail(request, pk):
     }
     valuations = list(asset.valuations.all()[:5])
     for valuation in valuations:
-        demand_level = (valuation.raw_response or {}).get(
-            "demand_level", "High Demand"
+        # ບໍ່ຕົກລົງມາເປັນ "High Demand" ອີກຕໍ່ໄປ — ການບອກວ່າຄວາມຕ້ອງການສູງ
+        # ທັງທີ່ AI ບໍ່ໄດ້ບອກ ຈະດັນໃຫ້ຮ້ານຮັບຊື້ໃນລາຄາແພງເກີນຄວາມຈິງ
+        valuation.localized_demand = demand_labels.get(
+            valuation.demand_level, valuation.demand_level
         )
-        valuation.localized_demand = demand_labels.get(demand_level, demand_level)
 
     before_media = list(
         asset.media_files.filter(stage=MediaFile.Stage.BEFORE)
@@ -612,11 +635,24 @@ def social_image(request, pk):
 
     from .social import compose_before_after
 
-    png_bytes = compose_before_after(
-        before.file.path,
-        after.file.path,
-        caption=f"{asset.brand} {asset.model_name}".strip(),
-    )
+    # ຮູບທີ່ອັບຄ້າງ (ເນັດຫຼຸດກາງທາງ) ຜ່ານການກວດຕອນອັບໂຫຼດໄດ້ ເພາະຫົວໄຟລ໌ຍັງດີ
+    # ແຕ່ PIL ເປີດບໍ່ໄດ້ຕອນມາປະກອບຮູບ — ຢ່າໃຫ້ໜ້າ 500 ໃສ່ພະນັກງານ
+    try:
+        png_bytes = compose_before_after(
+            before.file.path,
+            after.file.path,
+            caption=f"{asset.brand} {asset.model_name}".strip(),
+        )
+    except (OSError, ValueError):
+        messages.error(
+            request,
+            _(
+                "One of the photos is damaged and cannot be opened. "
+                "Please upload the before and after photos again."
+            ),
+        )
+        return redirect("asset_intake:detail", pk=asset.pk)
+
     response = HttpResponse(png_bytes, content_type="image/png")
     response["Content-Disposition"] = (
         f'attachment; filename="hugkerb-{asset.ticket_number}-before-after.png"'
@@ -847,3 +883,111 @@ def storage_release(request):
     asset.save(update_fields=["storage_slot", "updated_at"])
     messages.success(request, _("Storage slot released."))
     return redirect("asset_intake:detail", pk=asset.pk)
+
+
+# ══════════ ຈັດການຍີ່ຫໍ້ ແລະ ລຸ້ນເກີບ (Scope 2.3) ══════════
+
+
+def brand_catalogue():
+    """ຍີ່ຫໍ້ທີ່ເປີດໃຊ້ພ້ອມລຸ້ນຂອງມັນ — ໃຊ້ຮ່ວມກັນລະຫວ່າງໜ້າຮັບເຄື່ອງ ແລະ ໜ້າ POS
+
+    ຄືນເປັນ dict {ຊື່ຍີ່ຫໍ້: [ຊື່ລຸ້ນ, ...]} ເພື່ອຝັງເປັນ JSON ໃນໜ້າ
+    ແລ້ວໃຫ້ຝັ່ງ browser ກັ່ນຕອງເອງ — ບໍ່ຕ້ອງຍິງ request ທຸກຄັ້ງທີ່ປ່ຽນຍີ່ຫໍ້
+    (ຮ້ານມີຍີ່ຫໍ້ບໍ່ຮອດຮ້ອຍ ຂໍ້ມູນຈຶ່ງນ້ອຍພໍທີ່ຈະສົ່ງໄປພ້ອມໜ້າໄດ້)
+    """
+    catalogue = {}
+    for brand in Brand.objects.filter(is_active=True).prefetch_related("shoe_models"):
+        catalogue[brand.name] = [
+            model.name for model in brand.shoe_models.all() if model.is_active
+        ]
+    return catalogue
+
+
+@login_required
+def brand_list(request):
+    brands = Brand.objects.prefetch_related("shoe_models").order_by(
+        "sort_order", "name"
+    )
+    return render(
+        request,
+        "asset_intake/brand_list.html",
+        {"active_nav": "brands", "brands": brands},
+    )
+
+
+@login_required
+@require_POST
+def brand_create(request):
+    name = request.POST.get("name", "").strip()
+    if not name:
+        messages.error(request, _("Enter a brand name."))
+    elif Brand.objects.filter(name__iexact=name).exists():
+        messages.error(request, _("That brand already exists."))
+    else:
+        Brand.objects.create(
+            name=name,
+            sort_order=int(request.POST.get("sort_order") or 0),
+        )
+        messages.success(request, _("Brand added:") + f" {name}")
+    return redirect("asset_intake:brands")
+
+
+@login_required
+@require_POST
+def brand_update(request, pk):
+    brand = get_object_or_404(Brand, pk=pk)
+    name = request.POST.get("name", "").strip()
+    if not name:
+        messages.error(request, _("Enter a brand name."))
+    elif Brand.objects.filter(name__iexact=name).exclude(pk=brand.pk).exists():
+        messages.error(request, _("That brand already exists."))
+    else:
+        brand.name = name
+        brand.sort_order = int(request.POST.get("sort_order") or 0)
+        brand.is_active = request.POST.get("is_active") == "on"
+        brand.save()
+        messages.success(request, _("Brand updated."))
+    return redirect("asset_intake:brands")
+
+
+@login_required
+@require_POST
+def brand_delete(request, pk):
+    brand = get_object_or_404(Brand, pk=pk)
+    # ຄູ່ເກີບເກັບຍີ່ຫໍ້ເປັນຂໍ້ຄວາມ ບໍ່ແມ່ນ FK — ລຶບຍີ່ຫໍ້ຈຶ່ງບໍ່ກະທົບປະຫວັດເກົ່າ
+    # ແຕ່ຍັງເຕືອນໄວ້ ເພື່ອບໍ່ໃຫ້ພະນັກງານເຂົ້າໃຈວ່າປະຫວັດຫາຍໄປນຳ
+    used = Asset.objects.filter(brand__iexact=brand.name).count()
+    brand.delete()
+    if used:
+        messages.success(
+            request,
+            _("Brand removed from the list. %(count)d past item(s) keep their record.")
+            % {"count": used},
+        )
+    else:
+        messages.success(request, _("Brand removed."))
+    return redirect("asset_intake:brands")
+
+
+@login_required
+@require_POST
+def shoe_model_create(request, brand_pk):
+    brand = get_object_or_404(Brand, pk=brand_pk)
+    name = request.POST.get("name", "").strip()
+    if not name:
+        messages.error(request, _("Enter a model name."))
+    elif brand.shoe_models.filter(name__iexact=name).exists():
+        messages.error(request, _("That model already exists for this brand."))
+    else:
+        ShoeModel.objects.create(brand=brand, name=name)
+        messages.success(request, _("Model added:") + f" {brand.name} {name}")
+    return redirect("asset_intake:brands")
+
+
+@login_required
+@require_POST
+def shoe_model_delete(request, pk):
+    model = get_object_or_404(ShoeModel, pk=pk)
+    model.delete()
+    messages.success(request, _("Model removed."))
+    return redirect("asset_intake:brands")

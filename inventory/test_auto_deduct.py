@@ -123,3 +123,53 @@ class AutoStockDeductionTest(TestCase):
         soap_movements = StockMovement.objects.filter(order=order, supply=self.soap)
         self.assertEqual(soap_movements.count(), 1)
         self.assertEqual(soap_movements.first().quantity, 3)
+
+
+class InsufficientStockTest(TestCase):
+    """ສະຕັອກບໍ່ພໍ — ຫັກຕໍ່ ແຕ່ຕ້ອງບອກສາເຫດໄວ້ ບໍ່ດັ່ງນັ້ນຍອດຕິດລົບຈະໄຮ້ທີ່ມາ"""
+
+    def setUp(self):
+        self.customer = Customer.objects.create(name="ນາງ ແກ້ວ", phone="02055558888")
+        self.soap = Supply.objects.create(
+            name="ນ້ຳຢາຊັກເກີບ", sku="CLN-200", unit="ຂວດ", quantity_on_hand=50
+        )
+        self.deep_clean = ServiceType.objects.create(
+            name="Deep Clean (shortfall)", price=Decimal("150000.00")
+        )
+        ServiceSupply.objects.create(
+            service_type=self.deep_clean, supply=self.soap, quantity_per_unit=2
+        )
+
+    def _paid_order(self, quantity=1):
+        order = Order.objects.create(customer=self.customer, vat_rate=0)
+        OrderItem.objects.create(
+            order=order,
+            service_type=self.deep_clean,
+            quantity=quantity,
+            unit_price=Decimal("150000.00"),
+        )
+        record_payment(
+            order=order,
+            amount=order.total,
+            method=Payment.Method.CASH,
+        )
+        return order
+
+    def test_a_shortfall_is_recorded_in_the_movement_note(self):
+        self.soap.quantity_on_hand = 1
+        self.soap.save(update_fields=["quantity_on_hand"])
+
+        order = self._paid_order(quantity=1)
+
+        movement = StockMovement.objects.get(order=order, supply=self.soap)
+        self.assertIn("ສະຕັອກບໍ່ພໍ", movement.note)
+        self.assertIn("ເຫຼືອ 1", movement.note)
+        self.assertIn("ຕ້ອງການ 2", movement.note)
+        self.soap.refresh_from_db()
+        self.assertEqual(self.soap.quantity_on_hand, -1)
+
+    def test_a_normal_deduction_carries_no_shortfall_note(self):
+        order = self._paid_order(quantity=1)
+
+        movement = StockMovement.objects.get(order=order, supply=self.soap)
+        self.assertNotIn("ສະຕັອກບໍ່ພໍ", movement.note)

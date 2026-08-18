@@ -29,6 +29,18 @@
                 {% trans "Stock levels are healthy based on current thresholds." %}
                 {% endif %}
             </p>
+            {% if services_without_recipe %}
+            <p class="font-body-md text-status-alert mb-4 flex items-start gap-2">
+                <span class="material-symbols-outlined text-base mt-0.5">warning</span>
+                <span>{% blocktrans count count=services_without_recipe %}{{ count }} service has no material recipe yet, so paid orders deduct nothing from stock.{% plural %}{{ count }} services have no material recipe yet, so paid orders deduct nothing from stock.{% endblocktrans %}</span>
+            </p>
+            {% endif %}
+            {% if negative_stock_count %}
+            <p class="font-body-md text-status-alert mb-4 flex items-start gap-2">
+                <span class="material-symbols-outlined text-base mt-0.5">error</span>
+                <span>{% blocktrans count count=negative_stock_count %}{{ count }} material has gone negative — more was used than recorded as received. Count the shelf and post an adjustment.{% plural %}{{ count }} materials have gone negative — more was used than recorded as received. Count the shelf and post an adjustment.{% endblocktrans %}</span>
+            </p>
+            {% endif %}
             <button onclick="openRecordMovementModal()" class="btn-gradient text-on-primary font-label-caps text-label-caps py-2 px-4 rounded-lg inline-block">{% trans "Record Movement" %}</button>
         </div>
     </div>
@@ -58,7 +70,9 @@
                         <td class="py-4 px-4 font-medium text-on-surface">{{ supply.name }}</td>
                         <td class="py-4 px-4 text-right">{{ supply.quantity_on_hand }} {{ supply.unit }}</td>
                         <td class="py-4 px-4 text-center">
-                            {% if supply.is_low_stock %}
+                            {% if supply.quantity_on_hand < 0 %}
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-status-alert/20 text-status-alert border border-status-alert/40 font-bold">{% trans "Negative" %}</span>
+                            {% elif supply.is_low_stock %}
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-status-alert/10 text-status-alert border border-status-alert/20">{% trans "Low stock" %}</span>
                             {% else %}
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs bg-ai-cyan/10 text-ai-cyan border border-ai-cyan/20">{% trans "In stock" %}</span>
@@ -96,6 +110,87 @@
         </div>
     </aside>
 </div>
+
+<!-- Service recipes — ຕົວທີ່ເຮັດໃຫ້ການຕັດສະຕັອກອັດຕະໂນມັດເດີນຈິງ -->
+<section class="glass-card rounded-xl p-6">
+    <div class="flex flex-col md:flex-row justify-between md:items-center gap-3 mb-2">
+        <div>
+            <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Material use per service" %}</h3>
+            <p class="font-body-sm text-on-surface-variant mt-1">{% trans "Set how much of each material one service consumes. Stock is deducted automatically when an order is paid in full." %}</p>
+        </div>
+        <button onclick="openRecipeModal()" class="btn-gradient text-on-primary rounded-lg px-4 py-2 font-bold flex items-center gap-2 shrink-0"><span class="material-symbols-outlined text-sm">add</span>{% trans "Add to recipe" %}</button>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mt-6">
+        {% for row in service_recipes %}
+        <div class="rounded-lg border {% if row.usages %}border-white/10{% else %}border-status-alert/30{% endif %} p-4">
+            <div class="flex justify-between items-start gap-2 mb-3">
+                <span class="font-body-md font-semibold text-on-surface">{{ row.service.name }}</span>
+                {% if not row.usages %}
+                <span class="shrink-0 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-status-alert/10 text-status-alert border border-status-alert/20">{% trans "No recipe" %}</span>
+                {% endif %}
+            </div>
+            <ul class="space-y-2">
+                {% for usage in row.usages %}
+                <li class="flex justify-between items-center gap-2 text-sm">
+                    <span class="text-on-surface-variant truncate">{{ usage.supply.name }}</span>
+                    <span class="flex items-center gap-2 shrink-0">
+                        <span class="font-data-mono text-xs text-on-surface">× {{ usage.quantity_per_unit }} {{ usage.supply.unit }}</span>
+                        <form method="post" action="{% url 'inventory:delete_recipe' usage.pk %}" onsubmit="return confirm('{% trans "Remove this material from the recipe?" %}');">
+                            {% csrf_token %}
+                            <button type="submit" class="text-on-surface-variant hover:text-status-alert flex" aria-label="{% trans 'Remove' %}"><span class="material-symbols-outlined text-sm">close</span></button>
+                        </form>
+                    </span>
+                </li>
+                {% empty %}
+                <li class="text-sm text-on-surface-variant">{% trans "Paid orders for this service deduct nothing yet." %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% empty %}
+        <p class="text-on-surface-variant text-sm">{% trans "No active services yet." %}</p>
+        {% endfor %}
+    </div>
+</section>
+</div>
+
+<!-- Add Recipe Modal -->
+<div id="recipeModal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl max-w-md w-full overflow-hidden shadow-xl">
+        <div class="px-6 py-4 border-b border-outline-variant/20 bg-surface-bright flex justify-between items-center">
+            <h3 class="font-headline-sm text-on-surface font-bold">{% trans "Material use per service" %}</h3>
+            <button onclick="closeRecipeModal()" class="text-on-surface-variant hover:text-on-surface">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <form method="post" action="{% url 'inventory:add_recipe' %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm text-on-surface-variant mb-1">{% trans "Service" %}</label>
+                <select name="service_type" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                    {% for row in service_recipes %}
+                    <option value="{{ row.service.pk }}">{{ row.service.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-on-surface-variant mb-1">{% trans "Material" %}</label>
+                <select name="supply" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+                    {% for supply in supplies %}
+                    <option value="{{ supply.pk }}">{{ supply.name }} ({{ supply.unit }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-on-surface-variant mb-1">{% trans "Quantity used per service" %}</label>
+                <input type="number" name="quantity_per_unit" min="1" value="1" required class="w-full px-4 py-2 bg-surface border border-outline-variant/50 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
+            </div>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" onclick="closeRecipeModal()" class="px-4 py-2 text-sm text-on-surface-variant hover:text-on-surface">{% trans "Cancel" %}</button>
+                <button type="submit" class="btn-gradient text-on-primary px-4 py-2 rounded-lg text-sm font-bold">{% trans "Save" %}</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Add Supply Modal -->
@@ -284,6 +379,12 @@
     }
     function closeRecordMovementModal() {
         document.getElementById('movementModal').classList.add('hidden');
+    }
+    function openRecipeModal() {
+        document.getElementById('recipeModal').classList.remove('hidden');
+    }
+    function closeRecipeModal() {
+        document.getElementById('recipeModal').classList.add('hidden');
     }
 </script>
 {% endblock %}

@@ -5,7 +5,13 @@
 
 {% block content %}
 <section class="space-y-6">
-    <div><p class="text-xs font-bold uppercase tracking-widest text-ai-cyan">{% trans "End-of-day control" %}</p><h1 class="mt-1 text-3xl font-bold">{% trans "Cash handover and reconciliation" %}</h1><p class="mt-1 text-on-surface-variant">{% trans "Compare system cash with the amount physically counted." %}</p></div>
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+        <div><p class="text-xs font-bold uppercase tracking-widest text-ai-cyan">{% trans "End-of-day control" %}</p><h1 class="mt-1 text-3xl font-bold">{% trans "Cash handover and reconciliation" %}</h1><p class="mt-1 text-on-surface-variant">{% trans "Compare system cash with the amount physically counted." %}</p></div>
+        <a href="{% url 'accounting:yearly_cash_handover' %}?currency={{ selected_currency }}"
+           class="inline-flex items-center justify-center gap-2 self-start rounded-full border border-outline-variant px-5 py-2.5 text-sm font-bold hover:border-ai-cyan hover:text-ai-cyan transition-colors">
+            <span class="material-symbols-outlined text-[20px]">calendar_month</span>{% trans "Yearly cash handover" %}
+        </a>
+    </div>
     {% include "accounting/_nav.html" %}
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-5">
         <div class="space-y-4 xl:col-span-2">

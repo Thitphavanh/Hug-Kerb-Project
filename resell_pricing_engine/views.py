@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 
 from ai_mart_grading.models import Assessment
-from ai_mart_grading.services import OpenRouterError, chat, chat_json
+from ai_mart_grading.services import OpenRouterError, chat, chat_json, to_decimal
 from asset_intake.models import Asset
 from media_backup.models import MediaFile
 
@@ -88,13 +88,30 @@ def run_valuation(request, pk):
             model=os.environ.get("OPENROUTER_PRICING_MODEL", PRICING_MODEL),
             max_tokens=1200,
         )
+        suggested_price = to_decimal(result.get("suggested_price"), 0)
+        demand_level = str(result.get("demand_level", "")).strip()
         PriceValuation.objects.create(
             asset=asset,
             assessment=latest_assessment,
-            price_min=result.get("price_min", 0),
-            price_max=result.get("price_max", 0),
-            suggested_price=result.get("suggested_price", 0),
+            price_min=to_decimal(result.get("price_min"), 0),
+            price_max=to_decimal(result.get("price_max"), 0),
+            suggested_price=suggested_price,
             currency="LAK",
+            base_price=to_decimal(result.get("base_price")),
+            condition_adjustment=to_decimal(result.get("condition_adjustment")),
+            rarity_premium=to_decimal(result.get("rarity_premium")),
+            refurbishment_cost=to_decimal(result.get("refurbishment_cost")),
+            risk_reserve=to_decimal(result.get("risk_reserve")),
+            target_margin_percent=to_decimal(result.get("target_margin_percent")),
+            # ຖ້າ AI ບໍ່ຕອບລາຄາຮັບຊື້ ໃຫ້ວ່າງໄວ້ — ຢ່າຕົກລົງມາໃຊ້ລາຄາຂາຍຕໍ່
+            # ເພາະນັ້ນຈະສະແດງລາຄາຮັບຊື້ສູງເທົ່າລາຄາຂາຍ ແລ້ວຮ້ານຊື້ແພງເກີນ
+            recommended_buy_price=to_decimal(result.get("recommended_buy_price")),
+            demand_level=(
+                demand_level
+                if demand_level in PriceValuation.DemandLevel.values
+                else ""
+            ),
+            confidence_score=to_decimal(result.get("confidence_score")),
             reasoning=result.get("reasoning", ""),
             ai_model=raw.get("model", ""),
             raw_response={**raw, **result},

@@ -58,6 +58,27 @@ def confirmed_cashbook():
     return CashBook.objects.filter(status=CashBook.Status.CONFIRMED)
 
 
+def pl_bucket(row):
+    """ແຖວນີ້ລົງທາງໃດໃນລາຍງານກຳໄລ-ຂາດທຶນ → (bucket, ຈຳນວນທີ່ມີເຄື່ອງໝາຍ)
+
+    ກົດດຽວທີ່ທຸກລາຍງານກຳໄລ-ຂາດທຶນຕ້ອງໃຊ້ຮ່ວມກັນ:
+    ຄືນເງິນລູກຄ້າ = ຫັກອອກຈາກ *ລາຍຮັບ* ບໍ່ແມ່ນເພີ່ມເປັນ *ລາຍຈ່າຍ*
+    (ຖ້ານັບເປັນລາຍຈ່າຍ ຍອດສຸດທິຈະຖືກ ແຕ່ຍອດຂາຍ ແລະ ຍອດຈ່າຍຈະບວມທັງສອງຝັ່ງ)
+    """
+    if row.get("refund"):
+        return "income", -row["amount"]
+    if row["type"] == "IN":
+        return "income", row["amount"]
+    return "expense", row["amount"]
+
+
+def operational_rows(rows):
+    """ສະເພາະແຖວທີ່ນັບເຂົ້າກຳໄລ-ຂາດທຶນ: ຢືນຢັນແລ້ວ ແລະ ບໍ່ແມ່ນການຍ້າຍເງິນພາຍໃນ"""
+    return [
+        row for row in rows if row["status"] == "confirmed" and not row["internal"]
+    ]
+
+
 def exclude_internal_transfers(queryset):
     """ຕັດການຍ້າຍເງິນລະຫວ່າງກະເປົ໋າຂອງຮ້ານເອງອອກ (ເຊັ່ນ ເງິນສົດ → ບັນຊີທະນາຄານ)
 
@@ -206,6 +227,7 @@ def unified_transactions(
                 "status": item.status,
                 "status_label": _status_label(item.status),
                 "internal": item.category.is_internal_transfer,
+                "refund": False,
                 "raw_method": item.payment_method,
                 "object": item,
             }
@@ -229,8 +251,10 @@ def unified_transactions(
                     "order": item.order.order_number,
                     "customer": customer,
                 },
-                "category": _("POS income"),
-                "category_color": "#22d3ee",
+                # ຄືນເງິນຕ້ອງມີປ້າຍຂອງໂຕເອງ — ຂຶ້ນ "ລາຍຮັບຈາກ POS" ໃນຖັນເງິນອອກ
+                # ເຮັດໃຫ້ຄົນອ່ານລາຍງານເຂົ້າໃຈຜິດ
+                "category": _("POS refund") if is_refund else _("POS income"),
+                "category_color": "#fb7185" if is_refund else "#22d3ee",
                 "amount": item.amount,
                 "currency": item.currency,
                 "method": _payment_method_label(item.method),
@@ -240,6 +264,9 @@ def unified_transactions(
                 "status": "confirmed",
                 "status_label": _("Confirmed"),
                 "internal": False,
+                # ທຸງບອກລາຍງານກຳໄລ-ຂາດທຶນວ່າແຖວນີ້ຕ້ອງຫັກອອກຈາກລາຍຮັບ
+                # ສ່ວນໃບແຈ້ງຍອດຍັງໃຊ້ type=OUT ຢູ່ ເພາະເງິນອອກຈາກກຳປັ່ນຈິງ
+                "refund": is_refund,
                 "raw_method": item.method,
                 "object": item,
             }
@@ -264,6 +291,7 @@ def unified_transactions(
                 "status": "confirmed",
                 "status_label": _("Confirmed"),
                 "internal": False,
+                "refund": False,
                 "raw_method": CashBook.PaymentMethod.CASH,
                 "object": item,
             }
@@ -339,23 +367,27 @@ def normalize_category_key(name):
 
 
 def group_by_category(rows, transaction_type, currency, default_other=None):
-    """ລວມຍອດຕາມໝວດ → [{'description', 'amount'}] ຮຽງຈາກຫຼາຍໄປໜ້ອຍ"""
+    """ລວມຍອດຕາມໝວດ → [{'description', 'amount'}] ຮຽງຈາກຫຼາຍໄປໜ້ອຍ
+
+    ໃຊ້ກົດດຽວກັບ pl_bucket(): ຄືນເງິນຂຶ້ນເປັນແຖວ *ຕິດລົບ* ໃນຝັ່ງລາຍຮັບ
+    ບໍ່ແມ່ນແຖວບວກໃນຝັ່ງລາຍຈ່າຍ — ຜົນລວມຈຶ່ງກົງກັບການ໌ດຍອດລວມສະເໝີ
+    """
     default_other = default_other or _("Other")
+    bucket_wanted = "income" if transaction_type == "IN" else "expense"
     merged = {}
     order = []
     for row in rows:
-        if (
-            row["type"] != transaction_type
-            or row["currency"] != currency
-            or row["status"] != "confirmed"
-        ):
+        if row["currency"] != currency or row["status"] != "confirmed":
+            continue
+        bucket, amount = pl_bucket(row)
+        if bucket != bucket_wanted:
             continue
         name = row["category"] or default_other
         key = normalize_category_key(name)
         if key not in merged:
             merged[key] = {"description": name, "amount": ZERO}
             order.append(key)
-        merged[key]["amount"] += row["amount"]
+        merged[key]["amount"] += amount
     result = [merged[key] for key in order]
     result.sort(key=lambda item: -item["amount"])
     return result
@@ -385,11 +417,9 @@ def group_by_category_and_payment(rows, default_other=None):
 
 
 def grouped_report(start_date, end_date, grouping="daily"):
-    rows = unified_transactions(start_date, end_date)
+    rows = operational_rows(unified_transactions(start_date, end_date))
     grouped = defaultdict(lambda: {"income": ZERO, "expense": ZERO})
     for row in rows:
-        if row["status"] != "confirmed" or row.get("internal"):
-            continue
         date = row["date"]
         if grouping == "monthly":
             period = date.replace(day=1)
@@ -398,8 +428,8 @@ def grouped_report(start_date, end_date, grouping="daily"):
         else:
             period = date
         key = (period, row["currency"])
-        bucket = "income" if row["type"] == "IN" else "expense"
-        grouped[key][bucket] += row["amount"]
+        bucket, amount = pl_bucket(row)
+        grouped[key][bucket] += amount
 
     result = []
     for (period, currency), values in sorted(grouped.items(), reverse=True):

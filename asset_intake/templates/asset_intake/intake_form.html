@@ -1,93 +1,393 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}Asset Intake — Hug ເກີບ AI{% endblock %}
+{% block title %}{% trans "Asset Intake" %} — Hug ເກີບ AI{% endblock %}
 
 {% block content %}
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
     <div>
-        <h2 class="font-headline-lg text-headline-lg text-on-surface">Asset Intake</h2>
-        <p class="text-on-surface-variant">Capture customer, sneaker, and image evidence for AI grading.</p>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface">{% trans "Asset Intake" %}</h2>
+        <p class="text-on-surface-variant">{% trans "Capture customer, sneaker, and image evidence for AI grading." %}</p>
     </div>
-    <a href="{% url 'asset_intake:list' %}" class="text-ai-cyan hover:underline">Back to queue</a>
+    <a href="{% url 'asset_intake:list' %}" class="text-ai-cyan hover:underline flex items-center gap-1">
+        <span class="material-symbols-outlined text-sm">arrow_back</span>
+        {% trans "Back to queue" %}
+    </a>
 </div>
 
-<datalist id="customer-list">
-    {% for c in customers %}
-    <option value="{{ c.name }}">{{ c.phone }}</option>
-    {% endfor %}
-</datalist>
+{{ customer_seed|json_script:"customer-seed" }}
 
-<form method="post" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start">
+<form method="post" enctype="multipart/form-data" class="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-start mt-4">
     {% csrf_token %}
     <div class="lg:col-span-8 space-y-gutter">
+        <!-- Customer Details -->
         <section class="glass-card rounded-xl overflow-hidden">
-            <div class="px-6 py-4 border-b border-white/10 flex items-center gap-2">
-                <span class="material-symbols-outlined text-ai-cyan">person</span>
-                <h3 class="font-headline-md text-headline-md text-on-surface">Customer Details</h3>
+            <div class="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-ai-cyan">person</span>
+                    <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Customer Details" %}</h3>
+                </div>
+                <span id="customer-type-badge" class="shrink-0 rounded-full border border-outline-variant px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant transition-colors">
+                    {% trans "New Customer" %}
+                </span>
             </div>
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.customer_name.label }}</label>
-                    {{ form.customer_name }}
-                    {% for e in form.customer_name.errors %}<p class="text-xs text-status-alert mt-1">{{ e }}</p>{% endfor %}
+                {{ form.customer_id }}
+
+                <!-- ຄົ້ນຫາລູກຄ້າເກົ່າ — ແບບດຽວກັບໜ້າເປີດບິນ (POS) -->
+                <div class="relative md:col-span-2">
+                    <label for="customer-search" class="block font-label-caps text-label-caps text-on-surface-variant mb-2">
+                        {% trans "Find an existing customer" %}
+                    </label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+                        <input id="customer-search" type="search" autocomplete="off"
+                               class="w-full rounded-lg border border-white/10 bg-surface-container pl-11 pr-10 py-2 text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-ai-cyan focus:ring-1 focus:ring-ai-cyan"
+                               placeholder="{% trans 'Search existing customer by name or phone...' %}"
+                               role="combobox" aria-autocomplete="list"
+                               aria-controls="customer-suggestions" aria-expanded="false"/>
+                        <button type="button" id="btn-clear-customer" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface p-1">
+                            <span class="material-symbols-outlined text-base">close</span>
+                        </button>
+                        <div id="customer-suggestions" role="listbox"
+                             class="absolute left-0 right-0 top-full z-50 mt-1 hidden max-h-60 overflow-y-auto rounded-xl border border-outline-variant bg-surface-container-lowest shadow-2xl backdrop-blur-md">
+                        </div>
+                    </div>
+                    <p class="text-xs text-on-surface-variant mt-2">
+                        {% trans "Type a Lao name or part of a phone number, then select a customer." %}
+                    </p>
                 </div>
+
                 <div>
-                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.customer_phone.label }}</label>
+                    <label for="id_customer_name" class="block font-label-caps text-label-caps text-on-surface-variant mb-2">
+                        {{ form.customer_name.label }}
+                    </label>
+                    {{ form.customer_name }}
+                    {% for e in form.customer_name.errors %}
+                        <p class="text-xs text-status-alert mt-1">{{ e }}</p>
+                    {% endfor %}
+                </div>
+
+                <div>
+                    <label for="id_customer_phone" class="block font-label-caps text-label-caps text-on-surface-variant mb-2">
+                        {{ form.customer_phone.label }}
+                    </label>
                     {{ form.customer_phone }}
-                    {% for e in form.customer_phone.errors %}<p class="text-xs text-status-alert mt-1">{{ e }}</p>{% endfor %}
+                    {% for e in form.customer_phone.errors %}
+                        <p class="text-xs text-status-alert mt-1">{{ e }}</p>
+                    {% endfor %}
                 </div>
             </div>
         </section>
 
+        <!-- Sneaker Details -->
         <section class="glass-card rounded-xl overflow-hidden">
             <div class="px-6 py-4 border-b border-white/10 flex items-center gap-2">
                 <span class="material-symbols-outlined text-ai-purple">steps</span>
-                <h3 class="font-headline-md text-headline-md text-on-surface">Sneaker Details</h3>
+                <h3 class="font-headline-md text-headline-md text-on-surface">{% trans "Sneaker Details" %}</h3>
             </div>
             <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.brand.label }}</label>
+                    <label for="id_brand" class="block font-label-caps text-label-caps text-on-surface-variant mb-2">
+                        {{ form.brand.label }}
+                    </label>
                     {{ form.brand }}
-                    {% for e in form.brand.errors %}<p class="text-xs text-status-alert mt-1">{{ e }}</p>{% endfor %}
+                    {% for e in form.brand.errors %}
+                        <p class="text-xs text-status-alert mt-1">{{ e }}</p>
+                    {% endfor %}
                 </div>
                 <div>
-                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.model_name.label }}</label>
+                    <label for="id_model_name" class="block font-label-caps text-label-caps text-on-surface-variant mb-2">
+                        {{ form.model_name.label }}
+                    </label>
                     {{ form.model_name }}
+                    <datalist id="model-options"></datalist>
+                    <p class="text-xs text-on-surface-variant mt-1">{% trans "Pick from the list or type a new model." %}</p>
+                    {% for e in form.model_name.errors %}
+                        <p class="text-xs text-status-alert mt-1">{{ e }}</p>
+                    {% endfor %}
                 </div>
                 <div>
-                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.color.label }}</label>
+                    <label for="id_color" class="block font-label-caps text-label-caps text-on-surface-variant mb-2">
+                        {{ form.color.label }}
+                    </label>
                     {{ form.color }}
+                    {% for e in form.color.errors %}
+                        <p class="text-xs text-status-alert mt-1">{{ e }}</p>
+                    {% endfor %}
                 </div>
                 <div>
-                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.size.label }}</label>
+                    <label for="id_size" class="block font-label-caps text-label-caps text-on-surface-variant mb-2">
+                        {{ form.size.label }}
+                    </label>
                     {{ form.size }}
+                    {% for e in form.size.errors %}
+                        <p class="text-xs text-status-alert mt-1">{{ e }}</p>
+                    {% endfor %}
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.condition_note.label }}</label>
+                    <label for="id_condition_note" class="block font-label-caps text-label-caps text-on-surface-variant mb-2">
+                        {{ form.condition_note.label }}
+                    </label>
                     {{ form.condition_note }}
+                    {% for e in form.condition_note.errors %}
+                        <p class="text-xs text-status-alert mt-1">{{ e }}</p>
+                    {% endfor %}
                 </div>
                 <div>
-                    <label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">{{ form.pickup_date.label }}</label>
+                    <label for="id_pickup_date" class="block font-label-caps text-label-caps text-on-surface-variant mb-2">
+                        {{ form.pickup_date.label }}
+                    </label>
                     {{ form.pickup_date }}
+                    {% for e in form.pickup_date.errors %}
+                        <p class="text-xs text-status-alert mt-1">{{ e }}</p>
+                    {% endfor %}
                 </div>
             </div>
         </section>
     </div>
 
+    <!-- Asset Photos Upload -->
     <aside class="lg:col-span-4 glass-card ai-glow-border rounded-xl p-6 sticky top-4">
-        <h3 class="font-headline-md text-headline-md text-on-surface mb-4">Asset Photos</h3>
+        <h3 class="font-headline-md text-headline-md text-on-surface mb-4">{% trans "Asset Photos" %}</h3>
         <label class="min-h-[260px] border-2 border-dashed border-outline-variant hover:border-ai-cyan/60 rounded-lg flex flex-col items-center justify-center p-8 text-center transition-colors group cursor-pointer bg-surface-container-lowest/50 relative overflow-hidden">
-            <span class="material-symbols-outlined text-5xl text-on-surface-variant group-hover:text-ai-cyan mb-4">add_a_photo</span>
-            <span class="font-headline-md text-on-surface mb-2">Upload Sneaker Photos</span>
-            <span class="font-body-sm text-on-surface-variant max-w-[250px]">Use clear lighting. Include upper, sole, heel, laces, and insole if possible.</span>
-            <span class="font-label-caps text-label-caps text-outline mt-4">JPG, PNG, multiple files</span>
-            <input type="file" name="photos" multiple accept="image/*" capture="environment" class="sr-only">
+            <span class="material-symbols-outlined text-5xl text-on-surface-variant group-hover:text-ai-cyan mb-4 transition-colors">add_a_photo</span>
+            <span class="font-headline-md text-on-surface mb-2">{% trans "Upload Sneaker Photos" %}</span>
+            <span class="font-body-sm text-on-surface-variant max-w-[250px]">{% trans "Use clear lighting. Include upper, sole, heel, laces, and insole if possible." %}</span>
+            <span id="photo-count-label" class="font-label-caps text-label-caps text-outline mt-4">{% trans "JPG, PNG, multiple files" %}</span>
+            <input type="file" id="id_photos" name="photos" multiple accept="image/*" capture="environment" class="sr-only">
         </label>
-        <button type="submit" class="mt-6 w-full btn-gradient text-on-primary font-label-caps text-label-caps py-3 rounded-lg font-bold flex justify-center items-center gap-2">
+        <button type="submit" class="mt-6 w-full btn-gradient text-on-primary font-label-caps text-label-caps py-3 rounded-lg font-bold flex justify-center items-center gap-2 shadow-lg">
             <span class="material-symbols-outlined text-sm">save</span>
-            Save Intake
+            {% trans "Save Intake" %}
         </button>
     </aside>
 </form>
+
+<script>
+/* ── ຄົ້ນຫາລູກຄ້າເກົ່າ (ຊື່ລາວ/ອັງກິດ ຫຼື ບາງສ່ວນຂອງເບີໂທ) ──
+   ໃຊ້ຮູບແບບດຽວກັບໜ້າເປີດບິນ (POS): ຊ່ອງຄົ້ນຫາແຍກຕ່າງຫາກ ແລ້ວຄລິກເລືອກລູກຄ້າ
+   → ຕື່ມຊື່ + ເບີໂທໃຫ້ອັດຕະໂນມັດ ແລະ ຜູກດ້ວຍ customer_id */
+document.addEventListener('DOMContentLoaded', function () {
+    const SEARCH_URL = "{% url 'pos:customer_search' %}";
+    const searchInput = document.getElementById('customer-search');
+    const suggestions = document.getElementById('customer-suggestions');
+    const idInput = document.getElementById('id_customer_id');
+    const nameInput = document.getElementById('id_customer_name');
+    const phoneInput = document.getElementById('id_customer_phone');
+    const badge = document.getElementById('customer-type-badge');
+    const clearBtn = document.getElementById('btn-clear-customer');
+    const photoInput = document.getElementById('id_photos');
+    const photoCountLabel = document.getElementById('photo-count-label');
+
+    const i18n = {
+        existingCustomer: "{% trans 'Existing Customer' %}",
+        newCustomer: "{% trans 'New Customer' %}",
+        noResults: "{% trans 'No matching customer found' %}",
+        filesSelected: "{% trans 'files selected' %}",
+        photoHint: "{% trans 'JPG, PNG, multiple files' %}"
+    };
+
+    /* ລູກຄ້າຊຸດທຳອິດຖືກສົ່ງມາກັບໜ້າ — ພິມແລ້ວເຫັນຜົນທັນທີ
+       ບໍ່ຕ້ອງລໍເນັດ ຕອນຮັບເຄື່ອງໜ້າຮ້ານທີ່ສັນຍານບໍ່ດີ */
+    const seedEl = document.getElementById('customer-seed');
+    const seed = seedEl ? JSON.parse(seedEl.textContent) : [];
+
+    let debounceTimer = null;
+    let requestSeq = 0;
+
+    function setBadge(isExisting) {
+        if (!badge) return;
+        badge.textContent = isExisting ? i18n.existingCustomer : i18n.newCustomer;
+        badge.className = isExisting
+            ? 'shrink-0 rounded-full border border-ai-cyan/40 bg-ai-cyan/15 px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-ai-cyan transition-colors'
+            : 'shrink-0 rounded-full border border-outline-variant px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-on-surface-variant transition-colors';
+    }
+
+    function hideSuggestions() {
+        suggestions.classList.add('hidden');
+        suggestions.replaceChildren();
+        searchInput.setAttribute('aria-expanded', 'false');
+    }
+
+    function clearSelection(clearSearch) {
+        idInput.value = '';
+        setBadge(false);
+        if (clearSearch) {
+            searchInput.value = '';
+            clearBtn.classList.add('hidden');
+        }
+    }
+
+    function selectCustomer(cust) {
+        idInput.value = cust.id || '';
+        nameInput.value = cust.name || '';
+        phoneInput.value = cust.phone || '';
+        searchInput.value = [cust.name, cust.phone].filter(Boolean).join(' · ');
+        setBadge(Boolean(cust.id));
+        clearBtn.classList.remove('hidden');
+        hideSuggestions();
+    }
+
+    function renderSuggestions(list) {
+        suggestions.replaceChildren();
+
+        if (!list || !list.length) {
+            const empty = document.createElement('div');
+            empty.className = 'px-4 py-3 text-xs text-on-surface-variant text-center';
+            empty.textContent = i18n.noResults;
+            suggestions.appendChild(empty);
+        } else {
+            list.forEach(function (cust) {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.setAttribute('role', 'option');
+                item.className = 'flex w-full items-center justify-between gap-3 border-b border-white/5 px-4 py-2.5 text-left last:border-0 hover:bg-surface-container-high focus:bg-surface-container-high focus:outline-none transition-colors';
+
+                const left = document.createElement('div');
+                left.className = 'flex items-center gap-2 truncate';
+                const icon = document.createElement('span');
+                icon.className = 'material-symbols-outlined text-ai-cyan text-base shrink-0';
+                icon.textContent = 'person';
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'truncate text-sm font-medium text-on-surface';
+                nameSpan.textContent = cust.name;
+                left.append(icon, nameSpan);
+
+                const phoneSpan = document.createElement('span');
+                phoneSpan.className = 'shrink-0 text-xs font-mono text-on-surface-variant';
+                phoneSpan.textContent = cust.phone;
+
+                item.append(left, phoneSpan);
+                item.addEventListener('click', function () { selectCustomer(cust); });
+                suggestions.appendChild(item);
+            });
+        }
+
+        suggestions.classList.remove('hidden');
+        searchInput.setAttribute('aria-expanded', 'true');
+    }
+
+    function localMatches(query) {
+        const q = query.toLowerCase();
+        return seed.filter(function (c) {
+            return (c.name || '').toLowerCase().includes(q) || (c.phone || '').includes(query);
+        }).slice(0, 8);
+    }
+
+    async function remoteSearch(query) {
+        const seq = ++requestSeq;
+        try {
+            const res = await fetch(SEARCH_URL + '?q=' + encodeURIComponent(query), {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (!res.ok) throw new Error('Customer search failed');
+            const data = await res.json();
+            if (seq === requestSeq) renderSuggestions(data.results || []);
+        } catch (e) {
+            // ຄົ້ນຫາລົ້ມເຫຼວ → ຄົງລາຍການທ້ອງຖິ່ນໄວ້ ດີກວ່າລ້າງໜ້າຈໍເປົ່າ
+            if (seq === requestSeq && !suggestions.children.length) hideSuggestions();
+        }
+    }
+
+    searchInput.addEventListener('input', function () {
+        clearTimeout(debounceTimer);
+        clearSelection(false);
+        const query = this.value.trim();
+        clearBtn.classList.toggle('hidden', !query);
+
+        if (!query) { hideSuggestions(); return; }
+
+        const local = localMatches(query);
+        if (local.length) renderSuggestions(local);
+
+        debounceTimer = setTimeout(function () { remoteSearch(query); }, 200);
+    });
+
+    searchInput.addEventListener('focus', function () {
+        const query = this.value.trim();
+        if (!query || idInput.value) return;
+        const local = localMatches(query);
+        if (local.length) renderSuggestions(local);
+    });
+
+    searchInput.addEventListener('keydown', function (event) {
+        const options = [...suggestions.querySelectorAll('[role="option"]')];
+        if (event.key === 'ArrowDown' && options.length) {
+            event.preventDefault();
+            options[0].focus();
+        } else if (event.key === 'Escape') {
+            hideSuggestions();
+        }
+    });
+
+    // ແກ້ຊື່ ຫຼື ເບີໂທເອງ = ລູກຄ້າໃໝ່ → ຕັດການຜູກກັບ record ເກົ່າ
+    [nameInput, phoneInput].forEach(function (input) {
+        input.addEventListener('input', function () {
+            if (idInput.value) clearSelection(true);
+        });
+    });
+
+    clearBtn.addEventListener('click', function () {
+        clearSelection(true);
+        nameInput.value = '';
+        phoneInput.value = '';
+        hideSuggestions();
+        searchInput.focus();
+    });
+
+    document.addEventListener('click', function (event) {
+        if (!searchInput.contains(event.target) && !suggestions.contains(event.target)) {
+            hideSuggestions();
+        }
+    });
+
+    setBadge(Boolean(idInput.value));
+
+    // ຈຳນວນຮູບທີ່ເລືອກ
+    if (photoInput && photoCountLabel) {
+        photoInput.addEventListener('change', function () {
+            const count = this.files.length;
+            if (count > 0) {
+                photoCountLabel.textContent = count + ' ' + i18n.filesSelected;
+                photoCountLabel.className = 'font-label-caps text-label-caps text-ai-cyan font-bold mt-4';
+            } else {
+                photoCountLabel.textContent = i18n.photoHint;
+                photoCountLabel.className = 'font-label-caps text-label-caps text-outline mt-4';
+            }
+        });
+    }
+});
+</script>
+
+{{ brand_catalogue|json_script:"brand-catalogue" }}
+<script>
+/* ── ລຸ້ນຕາມຍີ່ຫໍ້: ປ່ຽນຍີ່ຫໍ້ແລ້ວ ລາຍການແນະນຳລຸ້ນປ່ຽນຕາມ ──
+   ໃຊ້ <datalist> ບໍ່ແມ່ນ <select> ເພາະລຸ້ນອອກໃໝ່ຕະຫຼອດ —
+   ພະນັກງານຕ້ອງພິມລຸ້ນທີ່ຍັງບໍ່ມີໃນລາຍການໄດ້ ບໍ່ດັ່ງນັ້ນຮັບເຄື່ອງບໍ່ໄດ້ໜ້າຮ້ານ */
+(function () {
+    const catalogue = JSON.parse(document.getElementById("brand-catalogue").textContent);
+    const brandField = document.getElementById("id_brand");
+    const modelField = document.getElementById("id_model_name");
+    const options = document.getElementById("model-options");
+    if (!brandField || !modelField || !options) return;
+
+    function refreshModels() {
+        const models = catalogue[brandField.value] || [];
+        options.replaceChildren();
+        models.forEach(function (name) {
+            const opt = document.createElement("option");
+            opt.value = name;
+            options.appendChild(opt);
+        });
+        // ລຸ້ນທີ່ພິມໄວ້ບໍ່ແມ່ນຂອງຍີ່ຫໍ້ໃໝ່ → ລ້າງໃຫ້ ບໍ່ດັ່ງນັ້ນຈະໄດ້ Adidas ຄູ່ກັບ Air Force 1
+        if (modelField.value && !models.includes(modelField.value)) {
+            modelField.value = "";
+        }
+    }
+
+    brandField.addEventListener("change", refreshModels);
+    refreshModels();
+})();
+</script>
 {% endblock %}

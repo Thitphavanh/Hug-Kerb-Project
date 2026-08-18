@@ -111,3 +111,92 @@ class BuybackValuationTests(TestCase):
             mock_chat.call_args.kwargs["model"],
             "google/gemini-2.5-flash-lite",
         )
+
+    @patch("resell_pricing_engine.views.chat_json")
+    def test_every_price_component_is_stored_as_a_column(self, mock_chat):
+        """ຮ້ານຕ້ອງກັ່ນຕອງ/ຈັດລຽງຕາມລາຄາຮັບຊື້ໄດ້ — ຢູ່ໃນ JSON ດິບເຮັດບໍ່ໄດ້"""
+        self._add_required_photos()
+        Assessment.objects.create(
+            asset=self.asset, status=Assessment.Status.DONE, overall_grade="B"
+        )
+        mock_chat.return_value = (
+            {
+                "price_min": 20_000_000,
+                "price_max": 24_000_000,
+                "suggested_price": 22_000_000,
+                "base_price": 22_000_000,
+                "condition_adjustment": -1_000_000,
+                "rarity_premium": 2_000_000,
+                "refurbishment_cost": 500_000,
+                "risk_reserve": 1_000_000,
+                "target_margin_percent": 25,
+                "recommended_buy_price": 15_000_000,
+                "demand_level": "High Demand",
+                "confidence_score": 85,
+            },
+            {"model": "test-model"},
+        )
+
+        self.client.post(self.url)
+
+        valuation = PriceValuation.objects.get()
+        self.assertEqual(valuation.base_price, 22_000_000)
+        self.assertEqual(valuation.condition_adjustment, -1_000_000)
+        self.assertEqual(valuation.rarity_premium, 2_000_000)
+        self.assertEqual(valuation.refurbishment_cost, 500_000)
+        self.assertEqual(valuation.risk_reserve, 1_000_000)
+        self.assertEqual(valuation.target_margin_percent, 25)
+        self.assertEqual(valuation.recommended_buy_price, 15_000_000)
+        self.assertEqual(valuation.demand_level, "High Demand")
+        self.assertEqual(valuation.confidence_score, 85)
+
+    @patch("resell_pricing_engine.views.chat_json")
+    def test_a_missing_buy_back_price_stays_empty_instead_of_copying_the_resale_price(
+        self, mock_chat
+    ):
+        """ຖ້າຕົກມາໃຊ້ລາຄາຂາຍຕໍ່ ຮ້ານຈະຮັບຊື້ໃນລາຄາທີ່ບໍ່ເຫຼືອກຳໄລເລີຍ"""
+        self._add_required_photos()
+        Assessment.objects.create(
+            asset=self.asset, status=Assessment.Status.DONE, overall_grade="C"
+        )
+        mock_chat.return_value = (
+            {"price_min": 1, "price_max": 3, "suggested_price": 2},
+            {"model": "test-model"},
+        )
+
+        self.client.post(self.url)
+
+        valuation = PriceValuation.objects.get()
+        self.assertIsNone(valuation.recommended_buy_price)
+        self.assertEqual(valuation.demand_level, "")
+        self.assertIsNone(valuation.confidence_score)
+
+    @patch("resell_pricing_engine.views.chat_json")
+    def test_numbers_written_as_text_by_the_ai_are_still_stored(self, mock_chat):
+        """AI ບາງຮຸ່ນສົ່ງ "15,000,000" ຫຼື "85%" — ຕ້ອງບໍ່ເຮັດໃຫ້ການປະເມີນລົ້ມ"""
+        self._add_required_photos()
+        Assessment.objects.create(
+            asset=self.asset, status=Assessment.Status.DONE, overall_grade="A"
+        )
+        mock_chat.return_value = (
+            {
+                "price_min": "20,000,000",
+                "price_max": "24,000,000",
+                "suggested_price": "22,000,000",
+                "recommended_buy_price": "15,000,000",
+                "confidence_score": "85%",
+                "target_margin_percent": "N/A",
+                "demand_level": "very high",
+            },
+            {"model": "test-model"},
+        )
+
+        self.client.post(self.url)
+
+        valuation = PriceValuation.objects.get()
+        self.assertEqual(valuation.suggested_price, 22_000_000)
+        self.assertEqual(valuation.recommended_buy_price, 15_000_000)
+        self.assertEqual(valuation.confidence_score, 85)
+        self.assertIsNone(valuation.target_margin_percent)
+        # ຄ່ານອກລາຍການທີ່ກຳນົດໄວ້ຖືກປະຖິ້ມ ບໍ່ໃຫ້ໄປໂຜ່ໃນໜ້າຈໍ
+        self.assertEqual(valuation.demand_level, "")

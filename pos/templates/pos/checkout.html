@@ -8,12 +8,46 @@
     /* ຕົວເລກເງິນທຸກບ່ອນໃຊ້ຄວາມກວ້າງເທົ່າກັນ — ຕົວເລກຈະບໍ່ເຕັ້ນຕອນປ່ຽນຄ່າ */
     .tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
 
+    .pos-shell { width: 100%; }
+
     /* ໜ້າຄິດເງິນຫຼຸດ blur/glass ລົງ ໃຊ້ພື້ນທຶບ ຄອນທຣາສສູງ
        ເພາະໜ້າຮ້ານມີແສງສະທ້ອນ ແລະ ພະນັກງານຕ້ອງອ່ານໄວ */
     .pay-surface {
         background: rgb(var(--color-surface-container-lowest));
-        border: 1px solid rgb(var(--color-outline-variant) / .55);
+        border: 1px solid rgb(var(--color-outline-variant) / .7);
+        border-radius: 18px;
     }
+
+    /* ແຖບຂັ້ນຕອນ: ບອກວ່າຢູ່ໃສຂອງເສັ້ນທາງ ຮັບເຄື່ອງ → ຄິດເງິນ → ສົ່ງມອບ */
+    .step-rail { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .step-dot {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-size: 12px; font-weight: 600;
+        color: rgb(var(--color-on-surface-variant));
+    }
+    .step-dot b {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 22px; height: 22px; border-radius: 9999px;
+        border: 1px solid rgb(var(--color-outline-variant));
+        font-size: 11px; font-variant-numeric: tabular-nums;
+    }
+    .step-dot.is-current { color: rgb(var(--color-on-surface)); }
+    .step-dot.is-current b {
+        background: rgb(var(--color-ai-cyan));
+        border-color: rgb(var(--color-ai-cyan));
+        color: rgb(var(--color-on-primary));
+    }
+    .step-sep { width: 20px; height: 1px; background: rgb(var(--color-outline-variant)); }
+
+    .btn-pill {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        min-height: 44px; padding: 0 18px; border-radius: 9999px;
+        border: 1px solid rgb(var(--color-outline-variant));
+        color: rgb(var(--color-on-surface));
+        font-size: 13px; font-weight: 600;
+        transition: border-color .15s ease, color .15s ease;
+    }
+    .btn-pill:hover { border-color: rgb(var(--color-ai-cyan)); color: rgb(var(--color-ai-cyan)); }
 
     /* ປຸ່ມທຸກອັນໃນແຜງຮັບເງິນ ≥48px ຕາມມາດຕະຖານ touch target */
     .pad-btn {
@@ -65,21 +99,31 @@
     }
 </style>
 
-<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<div class="pos-shell">
+
+<div class="step-rail mb-6">
+    <span class="step-dot"><b>1</b>{% trans "Bill" %}</span>
+    <span class="step-sep"></span>
+    <span class="step-dot is-current"><b>2</b>{% trans "Checkout" %}</span>
+    <span class="step-sep"></span>
+    <span class="step-dot"><b>3</b>{% trans "Hand over items" %}</span>
+</div>
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-6">
     <div>
-        <p class="font-label-caps tracking-widest text-on-surface-variant text-xs">{% trans "Checkout" %}</p>
-        <h2 class="font-headline-lg text-headline-lg text-on-surface tnum">{{ order.order_number }}</h2>
+        <p class="font-label-caps tracking-widest text-on-surface-variant text-xs uppercase">{% trans "Checkout" %}</p>
+        <h2 class="font-headline-lg text-headline-lg text-on-surface tnum font-bold mt-1">{{ order.order_number }}</h2>
         <p class="font-body-md text-on-surface-variant mt-1">
             {% if order.customer %}{{ order.customer.name }} · {{ order.customer.phone }}
             {% else %}{% trans "Walk-in customer" %}{% endif %}
         </p>
     </div>
-    <div class="flex gap-3">
-        <a href="{% url 'pos:open_orders' %}" class="border border-outline-variant text-on-surface-variant rounded-lg px-4 py-2 hover:text-ai-cyan hover:border-ai-cyan transition-colors flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm">receipt_long</span>{% trans "Open bills" %}
+    <div class="flex flex-wrap gap-2">
+        <a href="{% url 'pos:open_orders' %}" class="btn-pill">
+            <span class="material-symbols-outlined text-[18px]">receipt_long</span>{% trans "Open bills" %}
         </a>
-        <a href="{% url 'pos:invoice' order.pk %}" class="border border-outline-variant text-on-surface-variant rounded-lg px-4 py-2 hover:text-ai-cyan hover:border-ai-cyan transition-colors flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm">description</span>{% trans "Invoice" %}
+        <a href="{% url 'pos:invoice' order.pk %}" class="btn-pill">
+            <span class="material-symbols-outlined text-[18px]">description</span>{% trans "Invoice" %}
         </a>
     </div>
 </div>
@@ -121,7 +165,7 @@
                 {% for item in group.list %}
                 {% firstof item.description item.service_type.name "" as item_label %}
                 <div class="flex justify-between gap-3 py-2 border-b border-outline-variant/40 text-sm">
-                    <span class="text-on-surface">{{ item_label }} <span class="text-on-surface-variant">×{{ item.quantity }}</span></span>
+                    <span class="text-on-surface">{{ item_label|service_description }} <span class="text-on-surface-variant">×{{ item.quantity }}</span></span>
                     <span class="tnum text-on-surface-variant shrink-0">{{ item.subtotal|money }}</span>
                 </div>
                 {% endfor %}
@@ -279,8 +323,9 @@
 
             <!-- CTA ຫຼັກອັນດຽວຂອງໜ້ານີ້ -->
             <button type="submit" id="pay-submit" disabled
-                    class="w-full min-h-[56px] rounded-xl btn-gradient text-on-primary font-bold text-base
-                           disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                    class="w-full min-h-[56px] rounded-full bg-primary text-on-primary font-bold text-base
+                           disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2
+                           hover:opacity-95 active:scale-[.99] transition-all">
                 <span class="material-symbols-outlined">point_of_sale</span>
                 <span id="pay-label">{% trans "Take payment" %}</span>
             </button>
@@ -299,17 +344,17 @@
             </div>
             <div class="space-y-2">
                 <a href="{% url 'pos:handover' order.pk %}"
-                   class="w-full min-h-[56px] rounded-xl btn-gradient text-on-primary font-bold flex items-center justify-center gap-2">
+                   class="w-full min-h-[56px] rounded-full bg-primary text-on-primary font-bold flex items-center justify-center gap-2 hover:opacity-95 transition-opacity">
                     <span class="material-symbols-outlined">local_shipping</span>{% trans "Hand over items" %}
                 </a>
-                <a href="{% url 'pos:invoice' order.pk %}"
-                   class="w-full min-h-[48px] rounded-xl border border-outline-variant text-on-surface flex items-center justify-center gap-2 hover:border-ai-cyan hover:text-ai-cyan transition-colors">
+                <a href="{% url 'pos:invoice' order.pk %}" class="btn-pill w-full">
                     <span class="material-symbols-outlined text-[20px]">print</span>{% trans "Receipt options" %}
                 </a>
             </div>
         </div>
         {% endif %}
     </section>
+</div>
 </div>
 
 {% if balance_due > 0 %}

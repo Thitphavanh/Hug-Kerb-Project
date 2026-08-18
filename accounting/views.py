@@ -27,8 +27,10 @@ from .services import (
     group_by_category,
     group_by_category_and_payment,
     grouped_report,
+    operational_rows,
     payment_group,
     payment_group_label,
+    pl_bucket,
     statement_opening_balance,
     statement_rows,
     totals_by_currency,
@@ -225,8 +227,10 @@ def report(request):
             "rows": rows,
             "totals": totals,
             "whatsapp_text": _whatsapp_text(
-                _("Hug \u0ec0\u0e81\u0eb5\u0e9a AI financial report"),
-                f"{_('Period')}: {start_date:%d/%m/%Y} \u2013 {end_date:%d/%m/%Y}",
+                # ຂຽນຕົວອັກສອນລາວກົງໆ — ໃຊ້ \\u escape ແລ້ວ msgid ທີ່ xgettext ດຶງໄດ້
+                # ຈະບໍ່ກົງກັບຂໍ້ຄວາມທີ່ Python ສົ່ງມາຕອນແລ່ນ ເຮັດໃຫ້ແປບໍ່ຕິດຕະຫຼອດ
+                _("Hug ເກີບ AI financial report"),
+                f"{_('Period')}: {start_date:%d/%m/%Y} – {end_date:%d/%m/%Y}",
                 totals,
             ),
         },
@@ -234,7 +238,7 @@ def report(request):
 
 
 def _report_export_rows(start_date, end_date, grouping):
-    """\u0eab\u0ebb\u0ea7\u0e95\u0eb2\u0e95\u0eb0\u0ea5\u0eb2\u0e87 + \u0ec1\u0e96\u0ea7\u0e82\u0ecd\u0ec9\u0ea1\u0eb9\u0e99 \u0e97\u0eb5\u0ec8\u0e97\u0eb8\u0e81\u0eae\u0eb9\u0e9a\u0ec1\u0e9a\u0e9a\u0e81\u0eb2\u0e99\u0eaa\u0ebb\u0ec8\u0e87\u0ead\u0ead\u0e81\u0ec3\u0e8a\u0ec9\u0eae\u0ec8\u0ea7\u0ea1\u0e81\u0eb1\u0e99"""
+    """ຫົວຕາຕະລາງ + ແຖວຂໍ້ມູນ ທີ່ທຸກຮູບແບບການສົ່ງອອກໃຊ້ຮ່ວມກັນ"""
     headers = [_("Period"), _("Currency"), _("Income"), _("Expense"), _("Net")]
     rows = [
         [row["period"], row["currency"], row["income"], row["expense"], row["balance"]]
@@ -245,10 +249,10 @@ def _report_export_rows(start_date, end_date, grouping):
 
 @manager_required
 def export_report(request):
-    """\u0eaa\u0ebb\u0ec8\u0e87\u0ead\u0ead\u0e81\u0ea5\u0eb2\u0e8d\u0e87\u0eb2\u0e99\u0ec0\u0e9b\u0eb1\u0e99 CSV / Excel / Word / PDF
+    """ສົ່ງອອກລາຍງານເປັນ CSV / Excel / Word / PDF
 
-    Excel \u0ec1\u0ea5\u0eb0 Word \u0e95\u0ec9\u0ead\u0e87\u0e81\u0eb2\u0e99 openpyxl \u0ec1\u0ea5\u0eb0 python-docx. \u0e96\u0ec9\u0eb2\u0e8d\u0eb1\u0e87\u0e9a\u0ecd\u0ec8\u0ec4\u0e94\u0ec9\u0e95\u0eb4\u0e94\u0e95\u0eb1\u0ec9\u0e87
-    \u0e88\u0eb0\u0ec1\u0e88\u0ec9\u0e87\u0ec0\u0e95\u0eb7\u0ead\u0e99 \u0ec1\u0ea5\u0ec9\u0ea7\u0e9e\u0eb2\u0e81\u0eb1\u0e9a\u0ec4\u0e9b\u0edc\u0ec9\u0eb2\u0ea5\u0eb2\u0e8d\u0e87\u0eb2\u0e99 \u0ec1\u0e97\u0e99\u0e97\u0eb5\u0ec8\u0e88\u0eb0\u0ea5\u0ebb\u0ec9\u0ea1\u0e97\u0eb1\u0e87\u0edc\u0ec9\u0eb2.
+    Excel ແລະ Word ຕ້ອງການ openpyxl ແລະ python-docx. ຖ້າຍັງບໍ່ໄດ້ຕິດຕັ້ງ
+    ຈະແຈ້ງເຕືອນ ແລ້ວພາກັບໄປໜ້າລາຍງານ ແທນທີ່ຈະລົ້ມທັງໜ້າ.
     """
     start_date, end_date, grouping = _report_filters(request)
     export_format = (request.GET.get("format") or "csv").lower().strip()
@@ -300,7 +304,7 @@ def export_report(request):
             return redirect(back_url)
 
         document = Document()
-        document.add_heading(f"Hug \u0ec0\u0e81\u0eb5\u0e9a AI \u2014 Financial Report ({grouping})", 0)
+        document.add_heading(f"Hug ເກີບ AI — Financial Report ({grouping})", 0)
         table = document.add_table(rows=1, cols=len(headers))
         table.style = "Table Grid"
         for cell, title in zip(table.rows[0].cells, headers):
@@ -318,8 +322,8 @@ def export_report(request):
         return response
 
     if export_format == "pdf":
-        # \u0ec3\u0e8a\u0ec9\u0e95\u0ebb\u0ea7\u0e8a\u0ec8\u0ea7\u0e8d PDF \u0e82\u0ead\u0e87\u0ec2\u0e9b\u0ea3\u0ec0\u0e88\u0eb1\u0e81 (WeasyPrint + \u0e9d\u0eb1\u0e87 Noto Sans Lao) \u0ec1\u0e97\u0e99
-        # reportlab \u0ec0\u0e9e\u0eb7\u0ec8\u0ead\u0ec3\u0eab\u0ec9\u0eab\u0ebb\u0ea7\u0e95\u0eb2\u0e95\u0eb0\u0ea5\u0eb2\u0e87\u0e9e\u0eb2\u0eaa\u0eb2\u0ea5\u0eb2\u0ea7\u0ead\u0ead\u0e81\u0ea1\u0eb2\u0ead\u0ec8\u0eb2\u0e99\u0ec4\u0e94\u0ec9 \u0e9a\u0ecd\u0ec8\u0ec0\u0e9b\u0eb1\u0e99\u0eaa\u0eb5\u0ec8\u0eab\u0ebc\u0ec8\u0ebd\u0ea1\u0e94\u0eb3.
+        # ໃຊ້ຕົວຊ່ວຍ PDF ຂອງໂປຣເຈັກ (WeasyPrint + ຝັງ Noto Sans Lao) ແທນ
+        # reportlab ເພື່ອໃຫ້ຫົວຕາຕະລາງພາສາລາວອອກມາອ່ານໄດ້ ບໍ່ເປັນສີ່ຫຼ່ຽມດຳ.
         from core.pdf_fonts import pdf_font_context, pdf_response
 
         html = render(
@@ -340,7 +344,7 @@ def export_report(request):
 
     response = HttpResponse(content_type="text/csv; charset=utf-8")
     response["Content-Disposition"] = f'attachment; filename="{stem}.csv"'
-    response.write("\ufeff")
+    response.write("﻿")
     writer = csv.writer(response)
     writer.writerow(headers)
     for row in rows:
@@ -350,10 +354,10 @@ def export_report(request):
 
 @manager_required
 def export_daily_transactions(request):
-    """\u0eaa\u0ebb\u0ec8\u0e87\u0ead\u0ead\u0e81\u0ea5\u0eb2\u0e8d\u0e81\u0eb2\u0e99\u0e9b\u0eb0\u0e88\u0eb3\u0ea7\u0eb1\u0e99\u0ec0\u0e9b\u0eb1\u0e99 Excel
+    """ສົ່ງອອກລາຍການປະຈຳວັນເປັນ Excel
 
-    \u0e81\u0eb1\u0ec8\u0e99\u0e95\u0ead\u0e87\u0e95\u0eb2\u0ea1\u0e81\u0eb0\u0ec0\u0e9b\u0ebb\u0ecb\u0eb2\u0ec4\u0e94\u0ec9\u0e94\u0ec9\u0ea7\u0e8d ?payment=cash|bank|other|all \u0ec0\u0e9e\u0eb7\u0ec8\u0ead\u0ec3\u0eab\u0ec9\u0e9a\u0eb1\u0e99\u0e8a\u0eb5\u0e94\u0eb6\u0e87
-    \u0eaa\u0eb0\u0ec0\u0e9e\u0eb2\u0eb0\u0ea5\u0eb2\u0e8d\u0e81\u0eb2\u0e99\u0e97\u0eb5\u0ec8\u0e9c\u0ec8\u0eb2\u0e99\u0e9a\u0eb1\u0e99\u0e8a\u0eb5\u0e97\u0eb0\u0e99\u0eb2\u0e84\u0eb2\u0e99\u0ec4\u0e9b\u0e81\u0eb0\u0e97\u0ebb\u0e9a\u0e8d\u0ead\u0e94\u0e81\u0eb1\u0e9a\u0e97\u0eb0\u0e99\u0eb2\u0e84\u0eb2\u0e99\u0ec4\u0e94\u0ec9.
+    ກັ່ນຕອງຕາມກະເປົ໋າໄດ້ດ້ວຍ ?payment=cash|bank|other|all ເພື່ອໃຫ້ບັນຊີດຶງ
+    ສະເພາະລາຍການທີ່ຜ່ານບັນຊີທະນາຄານໄປກະທົບຍອດກັບທະນາຄານໄດ້.
     """
     today = timezone.localdate()
     view_date = _parse_date(request.GET.get("date"), today)
@@ -410,14 +414,14 @@ def export_daily_transactions(request):
         from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
         from openpyxl.utils import get_column_letter
     except ImportError:
-        # \u0e9a\u0ecd\u0ec8\u0ea1\u0eb5 openpyxl \u0e81\u0ecd\u0ec8\u0e8d\u0eb1\u0e87\u0ec4\u0e94\u0ec9\u0ec4\u0e9f\u0ea5\u0ecc \u2014 \u0e96\u0ead\u0e8d\u0ec4\u0e9b CSV \u0ec1\u0e97\u0e99\u0e97\u0eb5\u0ec8\u0e88\u0eb0\u0e9a\u0ecd\u0ec8\u0ec4\u0e94\u0ec9\u0eab\u0e8d\u0eb1\u0e87\u0ec0\u0ea5\u0eb5\u0e8d
+        # ບໍ່ມີ openpyxl ກໍ່ຍັງໄດ້ໄຟລ໌ — ຖອຍໄປ CSV ແທນທີ່ຈະບໍ່ໄດ້ຫຍັງເລີຍ
         messages.warning(
             request,
-            _("Excel export needs the openpyxl package \u2014 exported as CSV instead."),
+            _("Excel export needs the openpyxl package — exported as CSV instead."),
         )
         response = HttpResponse(content_type="text/csv; charset=utf-8")
         response["Content-Disposition"] = f'attachment; filename="{stem}.csv"'
-        response.write("\ufeff")
+        response.write("﻿")
         writer = csv.writer(response)
         writer.writerow(headers)
         for row in rows:
@@ -428,7 +432,7 @@ def export_daily_transactions(request):
     sheet = workbook.active
     sheet.title = payment[:31]
 
-    sheet.append([f"Hug \u0ec0\u0e81\u0eb5\u0e9a AI \u2014 {_('Daily transaction ledger')} ({payment_label})"])
+    sheet.append([f"Hug ເກີບ AI — {_('Daily transaction ledger')} ({payment_label})"])
     sheet.append([f"{_('Date')}: {view_date:%d/%m/%Y}"])
     sheet.append([])
     sheet.merge_cells(start_row=1, start_column=1, end_row=1, end_column=len(headers))
@@ -461,7 +465,7 @@ def export_daily_transactions(request):
         sheet_row[6].number_format = money_format
         sheet_row[7].number_format = money_format
 
-    # \u2500\u2500 \u0e9a\u0ea5\u0eb1\u0ead\u0e81\u0eaa\u0eb0\u0eab\u0ebc\u0eb9\u0e9a \u0edc\u0eb6\u0ec8\u0e87\u0ec1\u0e96\u0ea7\u0e95\u0ecd\u0ec8\u0edc\u0eb6\u0ec8\u0e87\u0eaa\u0eb0\u0e81\u0eb8\u0e99\u0ec0\u0e87\u0eb4\u0e99 \u2500\u2500
+    # ── ບລັອກສະຫຼູບ ໜຶ່ງແຖວຕໍ່ໜຶ່ງສະກຸນເງິນ ──
     sheet.append([])
     summary_head = sheet.max_row + 1
     sheet.append(
@@ -563,6 +567,84 @@ def cash_handover(request):
             "selected_currency": selected_currency,
             "history": history,
             "currencies": CURRENCIES,
+        },
+    )
+
+
+def _month_names():
+    """ຊື່ເດືອນ — Django ບໍ່ມີ locale ລາວມາໃຫ້ ຈຶ່ງແປເອງຜ່ານ catalog ຂອງໂຄງການ"""
+    return [
+        _("January"), _("February"), _("March"), _("April"),
+        _("May"), _("June"), _("July"), _("August"),
+        _("September"), _("October"), _("November"), _("December"),
+    ]
+
+
+@manager_required
+def yearly_cash_handover(request):
+    """ໃບສົ່ງມອບເງິນປະຈຳປີ — ລວມການສົ່ງມອບເງິນລາຍວັນທັງປີໄວ້ໃນໜ້າດຽວ
+
+    ໃຊ້ຢືນຢັນກັບເຈົ້າຂອງຮ້ານທ້າຍປີວ່າ ເງິນທີ່ນັບໄດ້ຕະຫຼອດປີ ກົງກັບຍອດຕາມລະບົບບໍ່
+    ແລະ ເດືອນໃດມີວັນທີ່ຍອດຂາດ/ເກີນ ຈະຖືກຍົກຂຶ້ນມາໃຫ້ເຫັນທັນທີ.
+    """
+    today = timezone.localdate()
+    year_str = request.GET.get("year", "")
+    year = int(year_str) if year_str.isdigit() else today.year
+    currency = request.GET.get("currency", "LAK")
+    if currency not in CURRENCIES:
+        currency = "LAK"
+
+    handovers = list(
+        CashHandover.objects.filter(date__year=year, currency=currency)
+        .select_related("handed_by")
+        .order_by("date")
+    )
+
+    month_names = _month_names()
+    months = []
+    year_expected = year_total_counted = year_difference = Decimal("0")
+    for month in range(1, 13):
+        month_rows = [item for item in handovers if item.date.month == month]
+        expected = sum((item.expected_amount for item in month_rows), Decimal("0"))
+        counted = sum((item.counted_amount for item in month_rows), Decimal("0"))
+        difference = counted - expected
+        year_expected += expected
+        year_total_counted += counted
+        year_difference += difference
+        months.append(
+            {
+                "month": month,
+                "label": month_names[month - 1],
+                "days": len(month_rows),
+                "expected": expected,
+                "counted": counted,
+                "difference": difference,
+                # ວັນທີ່ນັບເງິນບໍ່ກົງກັບລະບົບ — ຈຸດທີ່ຕ້ອງອະທິບາຍໃຫ້ໄດ້
+                "mismatch_days": sum(1 for item in month_rows if item.difference != 0),
+            }
+        )
+
+    mismatches = [item for item in handovers if item.difference != 0]
+    recorded_days = len(handovers)
+
+    return render(
+        request,
+        "accounting/yearly_cash_handover.html",
+        {
+            "active_nav": "accounting",
+            "year": year,
+            "years": range(today.year, today.year - 6, -1),
+            "currency": currency,
+            "currencies": CURRENCIES,
+            "months": months,
+            "year_expected": year_expected,
+            "year_counted": year_total_counted,
+            "year_difference": year_difference,
+            "recorded_days": recorded_days,
+            "mismatches": mismatches,
+            "first_handover": handovers[0] if handovers else None,
+            "last_handover": handovers[-1] if handovers else None,
+            "today": today,
         },
     )
 
@@ -679,6 +761,22 @@ def _group_by_category(transactions, transaction_type, currency_code):
     ]
 
 
+def _summary_income(transactions, currency_code):
+    """ຍອດລາຍຮັບຂອງໃບສະຫຼຸບ — ຕ້ອງໃຊ້ກົດດຽວກັບການ໌ດຢູ່ໜ້າ dashboard
+
+    ຄິດຜ່ານ pl_bucket() ຈຶ່ງໄດ້ຄ່າດຽວກັນກັບ totals_by_currency() ສະເໝີ
+    (ຄືນເງິນຫັກອອກ, ການຍ້າຍເງິນພາຍໃນຖືກຕັດອອກກ່ອນສົ່ງເຂົ້າມາແລ້ວ)
+    """
+    total = Decimal("0")
+    for row in transactions:
+        if row["currency"] != currency_code:
+            continue
+        bucket, amount = pl_bucket(row)
+        if bucket == "income":
+            total += amount
+    return total
+
+
 def _payment_breakdown(transactions):
     """ແຍກລາຍຮັບ/ລາຍຈ່າຍຕາມກະເປົ໋າ ຕໍ່ແຕ່ລະສະກຸນເງິນ (ໃຊ້ໃນໜ້າສະຫຼູບ ແລະ WhatsApp)"""
     breakdown = {}
@@ -741,25 +839,27 @@ def monthly_summary_financial(request):
         month_str, year_str, today
     )
     voucher_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else today
-    
-    # Fetch unified transactions for the period
-    transactions = unified_transactions(start_date, end_date)
-    
+
+    # ໃບສະຫຼຸບເປັນເອກະສານກຳໄລ-ຂາດທຶນ ຈຶ່ງຕັດການຍ້າຍເງິນລະຫວ່າງກະເປົ໋າຂອງຮ້ານເອງ
+    # ແລະ ແຖວທີ່ຍັງບໍ່ຢືນຢັນອອກ — ຄືກັນກັບການ໌ດຢູ່ໜ້າ dashboard ແລະ ໜ້າລາຍງານ
+    transactions = operational_rows(unified_transactions(start_date, end_date))
+
     # Calculate incomes
-    cash_in_lak = sum(t["amount"] for t in transactions if t["type"] == "IN" and t["currency"] == "LAK" and t["status"] == "confirmed")
-    cash_in_thb = sum(t["amount"] for t in transactions if t["type"] == "IN" and t["currency"] == "THB" and t["status"] == "confirmed")
-    cash_in_usd = sum(t["amount"] for t in transactions if t["type"] == "IN" and t["currency"] == "USD" and t["status"] == "confirmed")
-    
+    cash_in_lak = _summary_income(transactions, "LAK")
+    cash_in_thb = _summary_income(transactions, "THB")
+    cash_in_usd = _summary_income(transactions, "USD")
+
     # Build list of items for manual adjustment sheet editor
     default_items = []
     for t in transactions:
-        if t["type"] == "OUT" and t["status"] == "confirmed":
+        bucket, amount = pl_bucket(t)
+        if bucket == "expense":
             default_items.append({
                 'description': t["description"],
                 'currency': t["currency"],
-                'amount': float(t["amount"])
+                'amount': float(amount)
             })
-            
+
     # Group by category per currency
     report_data = {}
     for cur in CURRENCIES:
@@ -802,27 +902,28 @@ def yearly_summary_financial(request):
     
     current_year = int(year_str) if (year_str and year_str.isdigit()) else today.year
     voucher_date = datetime.datetime.strptime(date_str, '%Y-%m-%d').date() if date_str else today
-    
+
     start_date = datetime.date(current_year, 1, 1)
     end_date = datetime.date(current_year, 12, 31)
-    
-    # Fetch unified transactions for the entire year
-    transactions = unified_transactions(start_date, end_date)
-    
+
+    # ຄືກັບໃບສະຫຼຸບເດືອນ: ຕັດການຍ້າຍເງິນພາຍໃນ ແລະ ແຖວທີ່ຍັງບໍ່ຢືນຢັນອອກ
+    transactions = operational_rows(unified_transactions(start_date, end_date))
+
     # Calculate incomes
-    cash_in_lak = sum(t["amount"] for t in transactions if t["type"] == "IN" and t["currency"] == "LAK" and t["status"] == "confirmed")
-    cash_in_thb = sum(t["amount"] for t in transactions if t["type"] == "IN" and t["currency"] == "THB" and t["status"] == "confirmed")
-    cash_in_usd = sum(t["amount"] for t in transactions if t["type"] == "IN" and t["currency"] == "USD" and t["status"] == "confirmed")
-    
+    cash_in_lak = _summary_income(transactions, "LAK")
+    cash_in_thb = _summary_income(transactions, "THB")
+    cash_in_usd = _summary_income(transactions, "USD")
+
     # Retrieve expenses grouped by category and currency
     # Using python grouping from unified transactions
     from collections import defaultdict
     expense_groups = defaultdict(float)
     for t in transactions:
-        if t["type"] == "OUT" and t["status"] == "confirmed":
+        bucket, amount = pl_bucket(t)
+        if bucket == "expense":
             key = (t["category"], t["currency"])
-            expense_groups[key] += float(t["amount"])
-            
+            expense_groups[key] += float(amount)
+
     default_items = []
     for (category_name, cur), total_amount in sorted(expense_groups.items(), key=lambda x: -x[1]):
         default_items.append({

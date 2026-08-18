@@ -62,7 +62,7 @@ class PosCustomerSearchTests(TestCase):
         )
 
         order = Order.objects.get()
-        self.assertRedirects(response, reverse("pos:quotation", args=[order.pk]))
+        self.assertRedirects(response, reverse("pos:invoice", args=[order.pk]))
         self.assertEqual(order.customer, self.customer)
         self.assertEqual(Customer.objects.count(), 1)
 
@@ -122,9 +122,9 @@ class PosCustomerSearchTests(TestCase):
         self.assertContains(detail, "Start AI assessment")
         self.assertContains(detail, "AI assessment")
 
-    def test_buyback_only_order_skips_quotation_and_opens_ai_grading(self):
-        """ອໍເດີທີ່ມີແຕ່ບໍລິການ "ຮັບຊື້ເກີບມືສອງ" ຢ່າງດຽວ ບໍ່ມີຫຍັງໃຫ້ "ສະເໜີລາຄາ"
-        — ຄວນຂ້າມໜ້າໃບສະເໜີລາຄາ/ເຊັນຢືນຢັນ ແລ້ວພາໄປໜ້າ AI Grading ຂອງເກີບເລີຍ."""
+    def test_buyback_only_order_skips_billing_and_opens_ai_grading(self):
+        """ອໍເດີທີ່ມີແຕ່ບໍລິການ "ຮັບຊື້ເກີບມືສອງ" ຢ່າງດຽວ ບໍ່ມີຫຍັງໃຫ້ຄິດເງິນ
+        — ຄວນຂ້າມໜ້າໃບບິນ ແລ້ວພາໄປໜ້າ AI Grading ຂອງເກີບເລີຍ."""
         buyback_service = ServiceType.objects.create(
             name="Buy-back Evaluation",
             category=ServiceType.Category.BUYBACK,
@@ -151,9 +151,9 @@ class PosCustomerSearchTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, expected_url)
 
-    def test_mixed_buyback_and_paid_order_still_goes_to_quotation(self):
-        """ຖ້າອໍເດີປະສົມ (ຮັບຊື້ + ບໍລິການທີ່ຄິດເງິນ) ຍັງມີຍອດທີ່ຕ້ອງອະນຸມັດແທ້ໆ
-        — ຄວນໄປໜ້າໃບສະເໜີລາຄາຄືເກົ່າ, ບໍ່ຂ້າມ."""
+    def test_mixed_buyback_and_paid_order_still_goes_to_the_bill(self):
+        """ຖ້າອໍເດີປະສົມ (ຮັບຊື້ + ບໍລິການທີ່ຄິດເງິນ) ຍັງມີຍອດທີ່ຕ້ອງເກັບແທ້ໆ
+        — ຄວນໄປໜ້າໃບບິນ, ບໍ່ຂ້າມ."""
         buyback_service = ServiceType.objects.create(
             name="Buy-back Evaluation",
             category=ServiceType.Category.BUYBACK,
@@ -187,7 +187,7 @@ class PosCustomerSearchTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.endswith("/quotation/"))
+        self.assertTrue(response.url.endswith("/invoice/"))
 
     def test_storage_picker_map_marks_only_unoccupied_slot_as_free(self):
         free_slot = StorageSlot.objects.create(zone="A", cabinet=1, position=1)
@@ -301,6 +301,73 @@ class PosCustomerSearchTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertFalse(OrderItem.objects.filter(service_type=ai_report).exists())
 
+    def test_create_page_offers_add_ons_and_discount_on_the_same_page(self):
+        """ໜ້າຂາຍໜ້າຮ້ານລວມທຸກຂັ້ນຕອນໄວ້ໜ້າດຽວ — ບໍ່ຕ້ອງເດີນຜ່ານໜ້າສະເໜີລາຄາອີກ"""
+        ServiceType.objects.create(
+            name="Color Touch-up",
+            category=ServiceType.Category.ADD_ON,
+            price=Decimal("180000.00"),
+        )
+        self.client.post(
+            reverse("set_language"),
+            {"language": "en", "next": reverse("pos:create")},
+        )
+
+        response = self.client.get(reverse("pos:create"))
+
+        self.assertContains(response, "Color Touch-up")
+        self.assertContains(response, 'name="services"')
+        self.assertContains(response, 'name="promo_code"')
+        self.assertContains(response, 'name="vat_rate"')
+
+    def test_create_order_applies_add_ons_and_promo_code_in_one_step(self):
+        addon = ServiceType.objects.create(
+            name="Color Touch-up",
+            category=ServiceType.Category.ADD_ON,
+            price=Decimal("50000.00"),
+        )
+
+        response = self.client.post(
+            reverse("pos:create"),
+            {
+                "customer_id": str(self.customer.pk),
+                "customer_name": self.customer.name,
+                "customer_phone": self.customer.phone,
+                "item_indices": "0",
+                "brand_0": "Nike",
+                "model_name_0": "Air Force 1",
+                "service_0": str(self.service.pk),
+                "services": [str(addon.pk)],
+                "promo_code": "KVAIPRO20",
+                "vat_rate": "7",
+            },
+        )
+
+        order = Order.objects.get()
+        self.assertRedirects(response, reverse("pos:invoice", args=[order.pk]))
+        self.assertEqual(order.items.count(), 2)
+        # 150,000 + 50,000 = 200,000 → ຫຼຸດ 20% = 40,000, VAT 7%
+        self.assertEqual(order.subtotal, Decimal("200000.00"))
+        self.assertEqual(order.discount, Decimal("40000"))
+        self.assertEqual(order.vat_rate, 7)
+
+    def test_create_order_ignores_an_unknown_promo_code(self):
+        self.client.post(
+            reverse("pos:create"),
+            {
+                "customer_id": str(self.customer.pk),
+                "customer_name": self.customer.name,
+                "customer_phone": self.customer.phone,
+                "item_indices": "0",
+                "brand_0": "Nike",
+                "model_name_0": "Air Force 1",
+                "service_0": str(self.service.pk),
+                "promo_code": "NOT-A-CODE",
+            },
+        )
+
+        self.assertEqual(Order.objects.get().discount, Decimal("0"))
+
     def test_scan_lookup_returns_saved_color_and_size(self):
         asset = Asset.objects.create(
             customer=self.customer,
@@ -351,27 +418,32 @@ class QuotationLanguageTests(TestCase):
             {"language": language, "next": reverse("pos:create")},
         )
 
-    def test_quotation_and_signature_render_in_english_and_lao(self):
+    def test_quotation_renders_in_english_and_lao_without_a_signature_pad(self):
         self.set_language("en")
         quotation = self.client.get(reverse("pos:quotation", args=[self.order.pk]))
-        signature = self.client.get(reverse("pos:quotation_sign", args=[self.order.pk]))
 
         self.assertContains(quotation, "Smart quotation")
         self.assertContains(quotation, "Promotions and discounts")
         self.assertContains(quotation, "Submit quotation")
-        self.assertContains(signature, "Final step: confirm agreement")
-        self.assertContains(signature, "Authorized signatory name")
-        self.assertContains(signature, "Confirm and send document")
-        self.assertContains(signature, 'name="language"', count=2)
+        # ຂັ້ນຕອນລົງລາຍເຊັນອະນຸມັດຖືກຕັດອອກແລ້ວ
+        self.assertNotContains(quotation, "signature-canvas")
+        self.assertNotContains(quotation, 'name="signature_data"')
 
         self.set_language("lo")
         quotation = self.client.get(reverse("pos:quotation", args=[self.order.pk]))
-        signature = self.client.get(reverse("pos:quotation_sign", args=[self.order.pk]))
 
         self.assertContains(quotation, "ການສະເໜີລາຄາອັດສະລິຍະ")
         self.assertContains(quotation, "ໂປຣໂມຊັນ ແລະ ສ່ວນຫຼຸດ")
-        self.assertContains(signature, "ຂັ້ນຕອນສຸດທ້າຍ")
-        self.assertContains(signature, "ຊື່ຜູ້ມີອຳນາດລົງນາມ")
+
+    def test_quotation_submit_goes_straight_to_the_invoice(self):
+        response = self.client.post(
+            reverse("pos:quotation", args=[self.order.pk]),
+            {"services": [], "vat_rate": "10"},
+        )
+
+        self.assertRedirects(
+            response, reverse("pos:invoice", args=[self.order.pk])
+        )
 
     def test_quotation_groups_ai_primary_and_add_on_services(self):
         ServiceType.objects.create(

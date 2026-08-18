@@ -467,35 +467,31 @@
                         <div class="space-y-2 py-3 border-y border-white/5 text-sm">
                             <div class="flex justify-between text-body-sm">
                                 <span class="text-on-surface-variant">{% trans "Base market price" %}</span>
-                                <span class="text-on-surface">{{ latest_price.raw_response.base_price|default:latest_price.suggested_price|money }} {{ latest_price.currency }}</span>
+                                <span class="text-on-surface">{{ latest_price.base_price|default:latest_price.suggested_price|money }} {{ latest_price.currency }}</span>
                             </div>
                             <div class="flex justify-between text-body-sm">
                                 <span class="text-on-surface-variant">{% trans "Condition adjustment" %}</span>
-                                {% if latest_price.raw_response.condition_adjustment %}
-                                    <span class="text-status-error">{{ latest_price.raw_response.condition_adjustment|money }} {{ latest_price.currency }}</span>
-                                {% else %}
-                                    <span class="text-status-error">0 {{ latest_price.currency }}</span>
-                                {% endif %}
+                                <span class="text-status-error">{{ latest_price.condition_adjustment|default:0|money }} {{ latest_price.currency }}</span>
                             </div>
                             <div class="flex justify-between text-body-sm">
                                 <span class="text-on-surface-variant">{% trans "Rarity premium" %}</span>
-                                {% if latest_price.raw_response.rarity_premium %}
-                                    <span class="text-ai-cyan">+{{ latest_price.raw_response.rarity_premium|money }} {{ latest_price.currency }}</span>
-                                {% else %}
-                                    <span class="text-ai-cyan">+0 {{ latest_price.currency }}</span>
-                                {% endif %}
+                                <span class="text-ai-cyan">+{{ latest_price.rarity_premium|default:0|money }} {{ latest_price.currency }}</span>
                             </div>
                             <div class="flex justify-between text-body-sm">
                                 <span class="text-on-surface-variant">{% trans "Refurbishment cost" %}</span>
-                                <span class="text-status-error">-{{ latest_price.raw_response.refurbishment_cost|default:0|money }} {{ latest_price.currency }}</span>
+                                <span class="text-status-error">-{{ latest_price.refurbishment_cost|default:0|money }} {{ latest_price.currency }}</span>
                             </div>
                             <div class="flex justify-between text-body-sm">
                                 <span class="text-on-surface-variant">{% trans "Risk reserve" %}</span>
-                                <span class="text-status-error">-{{ latest_price.raw_response.risk_reserve|default:0|money }} {{ latest_price.currency }}</span>
+                                <span class="text-status-error">-{{ latest_price.risk_reserve|default:0|money }} {{ latest_price.currency }}</span>
                             </div>
                             <div class="flex justify-between text-body-sm">
                                 <span class="text-on-surface-variant">{% trans "Target shop margin" %}</span>
-                                <span class="text-on-surface">{{ latest_price.raw_response.target_margin_percent|default:25 }}%</span>
+                                {% if latest_price.target_margin_percent %}
+                                    <span class="text-on-surface">{{ latest_price.target_margin_percent|floatformat:"-2" }}%</span>
+                                {% else %}
+                                    <span class="text-on-surface-variant">—</span>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -504,15 +500,23 @@
                                 <span class="material-symbols-outlined text-sm">trending_up</span>
                                 {% trans "Recommended shop buy-back offer" %}
                             </p>
+                            {% if latest_price.recommended_buy_price %}
                             <div class="flex items-baseline gap-1">
                                 <span class="font-headline-lg text-headline-lg font-bold text-ai-cyan glow-accent">
-                                    {{ latest_price.raw_response.recommended_buy_price|default:latest_price.suggested_price|money }}
+                                    {{ latest_price.recommended_buy_price|money }}
                                 </span>
                                 <span class="font-body-sm text-ai-cyan/70">{{ latest_price.currency }}</span>
                             </div>
+                            {% else %}
+                            <p class="font-body-sm text-status-error mt-1">
+                                {% trans "AI did not return a buy-back offer — set the price manually." %}
+                            </p>
+                            {% endif %}
+                            {% if latest_price.localized_demand %}
                             <span class="inline-block mt-2 px-2 py-1 rounded bg-secondary-fixed/20 text-secondary-fixed font-data-mono text-[10px] uppercase font-bold">
                                 {{ latest_price.localized_demand }}
                             </span>
+                            {% endif %}
                             <p class="mt-3 text-[11px] text-on-surface-variant leading-relaxed">
                                 {% trans "AI estimate only. Staff must inspect the physical pair and confirm the final offer." %}
                             </p>
@@ -523,7 +527,7 @@
                             <div class="flex items-center gap-2 bg-surface-container px-3 py-1 rounded-full border border-ai-purple/30">
                                 <span class="material-symbols-outlined text-ai-purple text-sm">memory</span>
                                 <span class="font-data-mono text-data-mono text-ai-purple font-bold">
-                                    {{ latest_price.raw_response.confidence_score|default:"95" }}%
+                                    {% if latest_price.confidence_score %}{{ latest_price.confidence_score|floatformat:"-2" }}%{% else %}—{% endif %}
                                 </span>
                             </div>
                         </div>

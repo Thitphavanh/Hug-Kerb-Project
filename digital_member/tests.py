@@ -86,6 +86,42 @@ class CustomerPortalTest(TestCase):
         url = reverse("digital_member:member_card", args=[card.card_number])
         self.assertEqual(self.client.get(url).status_code, 404)
 
+    def test_member_card_page_shows_the_same_figures_as_the_crm_card(self):
+        """ບັດຝັ່ງລູກຄ້າ ຕ້ອງບອກຕົວເລກຊຸດດຽວກັນກັບບັດທີ່ພະນັກງານເຫັນໃນ CRM"""
+        from pos.models import Order
+
+        card = MemberCard.objects.create(customer=self.customer, stamps_count=12)
+        for _ in range(3):
+            Order.objects.create(customer=self.customer, status=Order.Status.PAID)
+        Order.objects.create(customer=self.customer, status=Order.Status.OPEN)
+
+        resp = self.client.get(
+            reverse("digital_member:member_card", args=[card.card_number])
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        # ນັບສະເພາະບິນທີ່ຊຳລະແລ້ວ ຄືກັນກັບ crm.views
+        self.assertEqual(resp.context["visit_count"], 3)
+        self.assertEqual(resp.context["card"].stamps_count, 12)
+        self.assertEqual(resp.context["card"].current_stamps, 2)
+        self.assertEqual(resp.context["card"].rewards_available, 1)
+        # ໜ້າຕາບັດແບບດຽວກັບ modal ຂອງ CRM: ໂລໂກ້ + ຕີນບັດ + ລິ້ງດາວໂຫຼດຮູບ
+        self.assertContains(resp, "WWW.HUGKERB.LA")
+        self.assertContains(resp, "Shoe Spa · Member")
+        self.assertContains(
+            resp,
+            reverse("digital_member:member_card_image", args=[card.card_number]),
+        )
+
+    def test_portal_pages_hide_the_scrollbar(self):
+        card = MemberCard.objects.create(customer=self.customer)
+        resp = self.client.get(
+            reverse("digital_member:member_card", args=[card.card_number])
+        )
+        # ຍັງເລື່ອນໄດ້ ແຕ່ບໍ່ສະແດງແຖບ scroll
+        self.assertContains(resp, "scrollbar-width: none")
+        self.assertContains(resp, "::-webkit-scrollbar")
+
 
 class LookupTest(TestCase):
     """ໜ້າຄົ້ນຫາດ້ວຍເລກໃບຮັບເຄື່ອງ + ເບີໂທ (ບໍ່ຕ້ອງສະແກນ QR)"""

@@ -1,8 +1,12 @@
+from decimal import Decimal
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import StockMovement, Supply
+from pos.models import ServiceType
+
+from .models import ServiceSupply, StockMovement, Supply
 
 
 class StockMovementTest(TestCase):
@@ -84,3 +88,106 @@ class InventoryLanguageTest(TestCase):
         csv_text = response.content.decode("utf-8-sig")
         self.assertIn("ຈຳນວນຄົງເຫຼືອ", csv_text)
         self.assertIn("ສະຕັອກຕ່ຳ", csv_text)
+
+
+class ServiceRecipeViewTest(TestCase):
+    """ສູດອຸປະກອນຕ້ອງຕັ້ງໄດ້ຈາກໜ້າສາງ — ພະນັກງານຮ້ານເຂົ້າ admin ບໍ່ໄດ້"""
+
+    def setUp(self):
+        user = get_user_model().objects.create_user("inventory-staff")
+        self.client.force_login(user)
+        self.supply = Supply.objects.create(
+            name="ນ້ຳຢາຊັກເກີບ", sku="CLN-900", unit="ຂວດ", quantity_on_hand=10
+        )
+        self.service = ServiceType.objects.create(
+            name="Deep Clean", price=Decimal("150000.00")
+        )
+
+    def test_staff_can_attach_a_material_to_a_service(self):
+        response = self.client.post(
+            reverse("inventory:add_recipe"),
+            {
+                "service_type": self.service.pk,
+                "supply": self.supply.pk,
+                "quantity_per_unit": "3",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        recipe = ServiceSupply.objects.get()
+        self.assertEqual(recipe.service_type, self.service)
+        self.assertEqual(recipe.quantity_per_unit, 3)
+
+    def test_adding_the_same_material_twice_updates_it_instead_of_duplicating(self):
+        """ແຖວຊ້ຳຈະເຮັດໃຫ້ຫັກສະຕັອກສອງເທື່ອຈາກບໍລິການດຽວ"""
+        for quantity in ("2", "5"):
+            self.client.post(
+                reverse("inventory:add_recipe"),
+                {
+                    "service_type": self.service.pk,
+                    "supply": self.supply.pk,
+                    "quantity_per_unit": quantity,
+                },
+            )
+
+        self.assertEqual(ServiceSupply.objects.count(), 1)
+        self.assertEqual(ServiceSupply.objects.get().quantity_per_unit, 5)
+
+    def test_a_zero_quantity_is_refused(self):
+        response = self.client.post(
+            reverse("inventory:add_recipe"),
+            {
+                "service_type": self.service.pk,
+                "supply": self.supply.pk,
+                "quantity_per_unit": "0",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(ServiceSupply.objects.exists())
+
+    def test_staff_can_remove_a_material_from_a_recipe(self):
+        recipe = ServiceSupply.objects.create(
+            service_type=self.service, supply=self.supply, quantity_per_unit=1
+        )
+
+        self.client.post(reverse("inventory:delete_recipe", args=[recipe.pk]))
+
+        self.assertFalse(ServiceSupply.objects.exists())
+
+    def test_the_page_flags_services_that_still_have_no_recipe(self):
+        """ນີ້ຄືສັນຍານທີ່ບອກຮ້ານວ່າເປັນຫຍັງບິນທີ່ຊຳລະແລ້ວຈຶ່ງບໍ່ຫັກສະຕັອກ"""
+        active_services = ServiceType.objects.filter(is_active=True).count()
+
+        before = self.client.get(reverse("inventory:index"))
+        self.assertEqual(
+            before.context["services_without_recipe"], active_services
+        )
+
+        ServiceSupply.objects.create(
+            service_type=self.service, supply=self.supply, quantity_per_unit=1
+        )
+
+        after = self.client.get(reverse("inventory:index"))
+        self.assertEqual(
+            after.context["services_without_recipe"], active_services - 1
+        )
+
+    def test_a_mistyped_stock_figure_does_not_crash_the_page(self):
+        """ຟອມສົ່ງຂໍ້ຄວາມມາ — ຄ່າຫວ່າງເຄີຍເປັນໜ້າ 500"""
+        response = self.client.post(
+            reverse("inventory:add_supply"),
+            {
+                "name": "ຜ້າເຊັດ",
+                "sku": "CLT-900",
+                "unit": "ຜືນ",
+                "quantity_on_hand": "",
+                "reorder_level": "abc",
+                "cost_price": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        supply = Supply.objects.get(sku="CLT-900")
+        self.assertEqual(supply.quantity_on_hand, 0)
+        self.assertEqual(supply.reorder_level, 0)

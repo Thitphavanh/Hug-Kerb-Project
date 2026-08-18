@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Brands and models" %} — Hug ເກີບ AI{% endblock %}
+
+{% block content %}
+<style>
+    .brand-card { background: rgb(var(--color-surface-container-lowest)); border: 1px solid rgb(var(--color-outline-variant)); }
+    .chip-model {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgb(var(--color-surface-container-high)); border-radius: 999px;
+        padding: 4px 6px 4px 12px; font-size: 13px;
+    }
+    .chip-model button { line-height: 0; opacity: .55; }
+    .chip-model button:hover { opacity: 1; color: rgb(var(--color-status-error)); }
+</style>
+
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-xl gap-md">
+    <div>
+        <h1 class="font-display-lg text-headline-lg-mobile md:text-headline-lg text-on-surface mb-xs font-bold">{% trans "Brands and models" %}</h1>
+        <p class="font-body-md text-body-md text-on-surface-variant">{% trans "The list staff pick from when receiving shoes and opening a bill." %}</p>
+    </div>
+    <a href="{% url 'asset_intake:list' %}" class="btn-quiet px-4">← {% trans "Back to intake" %}</a>
+</div>
+
+<!-- ເພີ່ມຍີ່ຫໍ້ໃໝ່ -->
+<form method="post" action="{% url 'asset_intake:brand_create' %}"
+      class="brand-card rounded-xl p-5 mb-lg flex flex-col sm:flex-row gap-3 sm:items-end">
+    {% csrf_token %}
+    <div class="flex-1">
+        <label class="field-label" for="new-brand">{% trans "New brand" %}</label>
+        <input class="theme-input" id="new-brand" name="name" required
+               placeholder="{% trans 'e.g. Puma, Asics, Onitsuka Tiger' %}">
+    </div>
+    <div class="w-full sm:w-28">
+        <label class="field-label" for="new-order">{% trans "Sort order" %}</label>
+        <input class="theme-input" id="new-order" name="sort_order" type="number" value="0" min="0">
+    </div>
+    <button type="submit" class="btn-gradient text-on-primary font-bold px-6 py-2.5 rounded-lg shrink-0">
+        + {% trans "Add brand" %}
+    </button>
+</form>
+
+<div class="flex flex-col gap-md">
+    {% for brand in brands %}
+    <div class="brand-card rounded-xl p-5 {% if not brand.is_active %}opacity-60{% endif %}">
+
+        <!-- ແກ້ຍີ່ຫໍ້ -->
+        <form method="post" action="{% url 'asset_intake:brand_update' brand.pk %}"
+              class="flex flex-col sm:flex-row gap-3 sm:items-center mb-4">
+            {% csrf_token %}
+            <input class="theme-input flex-1 font-bold" name="name" value="{{ brand.name }}" required>
+            <input class="theme-input w-full sm:w-20" name="sort_order" type="number" value="{{ brand.sort_order }}" min="0">
+            <label class="flex items-center gap-2 text-body-sm text-on-surface-variant whitespace-nowrap">
+                <input type="checkbox" name="is_active" {% if brand.is_active %}checked{% endif %}>
+                {% trans "Active" %}
+            </label>
+            <button type="submit" class="btn-quiet px-4 shrink-0">{% trans "Save" %}</button>
+        </form>
+
+        <!-- ລຸ້ນຂອງຍີ່ຫໍ້ນີ້ -->
+        <p class="text-body-sm text-on-surface-variant mb-2">
+            {% blocktrans count counter=brand.shoe_models.all|length %}{{ counter }} model{% plural %}{{ counter }} models{% endblocktrans %}
+        </p>
+        <div class="flex flex-wrap gap-2 mb-4">
+            {% for model in brand.shoe_models.all %}
+            <span class="chip-model">
+                {{ model.name }}
+                <form method="post" action="{% url 'asset_intake:model_delete' model.pk %}"
+                      onsubmit="return confirm('{% trans "Remove this model?" %}')">
+                    {% csrf_token %}
+                    <button type="submit" aria-label="{% trans 'Remove model' %}">
+                        <span class="material-symbols-outlined text-[16px]">close</span>
+                    </button>
+                </form>
+            </span>
+            {% empty %}
+            <span class="text-body-sm text-on-surface-variant">{% trans "No models yet — staff can still type one in." %}</span>
+            {% endfor %}
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <form method="post" action="{% url 'asset_intake:model_create' brand.pk %}"
+                  class="flex gap-2 flex-1">
+                {% csrf_token %}
+                <input class="theme-input flex-1" name="name" required
+                       placeholder="{% trans 'Add a model, e.g. Air Force 1' %}">
+                <button type="submit" class="btn-quiet px-4 shrink-0">+ {% trans "Add model" %}</button>
+            </form>
+            <form method="post" action="{% url 'asset_intake:brand_delete' brand.pk %}"
+                  onsubmit="return confirm('{% trans "Remove this brand and all its models? Past items keep their record." %}')">
+                {% csrf_token %}
+                <button type="submit" class="btn-quiet px-4 text-status-error shrink-0">{% trans "Delete brand" %}</button>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-on-surface-variant text-center py-8">{% trans "No brands yet. Add the first one above." %}</p>
+    {% endfor %}
+</div>
+{% endblock %}

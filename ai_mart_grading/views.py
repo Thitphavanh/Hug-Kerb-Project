@@ -12,7 +12,7 @@ from asset_intake.models import Asset
 from media_backup.models import MediaFile
 
 from .models import Assessment, AssessmentItem, ChecklistItem
-from .services import OpenRouterError, chat_json
+from .services import OpenRouterError, chat_json, to_decimal
 
 SYSTEM_PROMPT = (
     "ເຈົ້າແມ່ນຜູ້ຊ່ຽວຊານກວດສະພາບເກີບມືສອງ (sneaker condition grading expert). "
@@ -193,14 +193,19 @@ def run_assessment(request, pk):
             checklist_item = item_map.get(item_id)
             if checklist_item is None:
                 continue
+            # ຄະແນນທີ່ແປງບໍ່ໄດ້ນັບເປັນ 0 — ດີກວ່າປ່ອຍໃຫ້ທັງການປະເມີນລົ້ມ
             AssessmentItem.objects.create(
                 assessment=assessment,
                 checklist_item=checklist_item,
-                score=score,
+                score=to_decimal(score, 0),
                 note=str(note)[:200],
             )
-        assessment.overall_grade = result.get("overall_grade", "")
-        assessment.total_score = result.get("total_score")
+        # ເກຣດຕ້ອງເປັນ A–F ເທົ່ານັ້ນ — ບາງເທື່ອ AI ຕອບ "A+" ຫຼື "B/C"
+        # ເຊິ່ງຍາວເກີນ max_length=1 ແລ້ວການບັນທຶກຈະລົ້ມທັງໜ່ວຍ
+        grade = str(result.get("overall_grade", "")).strip().upper()[:1]
+        assessment.overall_grade = grade if grade in Assessment.Grade.values else ""
+        assessment.total_score = to_decimal(result.get("total_score"))
+        assessment.confidence_score = to_decimal(result.get("confidence_score"))
         assessment.summary = result.get("summary", "")
         assessment.ai_model = raw.get("model", "")
         assessment.raw_response = {**raw, **result}

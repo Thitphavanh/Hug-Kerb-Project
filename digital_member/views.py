@@ -10,15 +10,6 @@ from media_backup.models import MediaFile
 
 from .models import MemberCard
 
-# ລຳດັບຂັ້ນຕອນທີ່ສະແດງໃນ timeline (RETURNED ຄືຈຸດສຸດທ້າຍ)
-STATUS_FLOW = [
-    Asset.Status.RECEIVED,
-    Asset.Status.CLEANING,
-    Asset.Status.REPAIRING,
-    Asset.Status.READY,
-    Asset.Status.RETURNED,
-]
-
 
 def _phone_digits(phone):
     return re.sub(r"\D", "", phone or "")
@@ -75,14 +66,16 @@ def track_asset(request, token):
             {"asset": asset, "error": error},
         )
 
-    current_index = STATUS_FLOW.index(asset.status) if asset.status in STATUS_FLOW else 0
+    # ຂັ້ນຕອນຕາມວຽກທີ່ຄູ່ນີ້ສັ່ງໄວ້ຈິງ — ລູກຄ້າທີ່ມາຊັກຢ່າງດຽວບໍ່ຄວນເຫັນຂັ້ນສ້ອມແປງ
+    status_flow = asset.progress_stages()
+    current_index = status_flow.index(asset.status) if asset.status in status_flow else 0
     timeline = [
         {
             "label": Asset.Status(status).label,
             "is_done": i < current_index,
             "is_current": i == current_index,
         }
-        for i, status in enumerate(STATUS_FLOW)
+        for i, status in enumerate(status_flow)
     ]
 
     member_card = MemberCard.objects.filter(
@@ -112,10 +105,21 @@ def member_card_view(request, card_number):
         card_number=card_number,
         is_active=True,
     )
+    # ຈຳນວນຄັ້ງທີ່ມາໃຊ້ບໍລິການ = ບິນທີ່ຊຳລະແລ້ວ (ນິຍາມດຽວກັບໜ້າ CRM)
+    from pos.models import Order
+
+    visit_count = Order.objects.filter(
+        customer=card.customer, status=Order.Status.PAID
+    ).count()
     return render(
         request,
         "digital_member/member_card.html",
-        {"card": card, "transactions": card.transactions.all()[:10]},
+        {
+            "card": card,
+            "visit_count": visit_count,
+            "transactions": card.transactions.all()[:10],
+            "stamp_transactions": card.stamp_transactions.all()[:6],
+        },
     )
 
 

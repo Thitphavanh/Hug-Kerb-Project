@@ -181,6 +181,28 @@ MAX_UPLOAD_VIDEO_MB = int(os.getenv("MAX_UPLOAD_VIDEO_MB", "60"))
 MAX_UPLOAD_FILES_PER_REQUEST = int(os.getenv("MAX_UPLOAD_FILES_PER_REQUEST", "20"))
 
 # ------------------------------------------------------------
+# ການສຳຮອງໄຟລ໌ຫຼັກຖານ (Scope 2.3 — Cloud Storage ຕາມສັນຍາຂໍ້ 3)
+# ------------------------------------------------------------
+# ຫຼັກຖານຮູບກ່ອນ-ຫຼັງເປັນສິ່ງດຽວທີ່ຮ້ານໃຊ້ຢືນຢັນກັບລູກຄ້າຕອນມີຂໍ້ຂັດແຍ່ງ
+# ສຳເນົາດຽວຢູ່ disk ເຄື່ອງ = disk ເສຍແລ້ວຫຼັກຖານຫາຍ ກູ້ບໍ່ໄດ້
+#
+#   MEDIA_BACKUP_BACKEND=none   ປິດ (ຄ່າເລີ່ມຕົ້ນ — ໃຊ້ຕອນພັດທະນາ)
+#   MEDIA_BACKUP_BACKEND=local  ສຳເນົາໄປ MEDIA_BACKUP_DIR (external drive/NAS)
+#   MEDIA_BACKUP_BACKEND=s3     S3 / Cloudflare R2 / Backblaze B2 (ຕ້ອງມີ boto3)
+#
+# ແລ່ນດ້ວຍ: manage.py backup_media  (ຕັ້ງ cron ລາຍວັນ)
+MEDIA_BACKUP_BACKEND = os.getenv("MEDIA_BACKUP_BACKEND", "none")
+
+# ປາຍທາງແບບ local — ໃຫ້ຊີ້ໄປ disk ຄົນລະໜ່ວຍກັບ MEDIA_ROOT
+MEDIA_BACKUP_DIR = os.getenv("MEDIA_BACKUP_DIR", "")
+
+# ປາຍທາງແບບ s3 — ຄີເຂົ້າໃຊ້ອ່ານຈາກ AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+# ຕາມມາດຕະຖານ boto3. R2/B2 ໃຫ້ຕັ້ງ MEDIA_BACKUP_S3_ENDPOINT ນຳ
+MEDIA_BACKUP_S3_BUCKET = os.getenv("MEDIA_BACKUP_S3_BUCKET", "")
+MEDIA_BACKUP_S3_ENDPOINT = os.getenv("MEDIA_BACKUP_S3_ENDPOINT", "")
+MEDIA_BACKUP_S3_PREFIX = os.getenv("MEDIA_BACKUP_S3_PREFIX", "hugkerb-evidence")
+
+# ------------------------------------------------------------
 # ຄະແນນສະສົມ (Scope 2.2 — Digital Member)
 # ------------------------------------------------------------
 # ໃຊ້ຈ່າຍຄົບເທົ່າໃດ (ສະກຸນຫຼັກ) ຈຶ່ງໄດ້ 1 ຄະແນນ. ຄິດຈາກຍອດບິນທີ່ຊຳລະຄົບ

@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -597,3 +598,216 @@ class AccountingTestCase(TestCase):
         # ລາຍຈ່າຍທີ່ຈ່າຍດ້ວຍການໂອນ ບໍ່ວ່າຈະຢູ່ໝວດໃດ
         self.assertEqual(response.context["total"], Decimal("200000"))
         self.assertFalse(response.context["show_balance"])
+
+
+class ProfitAndLossConsistencyTests(TestCase):
+    """ລັອກໄວ້ວ່າ dashboard · ໜ້າລາຍງານ · ໃບສະຫຼຸບເດືອນ/ປີ ຕ້ອງໃຫ້ຕົວເລກດຽວກັນ
+
+    ສາມໜ້ານີ້ເຄີຍຄິດຄົນລະແບບ: ໃບສະຫຼຸບບໍ່ຕັດການຍ້າຍເງິນພາຍໃນ ແລະ
+    ໜ້າລາຍງານນັບຄືນເງິນເປັນລາຍຈ່າຍ ເຮັດໃຫ້ຍອດຂາຍບວມທັງທີ່ຍອດສຸດທິຖືກ.
+    """
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_superuser(
+            username="pl-manager", email="pl@example.com", password="test-pass-123"
+        )
+        self.client.force_login(self.user)
+        self.today = timezone.localdate()
+
+        self.sales = AccountCategory.objects.create(
+            name="ຂາຍໜ້າຮ້ານ (Shop sales)", transaction_type="IN"
+        )
+        self.rent = AccountCategory.objects.create(
+            name="ຄ່າເຊົ່າ (Rent)", transaction_type="OUT"
+        )
+        # ຄູ່ຍ້າຍເງິນ: ອອກຈາກກຳປັ່ນ → ເຂົ້າບັນຊີທະນາຄານ (ບໍ່ແມ່ນລາຍຮັບ/ລາຍຈ່າຍ)
+        self.transfer_in = AccountCategory.objects.create(
+            name="ຝາກເຂົ້າບັນຊີ (Deposit in)",
+            transaction_type="IN",
+            is_internal_transfer=True,
+        )
+        self.transfer_out = AccountCategory.objects.create(
+            name="ຖອນຈາກກຳປັ່ນ (Deposit out)",
+            transaction_type="OUT",
+            is_internal_transfer=True,
+        )
+
+        def entry(category, transaction_type, amount, method="cash"):
+            CashBook.objects.create(
+                date=self.today,
+                description=category.name,
+                transaction_type=transaction_type,
+                category=category,
+                amount=Decimal(amount),
+                currency="LAK",
+                payment_method=method,
+                created_by=self.user,
+            )
+
+        entry(self.sales, "IN", "1000000")
+        entry(self.rent, "OUT", "300000", "transfer")
+        entry(self.transfer_out, "OUT", "500000")
+        entry(self.transfer_in, "IN", "500000", "transfer")
+
+        # POS: ຮັບເງິນ 200,000 ແລ້ວຄືນໃຫ້ລູກຄ້າ 50,000
+        order = Order.objects.create(status=Order.Status.PAID, created_by=self.user)
+        paid_at = timezone.make_aware(
+            datetime.combine(self.today, datetime.min.time()) + timedelta(hours=9)
+        )
+        for kind, amount in (
+            (Payment.Kind.PAYMENT, "200000"),
+            (Payment.Kind.REFUND, "50000"),
+        ):
+            payment = Payment.objects.create(
+                order=order,
+                kind=kind,
+                amount=Decimal(amount),
+                base_amount=Decimal(amount),
+                currency="LAK",
+                method="cash",
+            )
+            Payment.objects.filter(pk=payment.pk).update(paid_at=paid_at)
+
+        # ຄວາມຈິງທີ່ທຸກໜ້າຕ້ອງລາຍງານ
+        self.expected_income = Decimal("1150000")   # 1,000,000 + 200,000 − 50,000
+        self.expected_expense = Decimal("300000")   # ຄ່າເຊົ່າ (ຍ້າຍເງິນບໍ່ນັບ)
+
+    def _report_totals(self):
+        response = self.client.get(
+            reverse("accounting:report"),
+            {"start": self.today.isoformat(), "end": self.today.isoformat()},
+        )
+        self.assertEqual(response.status_code, 200)
+        rows = [row for row in response.context["rows"] if row["currency"] == "LAK"]
+        self.assertEqual(len(rows), 1)
+        return rows[0], response.context["totals"]["LAK"]
+
+    def test_dashboard_totals_net_refunds_and_skip_internal_transfers(self):
+        totals = totals_by_currency(self.today, self.today)["LAK"]
+        self.assertEqual(totals["income"], self.expected_income)
+        self.assertEqual(totals["expense"], self.expected_expense)
+
+    def test_report_table_and_summary_cards_agree_on_the_same_page(self):
+        row, cards = self._report_totals()
+        self.assertEqual(row["income"], self.expected_income)
+        self.assertEqual(row["expense"], self.expected_expense)
+        # ຕາຕະລາງ ແລະ ການ໌ດຢູ່ໜ້າດຽວກັນ ຫ້າມຂັດກັນ
+        self.assertEqual(row["income"], cards["income"])
+        self.assertEqual(row["expense"], cards["expense"])
+
+    def test_monthly_and_yearly_summary_match_the_dashboard(self):
+        for view_name, params in (
+            ("accounting:monthly_summary_financial",
+             {"month": f"{self.today.month:02d}", "year": str(self.today.year)}),
+            ("accounting:yearly_summary_financial", {"year": str(self.today.year)}),
+        ):
+            with self.subTest(view=view_name):
+                response = self.client.get(reverse(view_name), params)
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(
+                    Decimal(str(response.context["default_cash_lak"])),
+                    self.expected_income,
+                )
+                report = json.loads(response.context["report_json"])["LAK"]
+                income = sum(Decimal(str(row["amount"])) for row in report["income"])
+                expense = sum(Decimal(str(row["amount"])) for row in report["expense"])
+                self.assertEqual(income, self.expected_income)
+                self.assertEqual(expense, self.expected_expense)
+
+    def test_internal_transfer_never_appears_as_income_or_expense(self):
+        response = self.client.get(
+            reverse("accounting:monthly_summary_financial"),
+            {"month": f"{self.today.month:02d}", "year": str(self.today.year)},
+        )
+        report = json.loads(response.context["report_json"])["LAK"]
+        names = [row["description"] for row in report["income"] + report["expense"]]
+        self.assertNotIn(self.transfer_in.name, names)
+        self.assertNotIn(self.transfer_out.name, names)
+
+    def test_refund_is_a_negative_income_line_labelled_as_a_refund(self):
+        response = self.client.get(
+            reverse("accounting:monthly_summary_financial"),
+            {"month": f"{self.today.month:02d}", "year": str(self.today.year)},
+        )
+        report = json.loads(response.context["report_json"])["LAK"]
+        refunds = [
+            row for row in report["income"] if Decimal(str(row["amount"])) < 0
+        ]
+        self.assertEqual(len(refunds), 1)
+        self.assertEqual(Decimal(str(refunds[0]["amount"])), Decimal("-50000"))
+        # ປ້າຍຕ້ອງບອກວ່າເປັນການຄືນເງິນ ບໍ່ແມ່ນ "ລາຍຮັບຈາກ POS"
+        self.assertNotIn("income", refunds[0]["description"].lower())
+        self.assertEqual(
+            [row["description"] for row in report["expense"]].count(
+                refunds[0]["description"]
+            ),
+            0,
+        )
+
+
+class YearlyCashHandoverTests(TestCase):
+    """ໃບສົ່ງມອບເງິນປະຈຳປີ — ລວມການສົ່ງມອບລາຍວັນທັງປີ ແລະ ຊີ້ວັນທີ່ຍອດບໍ່ກົງ"""
+
+    def setUp(self):
+        self.user = get_user_model().objects.create_superuser(
+            username="handover-manager", email="ho@example.com", password="test-pass-123"
+        )
+        self.client.force_login(self.user)
+        self.year = timezone.localdate().year
+
+    def _handover(self, month, day, expected, counted, currency="LAK"):
+        return CashHandover.objects.create(
+            date=datetime(self.year, month, day).date(),
+            currency=currency,
+            expected_amount=Decimal(expected),
+            counted_amount=Decimal(counted),
+            handed_by=self.user,
+            received_by="ເຈົ້າຂອງຮ້ານ",
+        )
+
+    def test_year_totals_add_up_and_flag_the_days_that_did_not_balance(self):
+        self._handover(1, 5, "500000", "500000")
+        self._handover(1, 6, "300000", "280000")   # ຂາດ 20,000
+        self._handover(3, 10, "700000", "710000")  # ເກີນ 10,000
+
+        response = self.client.get(
+            reverse("accounting:yearly_cash_handover"), {"year": str(self.year)}
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["year_expected"], Decimal("1500000"))
+        self.assertEqual(response.context["year_counted"], Decimal("1490000"))
+        self.assertEqual(response.context["year_difference"], Decimal("-10000"))
+        self.assertEqual(response.context["recorded_days"], 3)
+        self.assertEqual(len(response.context["mismatches"]), 2)
+
+        months = {row["month"]: row for row in response.context["months"]}
+        self.assertEqual(len(response.context["months"]), 12)
+        self.assertEqual(months[1]["counted"], Decimal("780000"))
+        self.assertEqual(months[1]["mismatch_days"], 1)
+        self.assertEqual(months[3]["difference"], Decimal("10000"))
+        self.assertEqual(months[2]["days"], 0)
+
+    def test_other_years_and_currencies_stay_out_of_the_sheet(self):
+        self._handover(2, 2, "100000", "100000")
+        self._handover(2, 3, "900", "900", currency="THB")
+        CashHandover.objects.create(
+            date=datetime(self.year - 1, 2, 2).date(),
+            currency="LAK",
+            expected_amount=Decimal("999999"),
+            counted_amount=Decimal("999999"),
+            handed_by=self.user,
+            received_by="ປີກ່ອນ",
+        )
+
+        response = self.client.get(
+            reverse("accounting:yearly_cash_handover"),
+            {"year": str(self.year), "currency": "LAK"},
+        )
+
+        self.assertEqual(response.context["year_expected"], Decimal("100000"))
+        self.assertEqual(response.context["recorded_days"], 1)
+
+    def test_daily_handover_page_links_to_the_yearly_sheet(self):
+        response = self.client.get(reverse("accounting:cash_handover"))
+        self.assertContains(response, reverse("accounting:yearly_cash_handover"))
